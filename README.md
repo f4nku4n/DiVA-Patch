@@ -25,6 +25,26 @@ This repo have already implemented following black-box patch-based attacks:
 - [**CamoPatch**](https://github.com/phoenixwilliams/CamoPatch)
 - **DiVA-Patch** (**Ours**)
 
+The repository also includes the following white-box localized attacks in
+`attack_methods/WhiteBoxPatch.py`:
+- **MaskedPGD**
+- **MaskedAutoPGD**
+- [**LaVAN**](https://proceedings.mlr.press/v80/karmon18a.html)
+
+Run any white-box attack under the common or realistic setting with:
+```shell
+python run_WhiteBoxPatch_common.py --attack_method MaskedPGD \
+  --vision_model VGGNet16 --dataset_root "$DATASET_PATH" --device cuda
+
+python run_WhiteBoxPatch_realistic.py --attack_method LaVAN \
+  --vision_model VGGNet16 --dataset_root "$DATASET_PATH" --device cuda \
+  --attack_type targeted
+```
+
+`--attack_method` accepts `MaskedPGD`, `MaskedAutoPGD`, or `LaVAN`. Both
+runners also accept `--steps` (or `--max_query`), `--patch_h`, `--patch_w`,
+`--eps`, and `--step_size`.
+
 Before executing the scripts below, please set the DATASET_PATH variable in each *.sh file to the path of your ImageNet-1K validation set.
 
 ### Demo

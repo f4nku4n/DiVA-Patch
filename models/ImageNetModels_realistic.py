@@ -26,7 +26,6 @@ class ImageNetModel:
         out = (x - self.mu) / self.sigma
         return self.model(out)
 
-    @torch.inference_mode()
     def forward(self, x):
         x = preprocess_for_inference(x)
         out = (x - self.mu) / self.sigma
