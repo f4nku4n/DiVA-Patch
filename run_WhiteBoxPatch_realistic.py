@@ -7,7 +7,7 @@ import numpy as np
 import torch
 from PIL import Image
 
-from attack_methods.WhiteBoxPatch import LaVAN, MaskedAutoPGD, MaskedPGD
+from attack_methods.WhiteBoxPatch import LOAP, LaVAN, MaskedAutoPGD, MaskedPGD
 from models.ImageNetModels_realistic import ImageNetModel
 from utils import NumpyEncoder, PerceptualMetrics, set_seed
 
@@ -16,12 +16,14 @@ ATTACKS = {
     "MaskedPGD": MaskedPGD,
     "MaskedAutoPGD": MaskedAutoPGD,
     "LaVAN": LaVAN,
+    "LOAP": LOAP,
 }
 
 DEFAULTS = {
     "MaskedPGD": {"steps": 100, "eps": 1.0, "step_size": 0.01},
     "MaskedAutoPGD": {"steps": 100, "eps": 0.3, "step_size": 0.1},
     "LaVAN": {"steps": 500, "eps": 1.0, "step_size": 5.0},
+    "LOAP": {"steps": 100, "eps": 1.0, "step_size": 0.05},
 }
 
 
@@ -51,6 +53,10 @@ def parse_args():
     parser.add_argument("--eps", type=float)
     parser.add_argument("--step_size", type=float)
     parser.add_argument("--location_update_period", type=int, default=0)
+    parser.add_argument("--lo_mode", choices=["full", "random"], default="full")
+    parser.add_argument("--stride", type=int, default=2)
+    parser.add_argument("--attempts", type=int, default=1)
+    parser.add_argument("--exclude_box", type=int, nargs=4)
     parser.add_argument("--demo", action="store_true")
     return parser.parse_args()
 
@@ -108,7 +114,7 @@ def main():
             continue
 
         set_seed(args.seed)
-        attack = ATTACKS[args.attack_method](
+        attack_kwargs = dict(
             image=image,
             model=model,
             true_label=true_label,
@@ -123,6 +129,14 @@ def main():
             device=args.device,
             location_update_period=args.location_update_period,
         )
+        if args.attack_method == "LOAP":
+            attack_kwargs.update(
+                lo_mode=args.lo_mode,
+                stride=args.stride,
+                attempts=args.attempts,
+                exclude_box=args.exclude_box,
+            )
+        attack = ATTACKS[args.attack_method](**attack_kwargs)
         result = attack.run()
         if perceptual_metrics is None:
             perceptual_metrics = PerceptualMetrics(device=args.device)
@@ -146,6 +160,13 @@ def main():
             "ssim": metrics["ssim"],
             "lpips": metrics["lpips"],
         }
+        if args.attack_method == "LOAP":
+            summary.update(
+                lo_mode=args.lo_mode,
+                stride=args.stride,
+                attempts=args.attempts,
+                exclude_box=args.exclude_box,
+            )
         with open(result_path, "w") as file:
             json.dump(summary, file, indent=4, cls=NumpyEncoder)
 

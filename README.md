@@ -30,6 +30,8 @@ The repository also includes the following white-box localized attacks in
 - **MaskedPGD**
 - **MaskedAutoPGD**
 - [**LaVAN**](https://proceedings.mlr.press/v80/karmon18a.html)
+- [**LOAP**](https://arxiv.org/abs/2005.02313), with full or random
+  location optimization
 
 Run any white-box attack under the common or realistic setting with:
 ```shell
@@ -41,7 +43,7 @@ python run_WhiteBoxPatch_realistic.py --attack_method LaVAN \
   --attack_type targeted
 ```
 
-`--attack_method` accepts `MaskedPGD`, `MaskedAutoPGD`, or `LaVAN`. Both
+`--attack_method` accepts `MaskedPGD`, `MaskedAutoPGD`, `LaVAN`, or `LOAP`. Both
 runners also accept `--steps` (or `--max_query`), `--patch_h`, `--patch_w`,
 `--eps`, `--step_size`, and `--location_update_period`. A period of `0`
 keeps one fixed location; a positive value samples a new location after that
@@ -49,6 +51,10 @@ many optimization steps and carries the best patch to the new location.
 MaskedPGD and MaskedAutoPGD default to 100 steps. LaVAN follows the linked
 PyTorch reproduction with a random `[0, 1]` patch, 500 steps, and raw-gradient
 step size `5.0`.
+LOAP defaults to 100 steps, signed-gradient step size `0.05`, full
+four-direction location optimization, stride `2`, and one random restart.
+Use `--lo_mode random` for RandLO, `--attempts` for additional restarts,
+and `--exclude_box TOP LEFT HEIGHT WIDTH` to prevent overlap with a region.
 
 Result JSON files for all black-box and white-box attacks report full-image
 `ssim` and `lpips`. LPIPS uses the official learned metric with a pretrained

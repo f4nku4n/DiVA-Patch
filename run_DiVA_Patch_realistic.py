@@ -89,6 +89,7 @@ if __name__ == "__main__":
                 existing_result = json.load(file)
             if metric_tracker.is_complete(existing_result):
                 metric_tracker.add_summary(existing_result)
+                metric_tracker.print_image(path_img, existing_result)
                 adversarial.append(existing_result["adversarial"])
                 L2.append(existing_result["l2_distance"])
                 if existing_result["adversarial"]:
@@ -128,6 +129,7 @@ if __name__ == "__main__":
                 :,
             ] = patch
             metrics = metric_tracker.compute(img_cls, img_adv)
+            metric_tracker.print_image(path_img, metrics)
             attack_result = existing_result if os.path.exists(result_json) else {}
             attack_result.update({
                 "adversarial": best[1],
@@ -179,6 +181,7 @@ if __name__ == "__main__":
         patch = best_idv.patch
         img_adv[loc_x:loc_x + s[0], loc_y:loc_y + s[1], :] = patch
         metrics = metric_tracker.compute(img_cls, img_adv)
+        metric_tracker.print_image(path_img, metrics)
         im = Image.fromarray(img_adv.astype(np.uint8))
         im.save(f"{save_dir}/examples/{best_idv.success_attack}_{path_img.replace('/', '_')}")
 

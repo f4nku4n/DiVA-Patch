@@ -1,4 +1,5 @@
 import numpy as np
+import random
 import torch
 import torch.nn.functional as F
 from tqdm import tqdm
@@ -404,5 +405,203 @@ class LaVAN(WhiteBoxPatchAttack):
             logits = self._logits(adversarial)
             objective = self._record_objective(logits)
             self._record(iteration, adversarial, logits, objective)
+
+        return self._result()
+
+
+class LOAP(WhiteBoxPatchAttack):
+    _DIRECTIONS = {
+        "left": (0, -1),
+        "right": (0, 1),
+        "up": (-1, 0),
+        "down": (1, 0),
+    }
+
+    def __init__(
+        self,
+        *args,
+        lo_mode="full",
+        stride=2,
+        attempts=1,
+        exclude_box=None,
+        **kwargs,
+    ):
+        self.lo_mode = str(lo_mode)
+        self.stride = int(stride)
+        self.attempts = int(attempts)
+        self.exclude_box = (
+            None
+            if exclude_box is None
+            else tuple(int(value) for value in exclude_box)
+        )
+        self._allowed_locations_cache = None
+
+        if self.lo_mode not in {"full", "random"}:
+            raise ValueError("lo_mode must be either 'full' or 'random'")
+        if self.stride <= 0:
+            raise ValueError("stride must be positive")
+        if self.attempts <= 0:
+            raise ValueError("attempts must be positive")
+        if self.exclude_box is not None:
+            if len(self.exclude_box) != 4:
+                raise ValueError(
+                    "exclude_box must contain top, left, height, and width"
+                )
+            top, left, height, width = self.exclude_box
+            if top < 0 or left < 0 or height <= 0 or width <= 0:
+                raise ValueError("exclude_box must describe a positive image region")
+
+        super().__init__(*args, **kwargs)
+
+        if self.exclude_box is not None:
+            top, left, height, width = self.exclude_box
+            image_h, image_w = self.image_size
+            if top + height > image_h or left + width > image_w:
+                raise ValueError("exclude_box must fit inside the input image")
+        if not self._allowed_locations():
+            raise ValueError("exclude_box leaves no valid patch location")
+
+    def _location_is_allowed(self, location):
+        row, column = int(location[0]), int(location[1])
+        image_h, image_w = self.image_size
+        patch_h, patch_w = self.patch_size
+        if (
+            row < 0
+            or column < 0
+            or row + patch_h > image_h
+            or column + patch_w > image_w
+        ):
+            return False
+        if self.exclude_box is None:
+            return True
+
+        top, left, height, width = self.exclude_box
+        bottom = top + height
+        right = left + width
+        return (
+            row + patch_h <= top
+            or row >= bottom
+            or column + patch_w <= left
+            or column >= right
+        )
+
+    def _allowed_locations(self):
+        if self._allowed_locations_cache is None:
+            image_h, image_w = self.image_size
+            patch_h, patch_w = self.patch_size
+            self._allowed_locations_cache = [
+                (row, column)
+                for row in range(image_h - patch_h + 1)
+                for column in range(image_w - patch_w + 1)
+                if self._location_is_allowed((row, column))
+            ]
+        return self._allowed_locations_cache
+
+    def _sample_location(self, exclude=None):
+        locations = self._allowed_locations()
+        if exclude is not None and len(locations) > 1:
+            locations = [
+                location
+                for location in locations
+                if location != tuple(exclude)
+            ]
+        if not locations:
+            raise ValueError("no valid patch location is available")
+        return random.choice(locations)
+
+    def _set_location(self, location):
+        super()._set_location(location)
+        if not self._location_is_allowed(self.location):
+            raise ValueError("patch location overlaps the excluded region")
+
+    def _initial_patch(self):
+        patch_h, patch_w = self.patch_size
+        patch = np.random.uniform(
+            0.0, 1.0, (1, 3, patch_h, patch_w)
+        ).astype(np.float32)
+        return torch.from_numpy(patch).to(
+            device=self.device,
+            dtype=self.image_normalized.dtype,
+        )
+
+    def _optimization_objective(self, logits):
+        if self.targeted:
+            target = torch.tensor([self.target_label], device=self.device)
+            return -F.cross_entropy(logits, target)
+        source = torch.tensor([self.true_label], device=self.device)
+        return F.cross_entropy(logits, source)
+
+    def _logits_for_patch(self, patch, location):
+        row, column = location
+        patch_h, patch_w = self.patch_size
+        image = self.image.clone()
+        image[:, :, row:row + patch_h, column:column + patch_w] = (
+            patch * self.value_range + self.clip_min
+        )
+        return self.model.forward(image)
+
+    def _candidate_location(self, location, direction):
+        row_delta, column_delta = self._DIRECTIONS[direction]
+        candidate = (
+            location[0] + row_delta * self.stride,
+            location[1] + column_delta * self.stride,
+        )
+        return candidate if self._location_is_allowed(candidate) else location
+
+    def _optimize_location(self, patch):
+        if self.lo_mode == "full":
+            directions = tuple(self._DIRECTIONS)
+        else:
+            directions = (random.choice(tuple(self._DIRECTIONS)),)
+
+        current_location = self.location
+        with torch.no_grad():
+            current_logits = self._logits_for_patch(patch, current_location)
+            best_objective = float(
+                self._optimization_objective(current_logits).item()
+            )
+            best_location = current_location
+            for direction in directions:
+                candidate = self._candidate_location(
+                    current_location, direction
+                )
+                if candidate == current_location:
+                    continue
+                candidate_logits = self._logits_for_patch(patch, candidate)
+                candidate_objective = float(
+                    self._optimization_objective(candidate_logits).item()
+                )
+                if candidate_objective > best_objective:
+                    best_objective = candidate_objective
+                    best_location = candidate
+        self._set_location(best_location)
+
+    def run(self):
+        global_iteration = 0
+        for _ in range(self.attempts):
+            self._set_location(self._sample_location())
+            patch = self._initial_patch()
+
+            for _ in tqdm(range(self.steps)):
+                global_iteration += 1
+                patch.requires_grad_(True)
+                logits = self._logits_for_patch(patch, self.location)
+                objective = self._optimization_objective(logits)
+                gradient = torch.autograd.grad(objective, patch)[0]
+                patch = (
+                    patch + self.step_size * gradient.sign()
+                ).clamp(0.0, 1.0).detach()
+
+                self._optimize_location(patch)
+                adversarial = self._place_normalized_patch(patch)
+                with torch.no_grad():
+                    logits = self._logits(adversarial)
+                    objective = self._optimization_objective(logits)
+                self._record(
+                    global_iteration,
+                    adversarial,
+                    logits,
+                    objective,
+                )
 
         return self._result()

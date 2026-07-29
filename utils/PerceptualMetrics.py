@@ -109,6 +109,13 @@ class PerceptualMetricTracker:
         self.add_summary(summary)
         return summary
 
+    @staticmethod
+    def print_image(image, summary):
+        print(
+            f"{image} | SSIM: {float(summary['ssim']):.6f} | "
+            f"LPIPS-AlexNet: {float(summary['lpips']):.6f}"
+        )
+
     def print_summary(self):
         if not self.ssim_scores:
             return
