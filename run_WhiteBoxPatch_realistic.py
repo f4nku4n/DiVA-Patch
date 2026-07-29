@@ -9,7 +9,7 @@ from PIL import Image
 
 from attack_methods.WhiteBoxPatch import LaVAN, MaskedAutoPGD, MaskedPGD
 from models.ImageNetModels_realistic import ImageNetModel
-from utils import NumpyEncoder, set_seed
+from utils import NumpyEncoder, PerceptualMetrics, set_seed
 
 
 ATTACKS = {
@@ -61,6 +61,7 @@ def main():
 
     model_index = {"VGGNet16": 0, "ResNet50": 1, "ViT16": 2}
     model = ImageNetModel(model_index[args.vision_model], args.device)
+    perceptual_metrics = None
 
     label_file = (
         f"TEST_IMGs/demo_{'targeted' if args.attack_type == 'targeted' else 'untargeted'}.json"
@@ -84,7 +85,7 @@ def main():
     for directory in ("processes", "results", "examples"):
         os.makedirs(os.path.join(save_folder, directory), exist_ok=True)
 
-    successes, distances = [], []
+    successes, distances, ssim_scores, lpips_scores = [], [], [], []
     for index, path_img in enumerate(path_labels):
         save_file = path_img.replace(".JPEG", "").replace("/", "_")
         result_path = os.path.join(save_folder, "results", save_file + ".json")
@@ -123,6 +124,9 @@ def main():
             location_update_period=args.location_update_period,
         )
         result = attack.run()
+        if perceptual_metrics is None:
+            perceptual_metrics = PerceptualMetrics(device=args.device)
+        metrics = perceptual_metrics(image, result["image"], data_range=255.0)
 
         with open(
             os.path.join(save_folder, "processes", save_file + ".p"), "wb"
@@ -139,6 +143,8 @@ def main():
             "eps": eps,
             "step_size": step_size,
             "location_update_period": args.location_update_period,
+            "ssim": metrics["ssim"],
+            "lpips": metrics["lpips"],
         }
         with open(result_path, "w") as file:
             json.dump(summary, file, indent=4, cls=NumpyEncoder)
@@ -153,6 +159,8 @@ def main():
         )
         successes.append(result["adversarial"])
         distances.append(result["l2"])
+        ssim_scores.append(metrics["ssim"])
+        lpips_scores.append(metrics["lpips"])
 
     if successes:
         asr = np.mean(successes) * 100
@@ -161,6 +169,8 @@ def main():
             f"L2 (mean, std): {np.mean(distances):.2f} "
             f"({np.std(distances):.2f})"
         )
+        print(f"SSIM (mean): {np.mean(ssim_scores):.4f}")
+        print(f"LPIPS-AlexNet (mean): {np.mean(lpips_scores):.4f}")
     else:
         print("No correctly classified, unfinished images were attacked.")
 

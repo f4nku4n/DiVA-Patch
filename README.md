@@ -50,6 +50,11 @@ MaskedPGD and MaskedAutoPGD default to 100 steps. LaVAN follows the linked
 PyTorch reproduction with a random `[0, 1]` patch, 500 steps, and raw-gradient
 step size `5.0`.
 
+White-box result JSON files also report full-image `ssim` and `lpips`.
+LPIPS uses the official learned metric with a pretrained AlexNet backbone.
+Both metrics are available for other experiments through
+`utils.PerceptualMetrics`.
+
 Before executing the scripts below, please set the DATASET_PATH variable in each *.sh file to the path of your ImageNet-1K validation set.
 
 ### Demo

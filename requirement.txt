@@ -4,3 +4,5 @@ tqdm
 scipy
 opencv-python
 matplotlib
+scikit-image
+lpips
