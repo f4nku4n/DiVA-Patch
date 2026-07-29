@@ -1,0 +1,34 @@
+{
+    "n01796340_ILSVRC2012_val_00002846.JPEG": {
+        "true_label": 81,
+        "target_label": 574
+    },
+    "n02094114_ILSVRC2012_val_00031981.JPEG": {
+        "true_label": 185,
+        "target_label": 355
+    },
+    "n02226429_ILSVRC2012_val_00006915.JPEG": {
+        "true_label": 311,
+        "target_label": 209
+    },
+    "n03041632_ILSVRC2012_val_00040170.JPEG": {
+        "true_label": 499,
+        "target_label": 726
+    },
+    "n03291819_ILSVRC2012_val_00034362.JPEG": {
+        "true_label": 549,
+        "target_label": 738
+    },
+    "n03733131_ILSVRC2012_val_00027446.JPEG": {
+        "true_label": 645,
+        "target_label": 620
+    },
+    "n04344873_ILSVRC2012_val_00001811.JPEG": {
+        "true_label": 831,
+        "target_label": 827
+    },
+    "n09428293_ILSVRC2012_val_00032032.JPEG": {
+        "true_label": 978,
+        "target_label": 611
+    }
+}
