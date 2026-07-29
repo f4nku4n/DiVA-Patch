@@ -3,7 +3,7 @@ import math
 import numpy as np
 from tqdm import tqdm
 from .utils import l2_compute, sh_selection
-from .CamoPatch import CamoPatch
+from .CamoPatch import CamoPatch, compose_image
 
 
 class CamoPatch_common(CamoPatch):
@@ -24,10 +24,10 @@ class CamoPatch_common(CamoPatch):
 
         update_loc_period = self.params["update_loc_period"]
 
-        x_adv = x.copy()
-        x_adv[loc[0]: loc[0] + s, loc[1]: loc[1] + s, :] = patch
-        x_adv = np.clip(x_adv, 0., 1.)
-        adversarial, loss = self.loss_function(x_adv)
+        x_adv = compose_image(x, patch, loc, (0., 1.))
+        adversarial, loss = self.loss_function.evaluate_patch(
+            patch, loc, clip_bounds=(0., 1.)
+        )
 
         l2_curr = l2_compute(adv_patch=patch, orig_patch=x[loc[0]: loc[0] + s, loc[1]: loc[1] + s, :].copy())
 
@@ -41,12 +41,10 @@ class CamoPatch_common(CamoPatch):
             if patch_counter < update_loc_period:
                 patch_new_geno = mutate(patch_geno, self.params["mut"])
                 patch_new = render(patch_new_geno, s)
-                x_adv_new = x.copy()
-                x_adv_new[loc[0]: loc[0] + s, loc[1]: loc[1] + s, :] = patch_new
-                x_adv_new = np.clip(x_adv_new, 0., 1.)
-
                 # evaluate new solutions
-                adversarial_new, loss_new = self.loss_function(x_adv_new)
+                adversarial_new, loss_new = self.loss_function.evaluate_patch(
+                    patch_new, loc, clip_bounds=(0., 1.)
+                )
 
                 orig_patch = x[loc[0]: loc[0] + s, loc[1]: loc[1] + s, :].copy()
                 l2_new = l2_compute(adv_patch=patch_new, orig_patch=orig_patch)
@@ -57,7 +55,7 @@ class CamoPatch_common(CamoPatch):
                         adversarial = adversarial_new
                         patch = patch_new
                         patch_geno = patch_new_geno
-                        x_adv = x_adv_new
+                        x_adv = compose_image(x, patch_new, loc, (0., 1.))
                         l2_curr = l2_new
 
                 else:
@@ -66,7 +64,7 @@ class CamoPatch_common(CamoPatch):
                         adversarial = adversarial_new
                         patch = patch_new
                         patch_geno = patch_new_geno
-                        x_adv = x_adv_new
+                        x_adv = compose_image(x, patch_new, loc, (0., 1.))
                         l2_curr = l2_new
 
             else:
@@ -76,12 +74,11 @@ class CamoPatch_common(CamoPatch):
                 sh_i = int(max(sh_selection(n_queries, it) * h, 0))
                 loc_new = loc.copy()
                 loc_new = update_location(loc_new, sh_i, h, s)
-                x_adv_new = x.copy()
-                x_adv_new[loc_new[0]: loc_new[0] + s, loc_new[1]: loc_new[1] + s, :] = patch
-                x_adv_new = np.clip(x_adv_new, 0., 1.)
                 # evaluate new solution
 
-                adversarial_new, loss_new = self.loss_function(x_adv_new)
+                adversarial_new, loss_new = self.loss_function.evaluate_patch(
+                    patch, loc_new, clip_bounds=(0., 1.)
+                )
 
                 orig_patch_new = x[loc_new[0]: loc_new[0] + s, loc_new[1]: loc_new[1] + s, :].copy()
                 l2_new = l2_compute(adv_patch=patch, orig_patch=orig_patch_new)
@@ -92,7 +89,7 @@ class CamoPatch_common(CamoPatch):
                         adversarial = adversarial_new
                         loc = loc_new
 
-                        x_adv = x_adv_new
+                        x_adv = compose_image(x, patch, loc_new, (0., 1.))
                         l2_curr = l2_new
 
                 else:
@@ -104,7 +101,7 @@ class CamoPatch_common(CamoPatch):
                         loss = loss_new
                         adversarial = adversarial_new
                         loc = loc_new
-                        x_adv = x_adv_new
+                        x_adv = compose_image(x, patch, loc_new, (0., 1.))
                         l2_curr = l2_new
 
             self.process.append([adversarial, loc, patch_geno, l2_curr, loss])

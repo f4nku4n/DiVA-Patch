@@ -19,11 +19,11 @@ class DiVA_Patch_common(DiVA_Patch):
         s = idv.s
         x, y = idv.location
 
-        img_adv = self.img_cls.copy()
         orig_patch = self.img_cls[x: x + s[0], y: y + s[1], :]
-        img_adv[x: x + s[0], y: y + s[1], :] = idv.patch
 
-        adversarial, loss = self.loss_function(img_adv)
+        adversarial, loss = self.loss_function.evaluate_patch(
+            idv.patch, idv.location
+        )
         l2_score = l2_compute(adv_patch=idv.patch, orig_patch=orig_patch)  # Difference
 
         idv.success_attack = adversarial

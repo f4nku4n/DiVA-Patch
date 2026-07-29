@@ -26,13 +26,12 @@ class PatchRS_common(PatchRS):
 
         best_patch_geno, best_patch = self.get_init_patch(s)
 
-        img_adv = self.img_cls.copy()
-        img_adv[best_loc[0]:best_loc[0] + s[0], best_loc[1]:best_loc[1] + s[1], :] = best_patch.copy()
-
         loc_t = abs(self.update_loc_period)
         assert loc_t > 1
 
-        best_adversarial, best_loss = self.loss_function(img_adv)
+        best_adversarial, best_loss = self.loss_function.evaluate_patch(
+            best_patch, best_loc
+        )
         best_l2 = l2_compute(
             adv_patch=best_patch,
             orig_patch=self.img_cls[best_loc[0]: best_loc[0] + s[0], best_loc[1]: best_loc[1] + s[1], :].copy(),
@@ -44,7 +43,6 @@ class PatchRS_common(PatchRS):
             s_it = int(max(self.p_selection(it) ** .5 * s[0], 1))
 
             # sample update
-            new_img_adv = self.img_cls.copy()
             new_patch_geno = best_patch_geno.copy()
             new_patch = best_patch.copy()
             new_loc = best_loc.copy()
@@ -68,9 +66,9 @@ class PatchRS_common(PatchRS):
                 new_loc[0] = np.clip(new_loc[0] + np.random.randint(-sh_it, sh_it + 1), 0, H - s[0])
                 new_loc[1] = np.clip(new_loc[1] + np.random.randint(-sw_it, sw_it + 1), 0, W - s[1])
 
-            new_img_adv[new_loc[0]:new_loc[0] + s[0], new_loc[1]:new_loc[1] + s[1], :] = new_patch.copy()
-
-            new_adversarial, new_loss = self.loss_function(new_img_adv)
+            new_adversarial, new_loss = self.loss_function.evaluate_patch(
+                new_patch, new_loc
+            )
             new_l2 = l2_compute(
                 new_patch,
                 self.img_cls[new_loc[0]: new_loc[0] + s[0], new_loc[1]: new_loc[1] + s[1], :].copy()

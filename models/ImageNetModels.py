@@ -12,10 +12,12 @@ class ImageNetModel:
         self.mu = torch.Tensor([0.485, 0.456, 0.406]).float().view(1, 3, 1, 1).to(device)
         self.sigma = torch.Tensor([0.229, 0.224, 0.225]).float().view(1, 3, 1, 1).to(device)
 
+    @torch.inference_mode()
     def predict(self, x):
         out = (x - self.mu) / self.sigma
         return self.model(out)
 
+    @torch.inference_mode()
     def forward(self, x):
         out = (x - self.mu) / self.sigma
         return self.model(out)

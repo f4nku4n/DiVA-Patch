@@ -11,6 +11,7 @@ class CamoPatch(Attacker):
         super().__init__(max_query)
         self.loss_function = loss_function
         self.params = params
+        self.loss_function.bind_base_image(params["x"])
 
     def completion_procedure(self, adversarial, x_adv, queries, loc, patch):
         data = {
@@ -37,10 +38,10 @@ class CamoPatch(Attacker):
 
         update_loc_period = self.params["update_loc_period"]
 
-        x_adv = x.copy()
-        x_adv[loc[0]: loc[0] + s, loc[1]: loc[1] + s, :] = patch
-        x_adv = np.clip(x_adv, 0., 255.)
-        adversarial, loss = self.loss_function(x_adv)
+        x_adv = compose_image(x, patch, loc, (0., 255.))
+        adversarial, loss = self.loss_function.evaluate_patch(
+            patch, loc, clip_bounds=(0., 255.)
+        )
 
         l2_curr = l2_compute(
             adv_patch=patch,
@@ -56,12 +57,10 @@ class CamoPatch(Attacker):
             if patch_counter < update_loc_period:
                 patch_new_geno = mutate(patch_geno, self.params["mut"])
                 patch_new = render(patch_new_geno, s)
-                x_adv_new = x.copy()
-                x_adv_new[loc[0]: loc[0] + s, loc[1]: loc[1] + s, :] = patch_new
-                x_adv_new = np.clip(x_adv_new, 0, 255)
-
                 # evaluate new solutions
-                adversarial_new, loss_new = self.loss_function(x_adv_new)
+                adversarial_new, loss_new = self.loss_function.evaluate_patch(
+                    patch_new, loc, clip_bounds=(0., 255.)
+                )
 
                 orig_patch = x[loc[0]: loc[0] + s, loc[1]: loc[1] + s, :].copy()
 
@@ -77,7 +76,7 @@ class CamoPatch(Attacker):
                         adversarial = adversarial_new
                         patch = patch_new
                         patch_geno = patch_new_geno
-                        x_adv = x_adv_new
+                        x_adv = compose_image(x, patch_new, loc, (0., 255.))
                         l2_curr = l2_new
                 else:
                     if loss_new < loss:  # minimization
@@ -85,7 +84,7 @@ class CamoPatch(Attacker):
                         adversarial = adversarial_new
                         patch = patch_new
                         patch_geno = patch_new_geno
-                        x_adv = x_adv_new
+                        x_adv = compose_image(x, patch_new, loc, (0., 255.))
                         l2_curr = l2_new
 
             else:
@@ -96,12 +95,10 @@ class CamoPatch(Attacker):
                 sw_i = int(max(sh_selection(self.max_query, it) * w, 0))
                 loc_new = loc.copy()
                 loc_new = update_location(loc_new, sh_i, sw_i, h, w, s)
-                x_adv_new = x.copy()
-                x_adv_new[loc_new[0]: loc_new[0] + s, loc_new[1]: loc_new[1] + s, :] = patch
-                x_adv_new = np.clip(x_adv_new, 0., 255.)
-
                 # evaluate new solution
-                adversarial_new, loss_new = self.loss_function(x_adv_new)
+                adversarial_new, loss_new = self.loss_function.evaluate_patch(
+                    patch, loc_new, clip_bounds=(0., 255.)
+                )
 
                 orig_patch_new = x[loc_new[0]: loc_new[0] + s, loc_new[1]: loc_new[1] + s, :].copy()
                 l2_new = l2_compute(
@@ -116,7 +113,7 @@ class CamoPatch(Attacker):
                         adversarial = adversarial_new
                         loc = loc_new
 
-                        x_adv = x_adv_new
+                        x_adv = compose_image(x, patch, loc_new, (0., 255.))
                         l2_curr = l2_new
                 else:
                     diff = loss_new - loss
@@ -127,12 +124,20 @@ class CamoPatch(Attacker):
                         loss = loss_new
                         adversarial = adversarial_new
                         loc = loc_new
-                        x_adv = x_adv_new
+                        x_adv = compose_image(x, patch, loc_new, (0., 255.))
                         l2_curr = l2_new
             self.process.append([adversarial, loc, patch_geno, l2_curr, loss])
 
         self.completion_procedure(adversarial, x_adv, self.max_query, loc, patch)
         return
+
+
+def compose_image(image, patch, location, clip_bounds):
+    image_adv = image.copy()
+    x, y = int(location[0]), int(location[1])
+    patch_h, patch_w = patch.shape[:2]
+    image_adv[x:x + patch_h, y:y + patch_w, :] = patch
+    return np.clip(image_adv, clip_bounds[0], clip_bounds[1])
 
 
 def update_location(loc_new, h_i, w_i, h, w, s):
