@@ -51,6 +51,7 @@ def parse_args():
     parser.add_argument("--patch_w", type=int, default=40)
     parser.add_argument("--eps", type=float)
     parser.add_argument("--step_size", type=float)
+    parser.add_argument("--location_update_period", type=int, default=0)
     parser.add_argument("--demo", action="store_true")
     return parser.parse_args()
 
@@ -120,6 +121,7 @@ def main():
             clip_min=0.0,
             clip_max=1.0,
             device=args.device,
+            location_update_period=args.location_update_period,
         )
         result = attack.run()
 
@@ -137,6 +139,7 @@ def main():
             "steps": args.steps,
             "eps": eps,
             "step_size": step_size,
+            "location_update_period": args.location_update_period,
         }
         with open(result_path, "w") as file:
             json.dump(summary, file, indent=4, cls=NumpyEncoder)

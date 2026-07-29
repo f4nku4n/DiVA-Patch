@@ -20,6 +20,7 @@ class WhiteBoxPatchAttack:
         clip_max=1.0,
         device="cuda",
         location=None,
+        location_update_period=0,
     ):
         self.model = model
         self.true_label = int(true_label)
@@ -32,7 +33,15 @@ class WhiteBoxPatchAttack:
         self.clip_max = clip_max
         self.value_range = clip_max - clip_min
         self.device = device
+        self.location_update_period = int(location_update_period)
         self.process = []
+        self.best_patch = None
+        self.best_image = None
+        self.best_location = None
+        self.best_success = None
+        self.best_prediction = None
+        self.best_l2 = None
+        self.best_loss = None
 
         if targeted and target_label is None:
             raise ValueError("target_label is required for a targeted attack")
@@ -44,6 +53,8 @@ class WhiteBoxPatchAttack:
             raise ValueError("step_size must be positive")
         if eps < 0:
             raise ValueError("eps must be non-negative")
+        if self.location_update_period < 0:
+            raise ValueError("location_update_period must be non-negative")
 
         image_tensor = torch.from_numpy(image).permute(2, 0, 1)
         self.image = image_tensor[None, :].to(device=device, dtype=torch.float32)
@@ -54,18 +65,65 @@ class WhiteBoxPatchAttack:
         if patch_h <= 0 or patch_w <= 0 or patch_h > height or patch_w > width:
             raise ValueError("patch_size must fit inside the input image")
 
+        self.patch_size = (patch_h, patch_w)
+        self.image_size = (height, width)
         if location is None:
-            x = np.random.randint(0, height - patch_h + 1)
-            y = np.random.randint(0, width - patch_w + 1)
-            location = (x, y)
-        self.location = (int(location[0]), int(location[1]))
-        x, y = self.location
+            location = self._sample_location()
+        self._set_location(location)
+
+    def _sample_location(self, exclude=None):
+        height, width = self.image_size
+        patch_h, patch_w = self.patch_size
+        locations_h = height - patch_h + 1
+        locations_w = width - patch_w + 1
+        while True:
+            location = (
+                np.random.randint(0, locations_h),
+                np.random.randint(0, locations_w),
+            )
+            if exclude is None or location != tuple(exclude):
+                return location
+            if locations_h * locations_w == 1:
+                return location
+
+    def _set_location(self, location):
+        height, width = self.image_size
+        patch_h, patch_w = self.patch_size
+        x, y = int(location[0]), int(location[1])
         if x < 0 or y < 0 or x + patch_h > height or y + patch_w > width:
             raise ValueError("patch location is outside the input image")
-
-        self.patch_size = (patch_h, patch_w)
+        self.location = (x, y)
         self.mask = torch.zeros_like(self.image_normalized)
         self.mask[:, :, x:x + patch_h, y:y + patch_w] = 1.0
+
+    def _should_update_location(self, iteration):
+        return (
+            self.location_update_period > 0
+            and iteration > 1
+            and (iteration - 1) % self.location_update_period == 0
+        )
+
+    def _normalized_patch(self, image_normalized):
+        x, y = self.location
+        patch_h, patch_w = self.patch_size
+        return image_normalized[
+            :, :, x:x + patch_h, y:y + patch_w
+        ].detach().clone()
+
+    def _place_normalized_patch(self, patch):
+        image = self.image_normalized.clone()
+        x, y = self.location
+        patch_h, patch_w = self.patch_size
+        image[:, :, x:x + patch_h, y:y + patch_w] = patch
+        return image
+
+    def _move_best_patch(self, project_eps=False):
+        self._set_location(self._sample_location(exclude=self.location))
+        image = self._place_normalized_patch(self.best_patch)
+        if project_eps:
+            delta = (image - self.image_normalized).clamp(-self.eps, self.eps)
+            image = (self.image_normalized + delta * self.mask).clamp(0.0, 1.0)
+        return image.detach()
 
     def _to_model_domain(self, image_normalized):
         return image_normalized * self.value_range + self.clip_min
@@ -114,30 +172,65 @@ class WhiteBoxPatchAttack:
     def _record(self, iteration, image_normalized, logits, objective):
         prediction = int(logits.argmax(dim=1).item())
         success = self._is_success(prediction)
-        patch = self._patch_from_image(image_normalized)
         l2 = self._l2(image_normalized)
         loss = float((-objective).item())
+        if self._is_better(success, loss, l2):
+            self.best_patch = self._normalized_patch(image_normalized)
+            self.best_image = image_normalized.detach().clone()
+            self.best_location = list(self.location)
+            self.best_success = success
+            self.best_prediction = prediction
+            self.best_l2 = l2
+            self.best_loss = loss
         self.process.append(
-            [iteration, success, list(self.location), patch.copy(), l2, loss]
+            [
+                iteration,
+                self.best_success,
+                self.best_location.copy(),
+                self._patch_from_best(),
+                self.best_l2,
+                self.best_loss,
+            ]
         )
         return success, loss, l2
 
-    def _result(self, image_normalized):
-        logits = self._logits(image_normalized)
-        objective = self._final_objective(logits)
-        prediction = int(logits.argmax(dim=1).item())
-        adversarial = self._compose_model_input(image_normalized)
+    def _is_better(self, success, loss, l2):
+        if self.best_patch is None:
+            return True
+        if not self.best_success and success:
+            return True
+        if self.best_success and success:
+            return l2 < self.best_l2
+        if not self.best_success and not success:
+            return loss < self.best_loss
+        return False
+
+    def _patch_from_best(self):
+        patch = self.best_patch[0].permute(1, 2, 0)
+        patch = patch * self.value_range + self.clip_min
+        return patch.detach().cpu().numpy().copy()
+
+    def _result(self):
+        adversarial = self._compose_best_model_input()
         image = adversarial[0].permute(1, 2, 0).detach().cpu().numpy()
         return {
-            "adversarial": self._is_success(prediction),
-            "prediction": prediction,
-            "location": list(self.location),
-            "patch": self._patch_from_image(image_normalized),
+            "adversarial": self.best_success,
+            "prediction": self.best_prediction,
+            "location": self.best_location.copy(),
+            "patch": self._patch_from_best(),
             "image": image,
-            "l2": self._l2(image_normalized),
-            "loss": float((-objective).item()),
+            "l2": self.best_l2,
+            "loss": self.best_loss,
             "process": self.process,
         }
+
+    def _compose_best_model_input(self):
+        image = self.image.clone()
+        x, y = self.best_location
+        patch_h, patch_w = self.patch_size
+        patch = self.best_patch * self.value_range + self.clip_min
+        image[:, :, x:x + patch_h, y:y + patch_w] = patch
+        return image
 
 
 class MaskedPGD(WhiteBoxPatchAttack):
@@ -152,6 +245,8 @@ class MaskedPGD(WhiteBoxPatchAttack):
         ).detach()
 
         for iteration in tqdm(range(1, self.steps + 1)):
+            if self._should_update_location(iteration):
+                adversarial = self._move_best_patch(project_eps=True)
             adversarial.requires_grad_(True)
             logits = self._logits(adversarial)
             objective = self._ce_objective(logits)
@@ -169,7 +264,7 @@ class MaskedPGD(WhiteBoxPatchAttack):
                 0.0, 1.0
             ).detach()
 
-        return self._result(adversarial)
+        return self._result()
 
 
 class MaskedAutoPGD(WhiteBoxPatchAttack):
@@ -191,6 +286,13 @@ class MaskedAutoPGD(WhiteBoxPatchAttack):
         checkpoint_objectives = []
 
         for iteration in tqdm(range(1, self.steps + 1)):
+            if self._should_update_location(iteration):
+                adversarial = self._move_best_patch(project_eps=True)
+                previous = adversarial.clone()
+                best = adversarial.clone()
+                best_objective = -torch.inf
+                step_size = self.step_size
+                checkpoint_objectives = []
             adversarial.requires_grad_(True)
             logits = self._logits(adversarial)
             objective = self._ce_objective(logits)
@@ -240,7 +342,7 @@ class MaskedAutoPGD(WhiteBoxPatchAttack):
                     previous = best.clone()
                 checkpoint_objectives = []
 
-        return self._result(best)
+        return self._result()
 
 
 class LaVAN(WhiteBoxPatchAttack):
@@ -261,6 +363,8 @@ class LaVAN(WhiteBoxPatchAttack):
         adversarial = adversarial.detach()
 
         for iteration in tqdm(range(1, self.steps + 1)):
+            if self._should_update_location(iteration):
+                adversarial = self._move_best_patch()
             adversarial.requires_grad_(True)
             logits = self._logits(adversarial)
             objective = self._margin_objective(logits)
@@ -278,4 +382,4 @@ class LaVAN(WhiteBoxPatchAttack):
                 + adversarial * self.mask
             ).detach()
 
-        return self._result(adversarial)
+        return self._result()
