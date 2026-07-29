@@ -9,7 +9,12 @@ from PIL import Image
 
 from attack_methods.WhiteBoxPatch import LOAP, LaVAN, MaskedAutoPGD, MaskedPGD
 from models.ImageNetModels_realistic import ImageNetModel
-from utils import NumpyEncoder, PerceptualMetrics, set_seed
+from utils import (
+    NumpyEncoder,
+    PerceptualMetrics,
+    PerceptualMetricTracker,
+    set_seed,
+)
 
 
 ATTACKS = {
@@ -96,6 +101,26 @@ def main():
         save_file = path_img.replace(".JPEG", "").replace("/", "_")
         result_path = os.path.join(save_folder, "results", save_file + ".json")
         if os.path.exists(result_path):
+            with open(result_path) as file:
+                existing_result = json.load(file)
+            changed = False
+            for field in ("queries", "first_success_query"):
+                if field not in existing_result:
+                    existing_result[field] = None
+                    changed = True
+            if changed:
+                with open(result_path, "w") as file:
+                    json.dump(
+                        existing_result,
+                        file,
+                        indent=4,
+                        cls=NumpyEncoder,
+                    )
+            PerceptualMetricTracker.print_result(path_img, existing_result)
+            successes.append(existing_result["adversarial"])
+            distances.append(existing_result["l2_distance"])
+            ssim_scores.append(existing_result["ssim"])
+            lpips_scores.append(existing_result["lpips"])
             continue
 
         print(f"Image #{index + 1}: {path_img}")
@@ -153,6 +178,8 @@ def main():
             "location": result["location"],
             "l2_distance": result["l2"],
             "loss": result["loss"],
+            "queries": result["queries"],
+            "first_success_query": result["first_success_query"],
             "steps": steps,
             "eps": eps,
             "step_size": step_size,
@@ -167,6 +194,7 @@ def main():
                 attempts=args.attempts,
                 exclude_box=args.exclude_box,
             )
+        PerceptualMetricTracker.print_result(path_img, summary)
         with open(result_path, "w") as file:
             json.dump(summary, file, indent=4, cls=NumpyEncoder)
 

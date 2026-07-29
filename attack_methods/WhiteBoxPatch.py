@@ -43,6 +43,8 @@ class WhiteBoxPatchAttack:
         self.best_prediction = None
         self.best_l2 = None
         self.best_loss = None
+        self.query_count = 0
+        self.first_success_query = None
 
         if targeted and target_label is None:
             raise ValueError("target_label is required for a targeted attack")
@@ -134,7 +136,17 @@ class WhiteBoxPatchAttack:
         return self.image * (1.0 - self.mask) + patch_domain * self.mask
 
     def _logits(self, image_normalized):
-        return self.model.forward(self._compose_model_input(image_normalized))
+        return self._forward_model(
+            self._compose_model_input(image_normalized)
+        )
+
+    def _forward_model(self, image):
+        logits = self.model.forward(image)
+        self.query_count += 1
+        prediction = int(logits.argmax(dim=1).item())
+        if self._is_success(prediction) and self.first_success_query is None:
+            self.first_success_query = self.query_count
+        return logits
 
     def _ce_objective(self, logits):
         if self.targeted:
@@ -222,6 +234,8 @@ class WhiteBoxPatchAttack:
             "image": image,
             "l2": self.best_l2,
             "loss": self.best_loss,
+            "queries": self.query_count,
+            "first_success_query": self.first_success_query,
             "process": self.process,
         }
 
@@ -538,7 +552,7 @@ class LOAP(WhiteBoxPatchAttack):
         image[:, :, row:row + patch_h, column:column + patch_w] = (
             patch * self.value_range + self.clip_min
         )
-        return self.model.forward(image)
+        return self._forward_model(image)
 
     def _candidate_location(self, location, direction):
         row_delta, column_delta = self._DIRECTIONS[direction]

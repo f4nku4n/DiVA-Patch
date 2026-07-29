@@ -17,6 +17,7 @@ class CamoPatch(Attacker):
         data = {
             "adversarial": adversarial,
             "queries": queries,
+            "first_success_query": self.first_success_query,
             "loc": loc,
             "patch": patch,
             "final_prediction": self.loss_function.get_label(x_adv),
@@ -42,6 +43,7 @@ class CamoPatch(Attacker):
         adversarial, loss = self.loss_function.evaluate_patch(
             patch, loc, clip_bounds=(0., 255.)
         )
+        self.count_query(adversarial)
 
         l2_curr = l2_compute(
             adv_patch=patch,
@@ -61,6 +63,7 @@ class CamoPatch(Attacker):
                 adversarial_new, loss_new = self.loss_function.evaluate_patch(
                     patch_new, loc, clip_bounds=(0., 255.)
                 )
+                self.count_query(adversarial_new)
 
                 orig_patch = x[loc[0]: loc[0] + s, loc[1]: loc[1] + s, :].copy()
 
@@ -99,6 +102,7 @@ class CamoPatch(Attacker):
                 adversarial_new, loss_new = self.loss_function.evaluate_patch(
                     patch, loc_new, clip_bounds=(0., 255.)
                 )
+                self.count_query(adversarial_new)
 
                 orig_patch_new = x[loc_new[0]: loc_new[0] + s, loc_new[1]: loc_new[1] + s, :].copy()
                 l2_new = l2_compute(
@@ -128,7 +132,7 @@ class CamoPatch(Attacker):
                         l2_curr = l2_new
             self.process.append([adversarial, loc, patch_geno, l2_curr, loss])
 
-        self.completion_procedure(adversarial, x_adv, self.max_query, loc, patch)
+        self.completion_procedure(adversarial, x_adv, self.n_query, loc, patch)
         return
 
 

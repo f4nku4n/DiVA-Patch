@@ -36,7 +36,7 @@ class PatchRS_common(PatchRS):
             adv_patch=best_patch,
             orig_patch=self.img_cls[best_loc[0]: best_loc[0] + s[0], best_loc[1]: best_loc[1] + s[1], :].copy(),
         )
-        self.n_query += 1
+        self.count_query(best_adversarial)
         self.process.append([self.n_query, best_adversarial, best_loc, best_patch, best_l2, best_loss])
 
         for it in tqdm(range(1, self.max_query)):
@@ -73,7 +73,7 @@ class PatchRS_common(PatchRS):
                 new_patch,
                 self.img_cls[new_loc[0]: new_loc[0] + s[0], new_loc[1]: new_loc[1] + s[1], :].copy()
             )
-            self.n_query += 1
+            self.count_query(new_adversarial)
 
             if is_better(new_adversarial, best_adversarial, new_loss, best_loss, new_l2, best_l2):
                 best_adversarial = new_adversarial

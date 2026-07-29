@@ -10,6 +10,7 @@ from PIL import Image
 from utils import (
     NumpyEncoder,
     PerceptualMetricTracker,
+    first_success_query_from_process,
     pytorch_switch,
     set_seed,
 )
@@ -89,9 +90,12 @@ if __name__ == "__main__":
         if os.path.exists(result_json):
             with open(result_json) as file:
                 existing_result = json.load(file)
-            if metric_tracker.is_complete(existing_result):
+            if (
+                metric_tracker.is_complete(existing_result)
+                and "first_success_query" in existing_result
+            ):
                 metric_tracker.add_summary(existing_result)
-                metric_tracker.print_image(path_img, existing_result)
+                metric_tracker.print_result(path_img, existing_result)
                 adversarial.append(existing_result["adversarial"])
                 L2.append(existing_result["l2_distance"])
                 continue
@@ -150,16 +154,22 @@ if __name__ == "__main__":
         loc_x, loc_y = location
         img_adv[loc_x:loc_x + S, loc_y:loc_y + S, :] = patch
         metrics = metric_tracker.compute(img_cls, img_adv)
-        metric_tracker.print_image(path_img, metrics)
 
         summary = {
             "adversarial": success,
             "l2_distance": l2_distance,
             "location": location,
             "loss": final_loss,
+            "first_success_query": artifact.get(
+                "first_success_query",
+                first_success_query_from_process(
+                    process, success_index=0
+                ),
+            ),
             "ssim": metrics["ssim"],
             "lpips": metrics["lpips"],
         }
+        metric_tracker.print_result(path_img, summary)
         with open(result_json, "w") as file:
             json.dump(summary, file, indent=4, cls=NumpyEncoder)
         img_adv = img_adv * 255

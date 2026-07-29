@@ -29,9 +29,6 @@ class DiVA_Patch(Attacker):
         self.K = K
 
     def evaluate(self, idv):
-        self.n_query += 1
-        self.pbar.update(1)
-
         s = idv.s
         x, y = idv.location
 
@@ -40,6 +37,8 @@ class DiVA_Patch(Attacker):
         adversarial, loss = self.loss_function.evaluate_patch(
             idv.patch, idv.location
         )
+        self.count_query(adversarial)
+        self.pbar.update(1)
         l2_score = l2_compute(adv_patch=idv.patch, orig_patch=orig_patch, integer=True)
 
         idv.success_attack = adversarial

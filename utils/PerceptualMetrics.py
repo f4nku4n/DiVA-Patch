@@ -116,6 +116,20 @@ class PerceptualMetricTracker:
             f"LPIPS-AlexNet: {float(summary['lpips']):.6f}"
         )
 
+    @staticmethod
+    def print_result(image, summary):
+        first_success_query = summary.get("first_success_query")
+        first_success_query = (
+            "N/A" if first_success_query is None else first_success_query
+        )
+        print(
+            f"{image} | Success: {bool(summary['adversarial'])} | "
+            f"L2: {float(summary['l2_distance']):.6f} | "
+            f"SSIM: {float(summary['ssim']):.6f} | "
+            f"LPIPS-AlexNet: {float(summary['lpips']):.6f} | "
+            f"First success query: {first_success_query}"
+        )
+
     def print_summary(self):
         if not self.ssim_scores:
             return

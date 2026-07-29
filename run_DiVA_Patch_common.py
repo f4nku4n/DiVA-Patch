@@ -9,6 +9,7 @@ from PIL import Image
 from utils import (
     NumpyEncoder,
     PerceptualMetricTracker,
+    first_success_query_from_process,
     pytorch_switch,
     set_seed,
 )
@@ -100,9 +101,12 @@ if __name__ == "__main__":
         if os.path.exists(result_json):
             with open(result_json) as file:
                 existing_result = json.load(file)
-            if metric_tracker.is_complete(existing_result):
+            if (
+                metric_tracker.is_complete(existing_result)
+                and "first_success_query" in existing_result
+            ):
                 metric_tracker.add_summary(existing_result)
-                metric_tracker.print_image(path_img, existing_result)
+                metric_tracker.print_result(path_img, existing_result)
                 adversarial.append(existing_result["adversarial"])
                 L2.append(existing_result["l2_distance"])
                 if existing_result["adversarial"]:
@@ -142,14 +146,17 @@ if __name__ == "__main__":
                 :,
             ] = patch
             metrics = metric_tracker.compute(img_cls, img_adv)
-            metric_tracker.print_image(path_img, metrics)
             attack_result = existing_result if os.path.exists(result_json) else {}
             attack_result.update({
                 "adversarial": best[1],
                 "l2_distance": best[4],
+                "first_success_query": first_success_query_from_process(
+                    process, success_index=1, query_index=0
+                ),
                 "ssim": metrics["ssim"],
                 "lpips": metrics["lpips"],
             })
+            metric_tracker.print_result(path_img, attack_result)
             with open(result_json, "w") as file:
                 json.dump(attack_result, file, indent=4, cls=NumpyEncoder)
             adversarial.append(best[1])
@@ -194,7 +201,6 @@ if __name__ == "__main__":
         patch = best_idv.patch
         img_adv[loc_x:loc_x + s[0], loc_y:loc_y + s[1], :] = patch
         metrics = metric_tracker.compute(img_cls, img_adv)
-        metric_tracker.print_image(path_img, metrics)
 
         img_adv = img_adv * 255
         
@@ -206,6 +212,8 @@ if __name__ == "__main__":
         attack_result['#locs'] = [[x[2], x[4], x[5]] for x in results]
         attack_result['ssim'] = metrics['ssim']
         attack_result['lpips'] = metrics['lpips']
+        attack_result['first_success_query'] = attacker.first_success_query
+        metric_tracker.print_result(path_img, attack_result)
 
         json.dump(attack_result,
                   open(f"{save_dir}/results/{path_img.replace('/', '_').replace('.JPEG', '')}.json", 'w'), indent=4,
