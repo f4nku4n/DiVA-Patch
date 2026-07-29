@@ -19,9 +19,9 @@ ATTACKS = {
 }
 
 DEFAULTS = {
-    "MaskedPGD": {"eps": 1.0, "step_size": 0.01},
-    "MaskedAutoPGD": {"eps": 0.3, "step_size": 0.1},
-    "LaVAN": {"eps": 1.0, "step_size": 0.01},
+    "MaskedPGD": {"steps": 100, "eps": 1.0, "step_size": 0.01},
+    "MaskedAutoPGD": {"steps": 100, "eps": 0.3, "step_size": 0.1},
+    "LaVAN": {"steps": 500, "eps": 1.0, "step_size": 5.0},
 }
 
 
@@ -33,7 +33,7 @@ def parse_args():
         default="MaskedPGD",
     )
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--steps", "--max_query", dest="steps", type=int, default=100)
+    parser.add_argument("--steps", "--max_query", dest="steps", type=int)
     parser.add_argument(
         "--vision_model",
         choices=["VGGNet16", "ResNet50", "ViT16"],
@@ -71,6 +71,7 @@ def main():
         path_labels = json.load(file)
 
     defaults = DEFAULTS[args.attack_method]
+    steps = defaults["steps"] if args.steps is None else args.steps
     eps = defaults["eps"] if args.eps is None else args.eps
     step_size = (
         defaults["step_size"] if args.step_size is None else args.step_size
@@ -113,7 +114,7 @@ def main():
             target_label=target_label,
             targeted=targeted,
             patch_size=(args.patch_h, args.patch_w),
-            steps=args.steps,
+            steps=steps,
             step_size=step_size,
             eps=eps,
             clip_min=0.0,
@@ -134,7 +135,7 @@ def main():
             "location": result["location"],
             "l2_distance": result["l2"],
             "loss": result["loss"],
-            "steps": args.steps,
+            "steps": steps,
             "eps": eps,
             "step_size": step_size,
             "location_update_period": args.location_update_period,

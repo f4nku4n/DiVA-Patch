@@ -347,39 +347,62 @@ class MaskedAutoPGD(WhiteBoxPatchAttack):
 
 class LaVAN(WhiteBoxPatchAttack):
     def _final_objective(self, logits):
+        return self._record_objective(logits)
+
+    def _targeted_repo_loss(self, logits):
+        source = torch.tensor([self.true_label], device=self.device)
+        target = torch.tensor([self.target_label], device=self.device)
+        return F.cross_entropy(logits, source) - F.cross_entropy(logits, target)
+
+    def _record_objective(self, logits):
+        if self.targeted:
+            return -self._targeted_repo_loss(logits)
         return self._margin_objective(logits)
 
-    def run(self):
-        x, y = self.location
+    def _initial_patch(self):
         patch_h, patch_w = self.patch_size
-        patch = torch.zeros(
-            (1, 3, patch_h, patch_w),
+        patch = np.random.uniform(
+            0.0, 1.0, (1, 3, patch_h, patch_w)
+        ).astype(np.float32)
+        return torch.from_numpy(patch).to(
             device=self.device,
             dtype=self.image_normalized.dtype,
         )
 
-        adversarial = self.image_normalized.clone()
-        adversarial[:, :, x:x + patch_h, y:y + patch_w] = patch
-        adversarial = adversarial.detach()
+    def run(self):
+        patch = self._initial_patch()
+        adversarial = self._place_normalized_patch(patch).detach()
+        adversarial.requires_grad_(True)
+        logits = self._logits(adversarial)
 
         for iteration in tqdm(range(1, self.steps + 1)):
             if self._should_update_location(iteration):
-                adversarial = self._move_best_patch()
+                self._set_location(
+                    self._sample_location(exclude=self.location)
+                )
+                patch = self.best_patch.detach().clone()
+                adversarial = self._place_normalized_patch(patch).detach()
+                adversarial.requires_grad_(True)
+                logits = self._logits(adversarial)
+
+            if self.targeted:
+                update_loss = self._targeted_repo_loss(logits)
+                gradient = torch.autograd.grad(update_loss, adversarial)[0]
+                patch = patch - self.step_size * self._normalized_patch(
+                    gradient
+                )
+            else:
+                objective = self._margin_objective(logits)
+                gradient = torch.autograd.grad(objective, adversarial)[0]
+                patch = patch + self.step_size * self._normalized_patch(
+                    gradient
+                )
+
+            patch = patch.clamp(0.0, 1.0).detach()
+            adversarial = self._place_normalized_patch(patch).detach()
             adversarial.requires_grad_(True)
             logits = self._logits(adversarial)
-            objective = self._margin_objective(logits)
+            objective = self._record_objective(logits)
             self._record(iteration, adversarial, logits, objective)
-            if iteration == self.steps:
-                adversarial = adversarial.detach()
-                continue
-
-            gradient = torch.autograd.grad(objective, adversarial)[0]
-            adversarial = (
-                adversarial + self.step_size * gradient * self.mask
-            ).clamp(0.0, 1.0)
-            adversarial = (
-                self.image_normalized * (1.0 - self.mask)
-                + adversarial * self.mask
-            ).detach()
 
         return self._result()

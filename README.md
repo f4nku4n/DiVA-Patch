@@ -46,6 +46,9 @@ runners also accept `--steps` (or `--max_query`), `--patch_h`, `--patch_w`,
 `--eps`, `--step_size`, and `--location_update_period`. A period of `0`
 keeps one fixed location; a positive value samples a new location after that
 many optimization steps and carries the best patch to the new location.
+MaskedPGD and MaskedAutoPGD default to 100 steps. LaVAN follows the linked
+PyTorch reproduction with a random `[0, 1]` patch, 500 steps, and raw-gradient
+step size `5.0`.
 
 Before executing the scripts below, please set the DATASET_PATH variable in each *.sh file to the path of your ImageNet-1K validation set.
 
