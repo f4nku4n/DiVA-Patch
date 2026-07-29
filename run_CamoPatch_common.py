@@ -7,13 +7,17 @@ import numpy as np
 from torchvision import transforms
 
 from PIL import Image
-from utils import set_seed, pytorch_switch
+from utils import (
+    NumpyEncoder,
+    PerceptualMetricTracker,
+    pytorch_switch,
+    set_seed,
+)
 
 from utils.LossFunctions import UnTargeted, Targeted
 
 from models.ImageNetModels import ImageNetModel
 from attack_methods.CamoPatch_common import CamoPatch_common as CamoPatch
-from attack_methods.CamoPatch_common import render
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -69,23 +73,33 @@ if __name__ == "__main__":
         path_labels = json.load(open(f'TEST_IMGs/{vision_model}_ImgNet1K.json'))
 
     adversarial, L2 = [], []
+    metric_tracker = PerceptualMetricTracker(device=device, data_range=1.0)
 
     save_folder = f"exp_result/CamoPatch-{vision_model}-SEED_{SEED}-common-{ATTACK_TYPE}"
     os.makedirs(save_folder, exist_ok=True)
 
     os.makedirs(save_folder + '/processes', exist_ok=True)
+    os.makedirs(save_folder + '/results', exist_ok=True)
     os.makedirs(save_folder + '/examples', exist_ok=True)
 
     for i, path_img in enumerate(path_labels):
-        if os.path.exists(f"{save_folder}/processes/{path_img.replace('/', '_').replace('.JPEG', '.npy')}"):
-            continue
+        save_file = path_img.replace('.JPEG', '').replace("/", "_")
+        process_path = f"{save_folder}/processes/{save_file}.npy"
+        result_json = f"{save_folder}/results/{save_file}.json"
+        if os.path.exists(result_json):
+            with open(result_json) as file:
+                existing_result = json.load(file)
+            if metric_tracker.is_complete(existing_result):
+                metric_tracker.add_summary(existing_result)
+                adversarial.append(existing_result["adversarial"])
+                L2.append(existing_result["l2_distance"])
+                continue
         print(f'Image #{i + 1}: {path_img}')
         image_dir = os.path.join(dataset_root, path_img)
 
         true_label = path_labels[path_img]['true_label']
         target_label = path_labels[path_img]['target_label']
         
-        save_file = path_img.replace('.JPEG', '').replace("/", "_")
         save_directory = os.path.join(save_folder + '/processes', save_file)
 
         if ATTACK_TYPE == 'non_targeted':
@@ -99,37 +113,53 @@ if __name__ == "__main__":
         if img_cls.shape[-1] != 3:
             continue
 
-        init_pred_label = loss.get_label(img_cls)
-        if init_pred_label != true_label:
-            continue
+        if not os.path.exists(process_path):
+            init_pred_label = loss.get_label(img_cls)
+            if init_pred_label != true_label:
+                continue
 
-        params = {
-            "x": img_cls,
-            "eps": S**2,
-            "n_queries": MAX_QUERY,
-            "save_directory": save_directory + ".npy",
-            "c": img_cls.shape[2],
-            "h": img_cls.shape[0],
-            "w": img_cls.shape[1],
-            "N": N,
-            "update_loc_period": LI,
-            "mut": MUT,
-            "temp": TEMP
-        }
+            params = {
+                "x": img_cls,
+                "eps": S**2,
+                "n_queries": MAX_QUERY,
+                "save_directory": process_path,
+                "c": img_cls.shape[2],
+                "h": img_cls.shape[0],
+                "w": img_cls.shape[1],
+                "N": N,
+                "update_loc_period": LI,
+                "mut": MUT,
+                "temp": TEMP
+            }
+            set_seed(SEED)
+            attacker = CamoPatch(params, loss, MAX_QUERY)
+            attacker.run()
 
-        set_seed(SEED)
-
-        attacker = CamoPatch(params, loss, MAX_QUERY)
-        attacker.run()
-      
-        process = attacker.process
-        L2.append(process[-1][-2])
-        adversarial.append(process[-1][0])
+        artifact = np.load(process_path, allow_pickle=True).item()
+        process = artifact["process"]
+        success = bool(artifact["adversarial"])
+        location = artifact["loc"]
+        patch = artifact["patch"]
+        l2_distance = process[-1][-2]
+        final_loss = process[-1][-1]
+        L2.append(l2_distance)
+        adversarial.append(success)
 
         img_adv = img_cls.copy()
-        loc_x, loc_y = process[-1][1]
-        patch = render(process[-1][2], S)
+        loc_x, loc_y = location
         img_adv[loc_x:loc_x + S, loc_y:loc_y + S, :] = patch
+        metrics = metric_tracker.compute(img_cls, img_adv)
+
+        summary = {
+            "adversarial": success,
+            "l2_distance": l2_distance,
+            "location": location,
+            "loss": final_loss,
+            "ssim": metrics["ssim"],
+            "lpips": metrics["lpips"],
+        }
+        with open(result_json, "w") as file:
+            json.dump(summary, file, indent=4, cls=NumpyEncoder)
         img_adv = img_adv * 255
 
         im = Image.fromarray(img_adv.astype(np.uint8))
@@ -139,3 +169,4 @@ if __name__ == "__main__":
     mean_l2, std_l2 = np.mean(L2), np.std(L2)
     print(f'Average Attack Success Rate: {asr:.2f}')
     print(f'L2 (mean, std): {mean_l2:.2f} ({std_l2:.2f})')
+    metric_tracker.print_summary()

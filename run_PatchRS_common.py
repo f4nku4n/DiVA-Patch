@@ -6,7 +6,12 @@ import pickle as p
 import numpy as np
 
 from PIL import Image
-from utils import set_seed, pytorch_switch
+from utils import (
+    NumpyEncoder,
+    PerceptualMetricTracker,
+    pytorch_switch,
+    set_seed,
+)
 import matplotlib.pyplot as plt
 from torchvision import transforms
 
@@ -69,16 +74,27 @@ if __name__ == "__main__":
         path_labels = json.load(open(f'TEST_IMGs/{vision_model}_ImgNet1K.json'))
 
     adversarial, L2 = [], []
+    metric_tracker = PerceptualMetricTracker(device=device, data_range=1.0)
 
     save_folder = f"exp_result/PatchRS-{vision_model}-SEED_{SEED}-common-{ATTACK_TYPE}"
     os.makedirs(save_folder, exist_ok=True)
 
     os.makedirs(save_folder + '/processes', exist_ok=True)
+    os.makedirs(save_folder + '/results', exist_ok=True)
     os.makedirs(save_folder + '/examples', exist_ok=True)
 
     for i, path_img in enumerate(path_labels):
-        if os.path.exists(f"{save_folder}/processes/{path_img.replace('/', '_').replace('.JPEG', '.p')}"):
-            continue
+        save_file = path_img.replace('.JPEG', '').replace("/", "_")
+        process_path = f"{save_folder}/processes/{save_file}.p"
+        result_json = f"{save_folder}/results/{save_file}.json"
+        if os.path.exists(result_json):
+            with open(result_json) as file:
+                existing_result = json.load(file)
+            if metric_tracker.is_complete(existing_result):
+                metric_tracker.add_summary(existing_result)
+                adversarial.append(existing_result["adversarial"])
+                L2.append(existing_result["l2_distance"])
+                continue
         print(f'Image #{i + 1}: {path_img}')
         image_dir = os.path.join(dataset_root, path_img)
 
@@ -96,24 +112,39 @@ if __name__ == "__main__":
         if img_cls.shape[-1] != 3:
             continue
 
-        init_pred_label = loss.get_label(img_cls)
-        if init_pred_label != true_label:
-            continue
+        if os.path.exists(process_path):
+            with open(process_path, "rb") as file:
+                process = p.load(file)
+        else:
+            init_pred_label = loss.get_label(img_cls)
+            if init_pred_label != true_label:
+                continue
 
-        set_seed(SEED)
-
-        attacker = PatchRS(img_cls=img_cls, loss_function=loss, max_query=MAX_QUERY, p_init=P_INIT, patch_size=[S, S], update_loc_period=LI)
-        attacker.run()
-      
-        process = attacker.process
-        p.dump(process, open(f"{save_folder}/processes/{path_img.replace('/', '_').replace('.JPEG', '')}.p", 'wb'))
+            set_seed(SEED)
+            attacker = PatchRS(img_cls=img_cls, loss_function=loss, max_query=MAX_QUERY, p_init=P_INIT, patch_size=[S, S], update_loc_period=LI)
+            attacker.run()
+            process = attacker.process
+            with open(process_path, "wb") as file:
+                p.dump(process, file)
 
         img_adv = img_cls.copy()
         loc_x, loc_y = process[-1][2]
         patch = process[-1][3]
-        img_adv[loc_x:loc_x + S, loc_y:loc_y + S, :] = patch        
+        img_adv[loc_x:loc_x + S, loc_y:loc_y + S, :] = patch
+        metrics = metric_tracker.compute(img_cls, img_adv)
         L2.append(process[-1][-2])
         adversarial.append(process[-1][1])
+
+        summary = {
+            "adversarial": process[-1][1],
+            "l2_distance": process[-1][-2],
+            "location": process[-1][2],
+            "loss": process[-1][-1],
+            "ssim": metrics["ssim"],
+            "lpips": metrics["lpips"],
+        }
+        with open(result_json, "w") as file:
+            json.dump(summary, file, indent=4, cls=NumpyEncoder)
 
         img_adv = img_adv * 255
         im = Image.fromarray(img_adv.astype(np.uint8))
@@ -124,4 +155,4 @@ if __name__ == "__main__":
     mean_l2, std_l2 = np.mean(L2), np.std(L2)
     print(f'Average Attack Success Rate: {asr:.2f}')
     print(f'L2 (mean, std): {mean_l2:.2f} ({std_l2:.2f})')
-
+    metric_tracker.print_summary()

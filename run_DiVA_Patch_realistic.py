@@ -4,7 +4,7 @@ import argparse
 import numpy as np
 import pickle as p
 from PIL import Image
-from utils import set_seed, NumpyEncoder
+from utils import NumpyEncoder, PerceptualMetricTracker, set_seed
 
 from attack_methods.DiVA_Patch import DiVA_Patch
 
@@ -71,6 +71,7 @@ if __name__ == "__main__":
         path_labels = json.load(open(f'TEST_IMGs/{vision_model}_ImgNet1K.json'))
 
     adversarial, L2, locs = [], [], []
+    metric_tracker = PerceptualMetricTracker(device=device, data_range=255.0)
 
     save_dir = f"exp_result/DiVA_Patch-GridSize_{args.grid_h}_{args.grid_w}-Delta_{DELTA_MAX}_{DELTA_MIN}-K{args.K}-{vision_model}-SEED_{SEED}-realistic-{ATTACK_TYPE}"
     os.makedirs(save_dir, exist_ok=True)
@@ -81,8 +82,18 @@ if __name__ == "__main__":
     os.makedirs(save_dir + '/examples', exist_ok=True)
 
     for i, path_img in enumerate(path_labels):
-        if os.path.exists(f"{save_dir}/results/{path_img.replace('/', '_').replace('.JPEG', '')}.json"):
-            continue
+        result_json = f"{save_dir}/results/{path_img.replace('/', '_').replace('.JPEG', '')}.json"
+        process_path = f"{save_dir}/processes/{path_img.replace('/', '_').replace('.JPEG', '')}_process.p"
+        if os.path.exists(result_json):
+            with open(result_json) as file:
+                existing_result = json.load(file)
+            if metric_tracker.is_complete(existing_result):
+                metric_tracker.add_summary(existing_result)
+                adversarial.append(existing_result["adversarial"])
+                L2.append(existing_result["l2_distance"])
+                if existing_result["adversarial"]:
+                    locs.append(len(existing_result.get("#locs", [])))
+                continue
         attack_result = {}
         print(f'Image #{i + 1}: {path_img}')
         image_dir = os.path.join(dataset_root, path_img)
@@ -102,6 +113,32 @@ if __name__ == "__main__":
         img_cls = np.array(img_cls, dtype='float32')
 
         if img_cls.shape[-1] != 3:
+            continue
+
+        if os.path.exists(process_path):
+            with open(process_path, "rb") as file:
+                process = p.load(file)
+            best = process[-1]
+            img_adv = img_cls.copy()
+            loc_x, loc_y = best[2]
+            patch = best[3]
+            img_adv[
+                loc_x:loc_x + patch.shape[0],
+                loc_y:loc_y + patch.shape[1],
+                :,
+            ] = patch
+            metrics = metric_tracker.compute(img_cls, img_adv)
+            attack_result = existing_result if os.path.exists(result_json) else {}
+            attack_result.update({
+                "adversarial": best[1],
+                "l2_distance": best[4],
+                "ssim": metrics["ssim"],
+                "lpips": metrics["lpips"],
+            })
+            with open(result_json, "w") as file:
+                json.dump(attack_result, file, indent=4, cls=NumpyEncoder)
+            adversarial.append(best[1])
+            L2.append(best[4])
             continue
 
         init_pred_label = loss.get_label(img_cls)
@@ -141,12 +178,15 @@ if __name__ == "__main__":
         s = best_idv.s
         patch = best_idv.patch
         img_adv[loc_x:loc_x + s[0], loc_y:loc_y + s[1], :] = patch
+        metrics = metric_tracker.compute(img_cls, img_adv)
         im = Image.fromarray(img_adv.astype(np.uint8))
         im.save(f"{save_dir}/examples/{best_idv.success_attack}_{path_img.replace('/', '_')}")
 
         attack_result['adversarial'] = best_idv.success_attack
         attack_result['l2_distance'] = best_idv.l2
         attack_result['#locs'] = [[x[2], x[4], x[5]] for x in results]
+        attack_result['ssim'] = metrics['ssim']
+        attack_result['lpips'] = metrics['lpips']
 
         json.dump(attack_result,
                   open(f"{save_dir}/results/{path_img.replace('/', '_').replace('.JPEG', '')}.json", 'w'), indent=4,
@@ -160,4 +200,5 @@ if __name__ == "__main__":
     print(f'Average Attack Success Rate: {asr:.2f}')
     print(f'L2 (mean, std): {mean_l2:.2f} ({std_l2:.2f})')
     print(f'#Locs (mean, std): {np.mean(locs):.2f} ({np.std(locs):.2f})')
+    metric_tracker.print_summary()
 
