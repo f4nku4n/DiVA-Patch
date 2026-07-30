@@ -31,6 +31,15 @@ def _patched_image(base_image, patch, location, device, clip_bounds):
     return image
 
 
+def _rectangle_image(base_image, target_image, rectangle):
+    top, left, bottom, right = (int(value) for value in rectangle)
+    image = base_image.clone()
+    image[:, :, top:bottom, left:right] = target_image[
+        :, :, top:bottom, left:right
+    ]
+    return image
+
+
 class UnTargeted:
     def __init__(self, model, true, unormalize=False, to_pytorch=False, device='cpu'):
         self.model = model
@@ -39,11 +48,30 @@ class UnTargeted:
         self.to_pytorch = to_pytorch
         self.device = device
         self.base_image = None
+        self.target_image = None
 
     def bind_base_image(self, image):
         if not self.to_pytorch:
             raise RuntimeError("GPU image caching requires to_pytorch=True")
         self.base_image = _torch_input(image, self.unormalize, self.device)
+
+    def bind_target_image(self, image):
+        if not self.to_pytorch:
+            raise RuntimeError("GPU image caching requires to_pytorch=True")
+        self.target_image = _torch_input(image, self.unormalize, self.device)
+        if self.base_image is not None and self.target_image.shape != self.base_image.shape:
+            raise ValueError("base and target images must have the same shape")
+
+    def evaluate_rectangle(self, rectangle):
+        if self.base_image is None or self.target_image is None:
+            raise RuntimeError(
+                "bind_base_image() and bind_target_image() must be called first"
+            )
+        image = _rectangle_image(
+            self.base_image, self.target_image, rectangle
+        )
+        prediction = torch.argmax(self.model.predict(image).flatten())
+        return bool(int(prediction.item()) != self.true)
 
     def evaluate_patch(self, patch, location, clip_bounds=None):
         if self.base_image is None:
@@ -116,11 +144,30 @@ class Targeted:
         self.to_pytorch = to_pytorch
         self.device = device
         self.base_image = None
+        self.target_image = None
 
     def bind_base_image(self, image):
         if not self.to_pytorch:
             raise RuntimeError("GPU image caching requires to_pytorch=True")
         self.base_image = _torch_input(image, self.unormalize, self.device)
+
+    def bind_target_image(self, image):
+        if not self.to_pytorch:
+            raise RuntimeError("GPU image caching requires to_pytorch=True")
+        self.target_image = _torch_input(image, self.unormalize, self.device)
+        if self.base_image is not None and self.target_image.shape != self.base_image.shape:
+            raise ValueError("base and target images must have the same shape")
+
+    def evaluate_rectangle(self, rectangle):
+        if self.base_image is None or self.target_image is None:
+            raise RuntimeError(
+                "bind_base_image() and bind_target_image() must be called first"
+            )
+        image = _rectangle_image(
+            self.base_image, self.target_image, rectangle
+        )
+        prediction = torch.argmax(self.model.predict(image).flatten())
+        return bool(int(prediction.item()) == self.target)
 
     def evaluate_patch(self, patch, location, clip_bounds=None):
         if self.base_image is None:

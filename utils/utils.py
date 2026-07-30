@@ -1,4 +1,5 @@
 import random
+import hashlib
 import numpy as np
 import json
 import torch
@@ -87,3 +88,44 @@ def sample_image_labels(
             json.dump(manifest, file, indent=4)
 
     return {path: labels[path] for path in images}
+
+
+def select_devopatch_target(
+    labels,
+    source_path,
+    targeted,
+    seed,
+):
+    source_label = int(labels[source_path]["true_label"])
+    if targeted:
+        target_class = int(labels[source_path]["target_label"])
+        candidates = sorted(
+            path
+            for path, metadata in labels.items()
+            if path != source_path
+            and int(metadata["true_label"]) == target_class
+        )
+        if not candidates:
+            raise ValueError(
+                f"no target image with true_label={target_class} exists "
+                f"in the label dictionary for {source_path}"
+            )
+    else:
+        candidates = sorted(
+            path
+            for path, metadata in labels.items()
+            if path != source_path
+            and int(metadata["true_label"]) != source_label
+        )
+        if not candidates:
+            raise ValueError(
+                f"no image from a different class exists for {source_path}"
+            )
+
+    digest = hashlib.sha256(
+        f"{int(seed)}\0{source_path}".encode("utf-8")
+    ).digest()
+    local_seed = int.from_bytes(digest[:8], "big")
+    target_path = random.Random(local_seed).choice(candidates)
+    target_class = int(labels[target_path]["true_label"])
+    return target_path, target_class

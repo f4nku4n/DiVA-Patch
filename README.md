@@ -23,7 +23,25 @@ val/
 This repo have already implemented following black-box patch-based attacks:
 - [**Patch-RS**](https://github.com/fra31/sparse-rs)
 - [**CamoPatch**](https://github.com/phoenixwilliams/CamoPatch)
+- [**DevoPatch**](https://arxiv.org/abs/2307.00477)
 - **DiVA-Patch** (**Ours**)
+
+Run DevoPatch under the common or realistic setting with:
+```shell
+python run_DevoPatch_common.py --vision_model VGGNet16 \
+  --dataset_root "$DATASET_PATH" --device cuda
+
+python run_DevoPatch_realistic.py --vision_model VGGNet16 \
+  --dataset_root "$DATASET_PATH" --device cuda --attack_type targeted
+```
+
+DevoPatch defaults to population size `10`, initialization rate `0.35`,
+integer mutation rate `1`, L0 fitness, and a strict `10,000` query budget.
+For an untargeted attack, its target texture is sampled from a different
+class in the full model-specific label dictionary. For a targeted attack, it
+is sampled from entries whose true label equals the configured target label.
+The selected texture is deterministic for the seed and source path and is
+recorded in `target_images.json`.
 
 The repository also includes the following white-box localized attacks in
 `attack_methods/WhiteBoxPatch.py`:
@@ -95,6 +113,7 @@ $ source bash/demo_attack_under_common_setting.sh
 #### Directed (_untargeted_) attacks under the _realistic_ settings (i.e., attacking on 1000 _raw_ images)
 ```shell
 $ source bash/run_DiVA_Patch_realistic_non_targeted.sh  # for DiVA-Patch (ours)
+$ source bash/run_DevoPatch_realistic_non_targeted.sh  # for DevoPatch
 $ source bash/run_PatchRS_realistic_non_targeted.sh  # for PatchRS
 $ source bash/run_CamoPatch_realistic_non_targeted.sh  # for CamoPatch
 ```
@@ -102,6 +121,7 @@ $ source bash/run_CamoPatch_realistic_non_targeted.sh  # for CamoPatch
 #### Directed (_targeted_) attacks under the _realistic_ settings (i.e., attacking on 1000 _raw_ images)
 ```shell
 $ source bash/run_DiVA_Patch_realistic_targeted.sh  # for DiVA-Patch (ours)
+$ source bash/run_DevoPatch_realistic_targeted.sh  # for DevoPatch
 $ source bash/run_PatchRS_realistic_targeted.sh  # for PatchRS
 $ source bash/run_CamoPatch_realistic_targeted.sh  # for CamoPatch
 ```
