@@ -20,6 +20,10 @@ from models.ImageNetModels_realistic import ImageNetModel
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--exp_root",
+        default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "exp_result"),
+    )
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--N", type=int, default=100, help='number of semi-transparent circles')
     parser.add_argument("--max_query", type=int, default=10000)
@@ -67,7 +71,10 @@ if __name__ == "__main__":
     adversarial, L2 = [], []
     metric_tracker = PerceptualMetricTracker(device=device, data_range=255.0)
 
-    save_folder = f"exp_result/PatchRS-{vision_model}-SEED_{SEED}-realistic-{ATTACK_TYPE}"
+    save_folder = os.path.join(
+        args.exp_root,
+        f"PatchRS-{vision_model}-SEED_{SEED}-realistic-{ATTACK_TYPE}",
+    )
     os.makedirs(save_folder, exist_ok=True)
 
     os.makedirs(save_folder + '/processes', exist_ok=True)

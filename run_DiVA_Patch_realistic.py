@@ -19,6 +19,10 @@ from models.ImageNetModels_realistic import ImageNetModel
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--exp_root",
+        default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "exp_result"),
+    )
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--max_query", type=int, default=10000)
     parser.add_argument("--vision_model", type=str, default='VGGNet16', choices=['VGGNet16', 'ResNet50', 'ViT16'])
@@ -78,7 +82,10 @@ if __name__ == "__main__":
     adversarial, L2, locs = [], [], []
     metric_tracker = PerceptualMetricTracker(device=device, data_range=255.0)
 
-    save_dir = f"exp_result/DiVA_Patch-GridSize_{args.grid_h}_{args.grid_w}-Delta_{DELTA_MAX}_{DELTA_MIN}-K{args.K}-{vision_model}-SEED_{SEED}-realistic-{ATTACK_TYPE}"
+    save_dir = os.path.join(
+        args.exp_root,
+        f"DiVA_Patch-GridSize_{args.grid_h}_{args.grid_w}-Delta_{DELTA_MAX}_{DELTA_MIN}-K{args.K}-{vision_model}-SEED_{SEED}-realistic-{ATTACK_TYPE}",
+    )
     os.makedirs(save_dir, exist_ok=True)
 
     os.makedirs(save_dir + '/map_elites', exist_ok=True)

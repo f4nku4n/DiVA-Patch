@@ -56,6 +56,19 @@ four-direction location optimization, stride `2`, and one random restart.
 Use `--lo_mode random` for RandLO, `--attempts` for additional restarts,
 and `--exclude_box TOP LEFT HEIGHT WIDTH` to prevent overlap with a region.
 
+The common white-box runner batches attacks with `--batch_size` (default `8`).
+All white-box runners also accept `--early_stop`; when enabled, each image
+stops as soon as its accepted attack state succeeds. In a common batch,
+unfinished images continue independently.
+
+All black-box and white-box runners accept `--exp_root` to select the root
+directory for saved results. It defaults to `exp_result` inside the project:
+```shell
+python run_WhiteBoxPatch_common.py --attack_method LOAP \
+  --vision_model VGGNet16 --dataset_root "$DATASET_PATH" \
+  --exp_root "/path/to/experiments"
+```
+
 Result JSON files for all black-box and white-box attacks report full-image
 `ssim` and `lpips`. LPIPS uses the official learned metric with a pretrained
 AlexNet backbone. Existing black-box process artifacts are backfilled without

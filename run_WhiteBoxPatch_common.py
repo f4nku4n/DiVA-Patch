@@ -8,7 +8,12 @@ import torch
 from PIL import Image
 from torchvision import transforms
 
-from attack_methods.WhiteBoxPatch import LOAP, LaVAN, MaskedAutoPGD, MaskedPGD
+from attack_methods.WhiteBoxPatchBatch import (
+    BatchedLOAP,
+    BatchedLaVAN,
+    BatchedMaskedAutoPGD,
+    BatchedMaskedPGD,
+)
 from models.ImageNetModels import ImageNetModel
 from utils import (
     NumpyEncoder,
@@ -20,10 +25,10 @@ from utils import (
 
 
 ATTACKS = {
-    "MaskedPGD": MaskedPGD,
-    "MaskedAutoPGD": MaskedAutoPGD,
-    "LaVAN": LaVAN,
-    "LOAP": LOAP,
+    "MaskedPGD": BatchedMaskedPGD,
+    "MaskedAutoPGD": BatchedMaskedAutoPGD,
+    "LaVAN": BatchedLaVAN,
+    "LOAP": BatchedLOAP,
 }
 
 DEFAULTS = {
@@ -37,9 +42,13 @@ DEFAULTS = {
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--attack_method",
-        choices=list(ATTACKS),
-        default="MaskedPGD",
+        "--exp_root",
+        default=os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "exp_result"
+        ),
+    )
+    parser.add_argument(
+        "--attack_method", choices=list(ATTACKS), default="MaskedPGD"
     )
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--steps", "--max_query", dest="steps", type=int)
@@ -64,21 +73,27 @@ def parse_args():
     parser.add_argument("--stride", type=int, default=2)
     parser.add_argument("--attempts", type=int, default=1)
     parser.add_argument("--exclude_box", type=int, nargs=4)
+    parser.add_argument("--batch_size", type=int, default=8)
+    parser.add_argument("--early_stop", action="store_true")
     parser.add_argument("--demo", action="store_true")
-    return parser.parse_args()
+    args = parser.parse_args()
+    if args.batch_size <= 0:
+        parser.error("--batch_size must be positive")
+    return args
 
 
 def main():
     args = parse_args()
     set_seed(args.seed)
-
     model_index = {"VGGNet16": 0, "ResNet50": 1, "ViT16": 2}
     model = ImageNetModel(model_index[args.vision_model], args.device)
-    perceptual_metrics = None
     load_image = transforms.Compose(
-        [transforms.Resize(256), transforms.CenterCrop(224), transforms.ToTensor()]
+        [
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+        ]
     )
-
     label_file = (
         f"TEST_IMGs/demo_{'targeted' if args.attack_type == 'targeted' else 'untargeted'}.json"
         if args.demo
@@ -94,68 +109,64 @@ def main():
         defaults["step_size"] if args.step_size is None else args.step_size
     )
     targeted = args.attack_type == "targeted"
-    save_folder = (
-        f"exp_result/{args.attack_method}-{args.vision_model}-SEED_{args.seed}"
-        f"-common-{args.attack_type}"
+    save_folder = os.path.join(
+        args.exp_root,
+        f"{args.attack_method}-{args.vision_model}-SEED_{args.seed}"
+        f"-common-{args.attack_type}",
     )
     for directory in ("processes", "results", "examples"):
         os.makedirs(os.path.join(save_folder, directory), exist_ok=True)
 
     successes, distances, ssim_scores, lpips_scores = [], [], [], []
-    for index, path_img in enumerate(path_labels):
-        save_file = path_img.replace(".JPEG", "").replace("/", "_")
-        result_path = os.path.join(save_folder, "results", save_file + ".json")
-        if os.path.exists(result_path):
-            with open(result_path) as file:
-                existing_result = json.load(file)
-            changed = False
-            for field in ("queries", "first_success_query"):
-                if field not in existing_result:
-                    existing_result[field] = None
-                    changed = True
-            if changed:
-                with open(result_path, "w") as file:
-                    json.dump(
-                        existing_result,
-                        file,
-                        indent=4,
-                        cls=NumpyEncoder,
-                    )
-            PerceptualMetricTracker.print_result(path_img, existing_result)
-            successes.append(existing_result["adversarial"])
-            distances.append(existing_result["l2_distance"])
-            ssim_scores.append(existing_result["ssim"])
-            lpips_scores.append(existing_result["lpips"])
-            continue
+    perceptual_metrics = None
 
-        print(f"Image #{index + 1}: {path_img}")
-        image_path = os.path.join(args.dataset_root, path_img)
-        image_tensor = load_image(Image.open(image_path).convert("RGB"))
-        image = pytorch_switch(image_tensor).detach().numpy()
-        true_label = path_labels[path_img]["true_label"]
-        target_label = path_labels[path_img]["target_label"]
+    def add_existing(path_img, result_path):
+        with open(result_path) as file:
+            summary = json.load(file)
+        changed = False
+        for field in ("queries", "first_success_query"):
+            if field not in summary:
+                summary[field] = None
+                changed = True
+        if changed:
+            with open(result_path, "w") as file:
+                json.dump(summary, file, indent=4, cls=NumpyEncoder)
+        PerceptualMetricTracker.print_result(path_img, summary)
+        successes.append(summary["adversarial"])
+        distances.append(summary["l2_distance"])
+        ssim_scores.append(summary["ssim"])
+        lpips_scores.append(summary["lpips"])
 
+    def run_batch(entries):
+        nonlocal perceptual_metrics
+        if not entries:
+            return
+        clean = torch.stack([entry["tensor"] for entry in entries]).to(
+            args.device
+        )
         with torch.inference_mode():
-            clean = image_tensor[None, :].to(args.device)
-            initial_label = int(model.predict(clean).argmax(dim=1).item())
-        if initial_label != true_label:
-            continue
+            predictions = model.predict(clean).argmax(dim=1).cpu().tolist()
+        entries = [
+            entry
+            for entry, prediction in zip(entries, predictions)
+            if prediction == entry["true_label"]
+        ]
+        if not entries:
+            return
 
-        set_seed(args.seed)
         attack_kwargs = dict(
-            image=image,
+            images=np.stack([entry["image"] for entry in entries]),
             model=model,
-            true_label=true_label,
-            target_label=target_label,
+            true_labels=[entry["true_label"] for entry in entries],
+            target_labels=[entry["target_label"] for entry in entries],
             targeted=targeted,
             patch_size=(args.patch_h, args.patch_w),
             steps=steps,
             step_size=step_size,
             eps=eps,
-            clip_min=0.0,
-            clip_max=1.0,
             device=args.device,
             location_update_period=args.location_update_period,
+            early_stop=args.early_stop,
         )
         if args.attack_method == "LOAP":
             attack_kwargs.update(
@@ -164,59 +175,95 @@ def main():
                 attempts=args.attempts,
                 exclude_box=args.exclude_box,
             )
-        attack = ATTACKS[args.attack_method](**attack_kwargs)
-        result = attack.run()
+        try:
+            results = ATTACKS[args.attack_method](**attack_kwargs).run()
+        except torch.cuda.OutOfMemoryError as error:
+            raise RuntimeError(
+                "CUDA out of memory during batched white-box attack; "
+                "reduce --batch_size and rerun."
+            ) from error
+
         if perceptual_metrics is None:
             perceptual_metrics = PerceptualMetrics(device=args.device)
-        metrics = perceptual_metrics(image, result["image"], data_range=1.0)
-
-        with open(
-            os.path.join(save_folder, "processes", save_file + ".p"), "wb"
-        ) as file:
-            pickle.dump(result["process"], file)
-
-        summary = {
-            "adversarial": result["adversarial"],
-            "prediction": result["prediction"],
-            "location": result["location"],
-            "l2_distance": result["l2"],
-            "loss": result["loss"],
-            "queries": result["queries"],
-            "first_success_query": result["first_success_query"],
-            "steps": steps,
-            "eps": eps,
-            "step_size": step_size,
-            "location_update_period": args.location_update_period,
-            "ssim": metrics["ssim"],
-            "lpips": metrics["lpips"],
-        }
-        if args.attack_method == "LOAP":
-            summary.update(
-                lo_mode=args.lo_mode,
-                stride=args.stride,
-                attempts=args.attempts,
-                exclude_box=args.exclude_box,
+        for entry, result in zip(entries, results):
+            metrics = perceptual_metrics(
+                entry["image"], result["image"], data_range=1.0
             )
-        PerceptualMetricTracker.print_result(path_img, summary)
-        with open(result_path, "w") as file:
-            json.dump(summary, file, indent=4, cls=NumpyEncoder)
-
-        output = np.clip(result["image"] * 255.0, 0, 255).astype(np.uint8)
-        Image.fromarray(output).save(
-            os.path.join(
-                save_folder,
-                "examples",
-                f"{result['adversarial']}_{path_img.replace('/', '_')}",
+            with open(entry["process_path"], "wb") as file:
+                pickle.dump(result["process"], file)
+            summary = {
+                "adversarial": result["adversarial"],
+                "prediction": result["prediction"],
+                "location": result["location"],
+                "l2_distance": result["l2"],
+                "loss": result["loss"],
+                "queries": result["queries"],
+                "first_success_query": result["first_success_query"],
+                "steps": steps,
+                "eps": eps,
+                "step_size": step_size,
+                "location_update_period": args.location_update_period,
+                "batch_size": args.batch_size,
+                "early_stop": args.early_stop,
+                "ssim": metrics["ssim"],
+                "lpips": metrics["lpips"],
+            }
+            if args.attack_method == "LOAP":
+                summary.update(
+                    lo_mode=args.lo_mode,
+                    stride=args.stride,
+                    attempts=args.attempts,
+                    exclude_box=args.exclude_box,
+                )
+            with open(entry["result_path"], "w") as file:
+                json.dump(summary, file, indent=4, cls=NumpyEncoder)
+            output = np.clip(result["image"] * 255.0, 0, 255).astype(
+                np.uint8
             )
+            Image.fromarray(output).save(
+                os.path.join(
+                    save_folder,
+                    "examples",
+                    f"{result['adversarial']}_{entry['path'].replace('/', '_')}",
+                )
+            )
+            PerceptualMetricTracker.print_result(entry["path"], summary)
+            successes.append(result["adversarial"])
+            distances.append(result["l2"])
+            ssim_scores.append(metrics["ssim"])
+            lpips_scores.append(metrics["lpips"])
+
+    pending = []
+    for index, path_img in enumerate(path_labels):
+        save_file = path_img.replace(".JPEG", "").replace("/", "_")
+        result_path = os.path.join(save_folder, "results", save_file + ".json")
+        if os.path.exists(result_path):
+            add_existing(path_img, result_path)
+            continue
+        print(f"Image #{index + 1}: {path_img}")
+        tensor = load_image(
+            Image.open(os.path.join(args.dataset_root, path_img)).convert("RGB")
         )
-        successes.append(result["adversarial"])
-        distances.append(result["l2"])
-        ssim_scores.append(metrics["ssim"])
-        lpips_scores.append(metrics["lpips"])
+        pending.append(
+            {
+                "path": path_img,
+                "tensor": tensor,
+                "image": pytorch_switch(tensor).numpy(),
+                "true_label": path_labels[path_img]["true_label"],
+                "target_label": path_labels[path_img]["target_label"],
+                "result_path": result_path,
+                "process_path": os.path.join(
+                    save_folder, "processes", save_file + ".p"
+                ),
+            }
+        )
+        if len(pending) == args.batch_size:
+            run_batch(pending)
+            pending = []
+    run_batch(pending)
 
     if successes:
-        asr = np.mean(successes) * 100
-        print(f"Average Attack Success Rate: {asr:.2f}")
+        print(f"Average Attack Success Rate: {np.mean(successes) * 100:.2f}")
         print(
             f"L2 (mean, std): {np.mean(distances):.2f} "
             f"({np.std(distances):.2f})"

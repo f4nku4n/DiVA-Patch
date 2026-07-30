@@ -35,6 +35,10 @@ DEFAULTS = {
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
+        "--exp_root",
+        default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "exp_result"),
+    )
+    parser.add_argument(
         "--attack_method",
         choices=list(ATTACKS),
         default="MaskedPGD",
@@ -62,6 +66,7 @@ def parse_args():
     parser.add_argument("--stride", type=int, default=2)
     parser.add_argument("--attempts", type=int, default=1)
     parser.add_argument("--exclude_box", type=int, nargs=4)
+    parser.add_argument("--early_stop", action="store_true")
     parser.add_argument("--demo", action="store_true")
     return parser.parse_args()
 
@@ -89,9 +94,10 @@ def main():
         defaults["step_size"] if args.step_size is None else args.step_size
     )
     targeted = args.attack_type == "targeted"
-    save_folder = (
-        f"exp_result/{args.attack_method}-{args.vision_model}-SEED_{args.seed}"
-        f"-realistic-{args.attack_type}"
+    save_folder = os.path.join(
+        args.exp_root,
+        f"{args.attack_method}-{args.vision_model}-SEED_{args.seed}"
+        f"-realistic-{args.attack_type}",
     )
     for directory in ("processes", "results", "examples"):
         os.makedirs(os.path.join(save_folder, directory), exist_ok=True)
@@ -153,6 +159,7 @@ def main():
             clip_max=255.0,
             device=args.device,
             location_update_period=args.location_update_period,
+            early_stop=args.early_stop,
         )
         if args.attack_method == "LOAP":
             attack_kwargs.update(
@@ -184,6 +191,7 @@ def main():
             "eps": eps,
             "step_size": step_size,
             "location_update_period": args.location_update_period,
+            "early_stop": args.early_stop,
             "ssim": metrics["ssim"],
             "lpips": metrics["lpips"],
         }

@@ -22,6 +22,7 @@ class WhiteBoxPatchAttack:
         device="cuda",
         location=None,
         location_update_period=0,
+        early_stop=False,
     ):
         self.model = model
         self.true_label = int(true_label)
@@ -35,6 +36,7 @@ class WhiteBoxPatchAttack:
         self.value_range = clip_max - clip_min
         self.device = device
         self.location_update_period = int(location_update_period)
+        self.early_stop = bool(early_stop)
         self.process = []
         self.best_patch = None
         self.best_image = None
@@ -265,7 +267,12 @@ class MaskedPGD(WhiteBoxPatchAttack):
             adversarial.requires_grad_(True)
             logits = self._logits(adversarial)
             objective = self._ce_objective(logits)
-            self._record(iteration, adversarial, logits, objective)
+            success, _, _ = self._record(
+                iteration, adversarial, logits, objective
+            )
+            if self.early_stop and success:
+                adversarial = adversarial.detach()
+                break
             if iteration == self.steps:
                 adversarial = adversarial.detach()
                 continue
@@ -311,7 +318,12 @@ class MaskedAutoPGD(WhiteBoxPatchAttack):
             adversarial.requires_grad_(True)
             logits = self._logits(adversarial)
             objective = self._ce_objective(logits)
-            self._record(iteration, adversarial, logits, objective)
+            success, _, _ = self._record(
+                iteration, adversarial, logits, objective
+            )
+            if self.early_stop and success:
+                adversarial = adversarial.detach()
+                break
 
             objective_value = float(objective.item())
             checkpoint_objectives.append(objective_value)
@@ -418,7 +430,12 @@ class LaVAN(WhiteBoxPatchAttack):
             adversarial.requires_grad_(True)
             logits = self._logits(adversarial)
             objective = self._record_objective(logits)
-            self._record(iteration, adversarial, logits, objective)
+            success, _, _ = self._record(
+                iteration, adversarial, logits, objective
+            )
+            if self.early_stop and success:
+                adversarial = adversarial.detach()
+                break
 
         return self._result()
 
@@ -611,11 +628,15 @@ class LOAP(WhiteBoxPatchAttack):
                 with torch.no_grad():
                     logits = self._logits(adversarial)
                     objective = self._optimization_objective(logits)
-                self._record(
+                success, _, _ = self._record(
                     global_iteration,
                     adversarial,
                     logits,
                     objective,
                 )
+                if self.early_stop and success:
+                    break
+            if self.early_stop and self.best_success:
+                break
 
         return self._result()
