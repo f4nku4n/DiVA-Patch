@@ -13,6 +13,7 @@ from utils import (
     NumpyEncoder,
     PerceptualMetrics,
     PerceptualMetricTracker,
+    sample_image_labels,
     set_seed,
 )
 
@@ -67,8 +68,12 @@ def parse_args():
     parser.add_argument("--attempts", type=int, default=1)
     parser.add_argument("--exclude_box", type=int, nargs=4)
     parser.add_argument("--early_stop", action="store_true")
+    parser.add_argument("--num_images", type=int, default=100)
     parser.add_argument("--demo", action="store_true")
-    return parser.parse_args()
+    args = parser.parse_args()
+    if args.num_images <= 0:
+        parser.error("--num_images must be positive")
+    return args
 
 
 def main():
@@ -101,6 +106,13 @@ def main():
     )
     for directory in ("processes", "results", "examples"):
         os.makedirs(os.path.join(save_folder, directory), exist_ok=True)
+    path_labels = sample_image_labels(
+        path_labels,
+        args.num_images,
+        args.seed,
+        label_file,
+        os.path.join(save_folder, "sampled_images.json"),
+    )
 
     successes, distances, ssim_scores, lpips_scores = [], [], [], []
     for index, path_img in enumerate(path_labels):

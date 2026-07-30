@@ -69,6 +69,12 @@ python run_WhiteBoxPatch_common.py --attack_method LOAP \
   --exp_root "/path/to/experiments"
 ```
 
+All runners sample `--num_images` paths from the selected label dictionary
+(default `100`). Sampling is deterministic for a given seed and is recorded in
+`sampled_images.json` inside the experiment folder so resumed runs reuse the
+same ordered subset. Demo dictionaries smaller than the requested size use all
+available images.
+
 Result JSON files for all black-box and white-box attacks report full-image
 `ssim` and `lpips`. LPIPS uses the official learned metric with a pretrained
 AlexNet backbone. Existing black-box process artifacts are backfilled without

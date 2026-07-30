@@ -12,6 +12,7 @@ from utils import (
     PerceptualMetricTracker,
     first_success_query_from_process,
     pytorch_switch,
+    sample_image_labels,
     set_seed,
 )
 
@@ -29,6 +30,7 @@ if __name__ == "__main__":
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--N", type=int, default=100, help='number of semi-transparent circles')
     parser.add_argument("--max_query", type=int, default=10000)
+    parser.add_argument("--num_images", type=int, default=100)
     parser.add_argument("--vision_model", type=str, default='VGGNet16', choices=['VGGNet16', 'ResNet50', 'ViT16'])
     parser.add_argument("--device", type=str, default='cuda', help='cuda/cpu')
     parser.add_argument("--dataset_root", type=str, help='ImageNet1K path')
@@ -37,6 +39,8 @@ if __name__ == "__main__":
     parser.add_argument('--demo', help='attack on some example images', action='store_true')
 
     args = parser.parse_args()
+    if args.num_images <= 0:
+        parser.error("--num_images must be positive")
 
     device = args.device
     vision_model = args.vision_model
@@ -71,11 +75,13 @@ if __name__ == "__main__":
     dataset_root = args.dataset_root
     if args.demo:
         if ATTACK_TYPE == 'targeted':
-            path_labels = json.load(open(f'TEST_IMGs/demo_targeted.json'))
+            label_file = 'TEST_IMGs/demo_targeted.json'
         else:
-            path_labels = json.load(open(f'TEST_IMGs/demo_untargeted.json'))
+            label_file = 'TEST_IMGs/demo_untargeted.json'
     else:
-        path_labels = json.load(open(f'TEST_IMGs/{vision_model}_ImgNet1K.json'))
+        label_file = f'TEST_IMGs/{vision_model}_ImgNet1K.json'
+    with open(label_file) as file:
+        path_labels = json.load(file)
 
     adversarial, L2 = [], []
     metric_tracker = PerceptualMetricTracker(device=device, data_range=1.0)
@@ -89,6 +95,13 @@ if __name__ == "__main__":
     os.makedirs(save_folder + '/processes', exist_ok=True)
     os.makedirs(save_folder + '/results', exist_ok=True)
     os.makedirs(save_folder + '/examples', exist_ok=True)
+    path_labels = sample_image_labels(
+        path_labels,
+        args.num_images,
+        SEED,
+        label_file,
+        os.path.join(save_folder, "sampled_images.json"),
+    )
 
     for i, path_img in enumerate(path_labels):
         save_file = path_img.replace('.JPEG', '').replace("/", "_")
