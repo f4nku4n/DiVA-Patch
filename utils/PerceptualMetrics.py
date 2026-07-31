@@ -38,16 +38,16 @@ def ssim_compute(original, adversarial, data_range=None):
 
 class LPIPSAlexNet:
     def __init__(self, device="cpu"):
-        try:
-            import lpips
-        except ImportError as error:
-            raise ImportError(
-                "LPIPS is not installed. Run `pip install lpips` or install "
-                "the packages in requirement.txt."
-            ) from error
-
+        # try:
+        #     import lpips
+        # except ImportError as error:
+        #     raise ImportError(
+        #         "LPIPS is not installed. Run `pip install lpips` or install "
+        #         "the packages in requirement.txt."
+        #     ) from error
+        from lpips import LPIPS
         self.device = device
-        self.model = lpips.LPIPS(net="alex", pretrained=True)
+        self.model = LPIPS(net="alex", pretrained=True)
         self.model = self.model.to(device).eval()
         for parameter in self.model.parameters():
             parameter.requires_grad_(False)
