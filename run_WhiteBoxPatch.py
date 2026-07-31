@@ -127,8 +127,9 @@ def _summary(args, result, metrics, steps, eps, step_size):
 
 
 def _record_result(args, save_folder, entry, result, metrics, summary, aggregates):
-    with open(entry["process_path"], "wb") as file:
-        pickle.dump(result["process"], file)
+    if args.save_imgs:
+        with open(entry["process_path"], "wb") as file:
+            pickle.dump(result["process"], file)
     with open(entry["result_path"], "w") as file:
         json.dump(summary, file, indent=4, cls=NumpyEncoder)
     if args.save_imgs:

@@ -61,6 +61,15 @@ Use `--patch_size`, `--p_init`, and `--update_loc_period` to configure
 Patch-RS. The old common and realistic entry points remain compatibility
 wrappers.
 
+DiVA-Patch also uses one runner for both settings:
+```shell
+python run_DiVA_Patch.py --setting common --vision_model VGGNet16 --dataset_root "$DATASET_PATH"
+
+python run_DiVA_Patch.py --setting realistic --vision_model VGGNet16 --dataset_root "$DATASET_PATH" --attack_type targeted
+```
+Use `--save_imgs` to save example images. The old common and realistic
+entry points remain compatibility wrappers.
+
 The repository also includes the following white-box localized attacks in
 `attack_methods/WhiteBoxPatch.py`:
 - **MaskedPGD**
