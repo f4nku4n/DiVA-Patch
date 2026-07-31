@@ -25,9 +25,7 @@ def pytorch_switch(tensor_image):
     return tensor_image.permute(1, 2, 0)
 
 
-def first_success_query_from_process(
-    process, success_index, query_index=None
-):
+def first_success_query_from_process(process, success_index, query_index=None):
     for query, record in enumerate(process, start=1):
         if bool(record[success_index]):
             if query_index is None:

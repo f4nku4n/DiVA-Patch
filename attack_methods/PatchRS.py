@@ -1,8 +1,8 @@
-import numpy as np
 import cv2
+import numpy as np
 from tqdm import tqdm
-from .base import Attacker
-from .utils import l2_compute
+from attack_methods.base import Attacker
+from attack_methods.utils import l2_compute
 
 
 class PatchRS(Attacker):

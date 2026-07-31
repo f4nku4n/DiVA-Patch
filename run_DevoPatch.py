@@ -5,81 +5,72 @@ import pickle
 
 import numpy as np
 from PIL import Image
-from torchvision import transforms
-
 from attack_methods.DevoPatch import DevoPatch
-from models.ImageNetModels import ImageNetModel as CommonImageNetModel
-from models.ImageNetModels_realistic import ImageNetModel as RealisticImageNetModel
-from utils.LossFunctions import Targeted, UnTargeted
-from utils.PerceptualMetrics import PerceptualMetricTracker
-from utils.utils import (
+from utils import (
     NumpyEncoder,
+    PerceptualMetricTracker,
+    select_devopatch_target,
     pytorch_switch,
     sample_image_labels,
-    select_devopatch_target,
     set_seed,
 )
+from utils.LossFunctions import Targeted, UnTargeted
 
 
-def _parser():
+def build_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--exp_root",
-        default=os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-            "exp_result",
-        ),
-    )
+    parser.add_argument("--setting", choices=["common", "realistic"],
+                        default="realistic",
+                        help="common resizes/crops to 224 in [0,1]; realistic uses raw images (pre-processing)")
+    parser.add_argument("--exp_root", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "exp_result"))
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--max_query", type=int, default=10000)
     parser.add_argument("--num_images", type=int, default=100)
-    parser.add_argument(
-        "--vision_model",
-        default="VGGNet16",
-        choices=["VGGNet16", "ResNet50", "ViT16"],
-    )
+    parser.add_argument("--vision_model", default="VGGNet16", choices=["VGGNet16", "ResNet50", "ViT16"])
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--dataset_root", required=True)
-    parser.add_argument(
-        "--attack_type",
-        default="non_targeted",
-        choices=["targeted", "non_targeted"],
-    )
+    parser.add_argument("--attack_type", default="non_targeted", choices=["targeted", "non_targeted"])
     parser.add_argument("--pop_size", type=int, default=10)
     parser.add_argument("--init_rate", type=float, default=0.35)
     parser.add_argument("--mutation_rate", type=int, default=1)
     parser.add_argument("--fitness_norm", type=int, default=0, choices=[0, 1, 2])
+    parser.add_argument("--save_imgs", action="store_true", help="save adversarial images")
     parser.add_argument("--demo", action="store_true")
     return parser
 
 
-def _model(name, realistic, device):
-    index = {"VGGNet16": 0, "ResNet50": 1, "ViT16": 2}[name]
-    model_class = RealisticImageNetModel if realistic else CommonImageNetModel
-    return model_class(index, device)
+def _model(name, setting, device):
+    if setting == "common":
+        from models.ImageNetModels import ImageNetModel
+    else:
+        from models.ImageNetModels_realistic import ImageNetModel
+    return ImageNetModel({"VGGNet16": 0, "ResNet50": 1, "ViT16": 2}[name], device)
 
 
 def _safe_name(path):
     return path.replace("\\", "_").replace("/", "_").rsplit(".", 1)[0]
 
 
-def _load_common(path):
-    transform = transforms.Compose([
-        transforms.Resize(256),
-        transforms.CenterCrop(224),
-        transforms.ToTensor(),
-    ])
-    tensor = transform(Image.open(path).convert("RGB"))
-    return pytorch_switch(tensor).detach().numpy()
+def _image_loader(setting):
+    if setting == "realistic":
+        def load_realistic(path):
+            return np.asarray(Image.open(path).convert("RGB"), dtype=np.float32)
+
+        return load_realistic
+
+    from torchvision import transforms
+
+    transform = transforms.Compose([transforms.Resize(256), transforms.CenterCrop(224), transforms.ToTensor()])
+
+    def load_common(path):
+        return pytorch_switch(transform(Image.open(path).convert("RGB"))).detach().numpy()
+
+    return load_common
 
 
-def _load_realistic(path):
-    return np.asarray(Image.open(path).convert("RGB"), dtype=np.float32)
-
-
-def _load_target(path, realistic, source_shape):
-    if not realistic:
-        return _load_common(path)
+def _load_target(path, setting, source_shape, load_image):
+    if setting == "common":
+        return load_image(path)
     image = Image.open(path).convert("RGB")
     height, width = source_shape[:2]
     image = image.resize((width, height), resample=Image.Resampling.BILINEAR)
@@ -137,8 +128,8 @@ def _print_result(image, summary):
     )
 
 
-def run_devopatch(realistic=False):
-    parser = _parser()
+def main():
+    parser = build_parser()
     args = parser.parse_args()
     if args.num_images <= 0:
         parser.error("--num_images must be positive")
@@ -146,7 +137,7 @@ def run_devopatch(realistic=False):
         parser.error("--max_query must be positive")
 
     set_seed(args.seed)
-    model = _model(args.vision_model, realistic, args.device)
+    model = _model(args.vision_model, args.setting, args.device)
     if args.demo:
         label_file = (
             "TEST_IMGs/demo_targeted.json"
@@ -158,13 +149,12 @@ def run_devopatch(realistic=False):
     with open(label_file) as file:
         all_labels = json.load(file)
 
-    setting = "realistic" if realistic else "common"
     save_dir = os.path.join(
         args.exp_root,
         "DevoPatch-"
         f"Pop_{args.pop_size}-Init_{args.init_rate}-Mutation_{args.mutation_rate}-"
-        f"Norm_{args.fitness_norm}-{args.vision_model}-SEED_{args.seed}-"
-        f"{setting}-{args.attack_type}",
+        f"Norm_{args.fitness_norm}-{args.vision_model}-"
+        f"{args.setting}-{args.attack_type}/SEED_{args.seed}",
     )
     result_dir = os.path.join(save_dir, "results")
     process_dir = os.path.join(save_dir, "processes")
@@ -185,8 +175,9 @@ def run_devopatch(realistic=False):
     )
     metric_tracker = PerceptualMetricTracker(
         device=args.device,
-        data_range=255.0 if realistic else 1.0,
+        data_range=255.0 if args.setting == "realistic" else 1.0,
     )
+    load_image = _image_loader(args.setting)
     successes, l2_values, areas, query_values = [], [], [], []
 
     for index, (source_path, metadata) in enumerate(labels.items(), start=1):
@@ -229,9 +220,8 @@ def run_devopatch(realistic=False):
 
         source_file = os.path.join(args.dataset_root, source_path)
         target_file = os.path.join(args.dataset_root, target_path)
-        loader = _load_realistic if realistic else _load_common
-        source = loader(source_file)
-        target = _load_target(target_file, realistic, source.shape)
+        source = load_image(source_file)
+        target = _load_target(target_file, args.setting, source.shape, load_image)
         true_label = int(metadata["true_label"])
         configured_target = int(metadata["target_label"])
         if args.attack_type == "targeted":
@@ -303,9 +293,10 @@ def run_devopatch(realistic=False):
             attacker.run()
             result = attacker.get_best()
             adversarial = attacker.build_adversarial()
-            process = attacker.process
-            with open(process_path, "wb") as file:
-                pickle.dump(process, file)
+            if args.save_imgs:
+                process = attacker.process
+                with open(process_path, "wb") as file:
+                    pickle.dump(process, file)
             summary = {
                 "adversarial": result["success"],
                 "l2_distance": result["l2"],
@@ -321,12 +312,14 @@ def run_devopatch(realistic=False):
 
         metrics = metric_tracker.compute(source, adversarial)
         summary.update(metrics)
-        output = adversarial if realistic else adversarial * 255.0
-        Image.fromarray(np.clip(output, 0, 255).astype(np.uint8)).save(
-            os.path.join(example_dir, f"{summary['adversarial']}_{stem}.JPEG")
-        )
+
+        if args.save_imgs:
+            output = adversarial if args.setting == "realistic" else adversarial * 255.0
+            Image.fromarray(np.clip(output, 0, 255).astype(np.uint8)).save(os.path.join(example_dir, f"{summary['adversarial']}_{stem}.JPEG"))
+
         with open(result_path, "w") as file:
             json.dump(summary, file, indent=4, cls=NumpyEncoder)
+
         _print_result(source_path, summary)
         successes.append(bool(summary["adversarial"]))
         l2_values.append(float(summary["l2_distance"]))
@@ -341,3 +334,7 @@ def run_devopatch(realistic=False):
     print(f"Patch area (mean): {100 * np.mean(areas):.4f}%")
     print(f"Queries (mean): {np.mean(query_values):.2f}")
     metric_tracker.print_summary()
+
+
+if __name__ == "__main__":
+    main()

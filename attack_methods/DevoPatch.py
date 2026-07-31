@@ -1,7 +1,7 @@
 import numpy as np
 from tqdm import tqdm
 
-from .base import Attacker
+from attack_methods.base import Attacker
 
 
 class DevoPatch(Attacker):

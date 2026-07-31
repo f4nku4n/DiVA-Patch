@@ -28,11 +28,9 @@ This repo have already implemented following black-box patch-based attacks:
 
 Run DevoPatch under the common or realistic setting with:
 ```shell
-python run_DevoPatch_common.py --vision_model VGGNet16 \
-  --dataset_root "$DATASET_PATH" --device cuda
+python run_DevoPatch.py --setting common --vision_model VGGNet16 --dataset_root "$DATASET_PATH" --device cuda
 
-python run_DevoPatch_realistic.py --vision_model VGGNet16 \
-  --dataset_root "$DATASET_PATH" --device cuda --attack_type targeted
+python run_DevoPatch.py --setting realistic --vision_model VGGNet16 --dataset_root "$DATASET_PATH" --device cuda --attack_type targeted
 ```
 
 DevoPatch defaults to population size `10`, initialization rate `0.35`,
@@ -42,6 +40,26 @@ class in the full model-specific label dictionary. For a targeted attack, it
 is sampled from entries whose true label equals the configured target label.
 The selected texture is deterministic for the seed and source path and is
 recorded in `target_images.json`.
+The old common and realistic entry points remain compatibility wrappers.
+
+CamoPatch common and realistic settings share one runner:
+```shell
+python run_CamoPatch.py --setting common --vision_model VGGNet16 --dataset_root "$DATASET_PATH"
+
+python run_CamoPatch.py --setting realistic --vision_model VGGNet16 --dataset_root "$DATASET_PATH"
+```
+
+Patch-RS uses the same unified runner pattern:
+```shell
+python run_PatchRS.py --setting common \
+  --vision_model VGGNet16 --dataset_root "$DATASET_PATH"
+
+python run_PatchRS.py --setting realistic \
+  --vision_model VGGNet16 --dataset_root "$DATASET_PATH"
+```
+Use `--patch_size`, `--p_init`, and `--update_loc_period` to configure
+Patch-RS. The old common and realistic entry points remain compatibility
+wrappers.
 
 The repository also includes the following white-box localized attacks in
 `attack_methods/WhiteBoxPatch.py`:
@@ -53,13 +71,13 @@ The repository also includes the following white-box localized attacks in
 
 Run any white-box attack under the common or realistic setting with:
 ```shell
-python run_WhiteBoxPatch_common.py --attack_method MaskedPGD \
-  --vision_model VGGNet16 --dataset_root "$DATASET_PATH" --device cuda
+python run_WhiteBoxPatch.py --setting common --attack_method MaskedPGD --vision_model VGGNet16 --dataset_root "$DATASET_PATH" --device cuda
 
-python run_WhiteBoxPatch_realistic.py --attack_method LaVAN \
-  --vision_model VGGNet16 --dataset_root "$DATASET_PATH" --device cuda \
-  --attack_type targeted
+python run_WhiteBoxPatch.py --setting realistic --attack_method LaVAN --vision_model VGGNet16 --dataset_root "$DATASET_PATH" --device cuda --attack_type targeted
 ```
+
+The old `run_WhiteBoxPatch_common.py` and
+`run_WhiteBoxPatch_realistic.py` entry points remain compatibility wrappers.
 
 `--attack_method` accepts `MaskedPGD`, `MaskedAutoPGD`, `LaVAN`, or `LOAP`. Both
 runners also accept `--steps` (or `--max_query`), `--patch_h`, `--patch_w`,
@@ -82,7 +100,7 @@ unfinished images continue independently.
 All black-box and white-box runners accept `--exp_root` to select the root
 directory for saved results. It defaults to `exp_result` inside the project:
 ```shell
-python run_WhiteBoxPatch_common.py --attack_method LOAP \
+python run_WhiteBoxPatch.py --setting common --attack_method LOAP \
   --vision_model VGGNet16 --dataset_root "$DATASET_PATH" \
   --exp_root "/path/to/experiments"
 ```

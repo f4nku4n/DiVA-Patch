@@ -2,8 +2,8 @@ import cv2
 import math
 import numpy as np
 from tqdm import tqdm
-from .utils import l2_compute, sh_selection
-from .CamoPatch import CamoPatch, compose_image
+from attack_methods.utils import l2_compute, sh_selection
+from attack_methods.CamoPatch import CamoPatch, compose_image
 
 
 class CamoPatch_common(CamoPatch):

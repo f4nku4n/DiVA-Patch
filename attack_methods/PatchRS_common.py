@@ -1,8 +1,8 @@
 import cv2
 import numpy as np
 from tqdm import tqdm
-from .utils import l2_compute
-from .PatchRS import PatchRS, is_better
+from attack_methods.utils import l2_compute
+from attack_methods.PatchRS import PatchRS, is_better
 
 class PatchRS_common(PatchRS):
     def __init__(self, img_cls, loss_function, p_init=0.4, patch_size=[40, 40], update_loc_period=4, max_query=10000):
