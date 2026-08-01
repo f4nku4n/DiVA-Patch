@@ -185,6 +185,7 @@ def main():
         stem = _safe_name(source_path)
         result_path = os.path.join(result_dir, f"{stem}.json")
         process_path = os.path.join(process_dir, f"{stem}_process.p")
+        final_result_path = os.path.join(result_dir, f"{stem}_result.p")
         if os.path.exists(result_path):
             with open(result_path) as file:
                 summary = json.load(file)
@@ -192,6 +193,7 @@ def main():
                 metric_tracker.is_complete(summary)
                 and "first_success_query" in summary
                 and "target_image" in summary
+                and os.path.exists(final_result_path)
             ):
                 metric_tracker.add_summary(summary)
                 _print_result(source_path, summary)
@@ -255,6 +257,7 @@ def main():
             adversarial = _rebuild_from_process(source, process)
             best = process[-1]
             patch = np.asarray(best[3])
+            final_patch = patch
             summary = {
                 "adversarial": bool(best[1]),
                 "l2_distance": float(best[4]),
@@ -292,6 +295,7 @@ def main():
             )
             attacker.run()
             result = attacker.get_best()
+            final_patch = np.asarray(result["patch"])
             adversarial = attacker.build_adversarial()
             if args.save_imgs:
                 process = attacker.process
@@ -310,8 +314,31 @@ def main():
                 **target_entry,
             }
 
+        final_result = {
+            "adversarial": bool(summary["adversarial"]),
+            "location": summary["location"],
+            "rectangle": summary["rectangle"],
+            "patch": final_patch.copy(),
+            "l2_distance": float(summary["l2_distance"]),
+            "fitness": float(summary["fitness"]),
+            "queries": int(summary["queries"]),
+            "first_success_query": summary["first_success_query"],
+            "patch_area": int(summary["patch_area"]),
+            "patch_area_ratio": float(summary["patch_area_ratio"]),
+            "setting": args.setting,
+            "attack_type": args.attack_type,
+            "pop_size": args.pop_size,
+            "init_rate": args.init_rate,
+            "mutation_rate": args.mutation_rate,
+            "fitness_norm": args.fitness_norm,
+            **target_entry,
+        }
+
         metrics = metric_tracker.compute(source, adversarial)
         summary.update(metrics)
+        final_result.update(ssim=float(metrics["ssim"]), lpips=float(metrics["lpips"]))
+        with open(final_result_path, "wb") as file:
+            pickle.dump(final_result, file)
 
         if args.save_imgs:
             output = adversarial if args.setting == "realistic" else adversarial * 255.0

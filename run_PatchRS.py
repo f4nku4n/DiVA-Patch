@@ -118,10 +118,11 @@ def main():
         save_file = path_img.replace(".JPEG", "").replace("/", "_")
         process_path = os.path.join(process_folder, f"{save_file}.p")
         result_json = os.path.join(result_folder, f"{save_file}.json")
+        final_result_path = os.path.join(result_folder, f"{save_file}_result.p")
         if os.path.exists(result_json):
             with open(result_json) as file:
                 existing_result = json.load(file)
-            if metric_tracker.is_complete(existing_result) and "first_success_query" in existing_result:
+            if metric_tracker.is_complete(existing_result) and "first_success_query" in existing_result and os.path.exists(final_result_path):
                 metric_tracker.add_summary(existing_result)
                 metric_tracker.print_result(path_img, existing_result)
                 adversarial.append(existing_result["adversarial"])
@@ -150,10 +151,7 @@ def main():
             set_seed(args.seed)
             attacker = PatchRS(img_cls=img_cls, loss_function=loss, max_query=args.max_query, p_init=args.p_init, patch_size=[args.patch_size, args.patch_size], update_loc_period=args.update_loc_period)
             attacker.run()
-            if args.save_imgs:
-                process = attacker.process
-                with open(process_path, "wb") as file:
-                    pickle.dump(process, file)
+            process = attacker.process
 
         best = process[-1]
         img_adv = img_cls.copy()
@@ -170,6 +168,29 @@ def main():
             "ssim": metrics["ssim"],
             "lpips": metrics["lpips"],
         }
+        final_result = {
+            "adversarial": bool(best[1]),
+            "location": best[2],
+            "patch": np.asarray(best[3]).copy(),
+            "l2_distance": float(best[-2]),
+            "loss": float(best[-1]),
+            "queries": int(best[0]),
+            "first_success_query": summary["first_success_query"],
+            "ssim": float(metrics["ssim"]),
+            "lpips": float(metrics["lpips"]),
+            "setting": args.setting,
+            "attack_type": args.attack_type,
+            "patch_size": args.patch_size,
+            "p_init": args.p_init,
+            "update_loc_period": args.update_loc_period,
+        }
+        if args.save_imgs:
+            with open(process_path, "wb") as file:
+                pickle.dump(process, file)
+
+        with open(final_result_path, "wb") as file:
+            pickle.dump(final_result, file)
+
         metric_tracker.print_result(path_img, summary)
         with open(result_json, "w") as file:
             json.dump(summary, file, indent=4, cls=NumpyEncoder)

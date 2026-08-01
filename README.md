@@ -126,6 +126,12 @@ AlexNet backbone. Existing black-box process artifacts are backfilled without
 rerunning the attack. Both metrics are also available through
 `utils.PerceptualMetrics`.
 
+PatchRS, DevoPatch, and all white-box methods also save a per-image
+`results/*_result.p` artifact. It contains the final patch content and
+location together with success, L2, loss or fitness, query information,
+SSIM, LPIPS, and method-specific hyperparameters. These artifacts and process
+files are always saved; `--save_imgs` controls only example image output.
+
 Before executing the scripts below, please set the DATASET_PATH variable in each *.sh file to the path of your ImageNet-1K validation set.
 
 ### Demo

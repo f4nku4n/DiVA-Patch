@@ -44,7 +44,7 @@ def build_parser(default_setting=None):
     parser.add_argument("--location_update_period", type=int, default=0)
     parser.add_argument("--lo_mode", choices=["full", "random"], default="full")
     parser.add_argument("--stride", type=int, default=2)
-    parser.add_argument("--attempts", type=int, default=1)
+    parser.add_argument("--attempts", type=int, default=100)
     parser.add_argument("--exclude_box", type=int, nargs=4)
     parser.add_argument("--batch_size", type=int, default=8, help="used only by the common setting")
     parser.add_argument("--early_stop", action="store_true")
@@ -127,9 +127,33 @@ def _summary(args, result, metrics, steps, eps, step_size):
 
 
 def _record_result(args, save_folder, entry, result, metrics, summary, aggregates):
-    if args.save_imgs:
+    final_result = {
+        "adversarial": result["adversarial"],
+        "prediction": result["prediction"],
+        "location": result["location"],
+        "patch": np.asarray(result["patch"]).copy(),
+        "l2_distance": result["l2"],
+        "loss": result["loss"],
+        "queries": result["queries"],
+        "first_success_query": result["first_success_query"],
+        "ssim": metrics["ssim"],
+        "lpips": metrics["lpips"],
+        "attack_method": args.attack_method,
+        "setting": args.setting,
+        "attack_type": args.attack_type,
+        "steps": summary["steps"],
+        "eps": summary["eps"],
+        "step_size": summary["step_size"],
+        "location_update_period": summary["location_update_period"],
+        "early_stop": summary["early_stop"],
+    }
+    if args.attack_method == "LOAP":
+        final_result.update(lo_mode=args.lo_mode, stride=args.stride, attempts=args.attempts, exclude_box=args.exclude_box)
+    if args.save_images:
         with open(entry["process_path"], "wb") as file:
             pickle.dump(result["process"], file)
+    with open(entry["final_result_path"], "wb") as file:
+        pickle.dump(final_result, file)
     with open(entry["result_path"], "w") as file:
         json.dump(summary, file, indent=4, cls=NumpyEncoder)
     if args.save_imgs:
@@ -178,12 +202,13 @@ def _run_common(args, model, attack_class, path_labels, save_folder, steps, eps,
     for index, path_img in enumerate(path_labels, start=1):
         save_file = path_img.replace(".JPEG", "").replace("/", "_")
         result_path = os.path.join(save_folder, "results", save_file + ".json")
-        if os.path.exists(result_path):
+        final_result_path = os.path.join(save_folder, "results", save_file + "_result.p")
+        if os.path.exists(result_path) and os.path.exists(final_result_path):
             _add_existing(path_img, result_path, aggregates)
             continue
         print(f"Image #{index}: {path_img}")
         tensor = transform(Image.open(os.path.join(args.dataset_root, path_img)).convert("RGB"))
-        pending.append({"path": path_img, "tensor": tensor, "image": pytorch_switch(tensor).numpy(), "true_label": path_labels[path_img]["true_label"], "target_label": path_labels[path_img]["target_label"], "result_path": result_path, "process_path": os.path.join(save_folder, "processes", save_file + ".p")})
+        pending.append({"path": path_img, "tensor": tensor, "image": pytorch_switch(tensor).numpy(), "true_label": path_labels[path_img]["true_label"], "target_label": path_labels[path_img]["target_label"], "result_path": result_path, "final_result_path": final_result_path, "process_path": os.path.join(save_folder, "processes", save_file + ".p")})
         if len(pending) == args.batch_size:
             run_batch(pending)
             pending = []
@@ -196,7 +221,8 @@ def _run_realistic(args, model, attack_class, path_labels, save_folder, steps, e
     for index, path_img in enumerate(path_labels, start=1):
         save_file = path_img.replace(".JPEG", "").replace("/", "_")
         result_path = os.path.join(save_folder, "results", save_file + ".json")
-        if os.path.exists(result_path):
+        final_result_path = os.path.join(save_folder, "results", save_file + "_result.p")
+        if os.path.exists(result_path) and os.path.exists(final_result_path):
             _add_existing(path_img, result_path, aggregates)
             continue
         print(f"Image #{index}: {path_img}")
@@ -216,7 +242,7 @@ def _run_realistic(args, model, attack_class, path_labels, save_folder, steps, e
         if perceptual_metrics is None:
             perceptual_metrics = PerceptualMetrics(device=args.device)
         metrics = perceptual_metrics(image, result["image"], data_range=255.0)
-        entry = {"path": path_img, "result_path": result_path, "process_path": os.path.join(save_folder, "processes", save_file + ".p")}
+        entry = {"path": path_img, "result_path": result_path, "final_result_path": final_result_path, "process_path": os.path.join(save_folder, "processes", save_file + ".p")}
         summary = _summary(args, result, metrics, steps, eps, step_size)
         _record_result(args, save_folder, entry, result, metrics, summary, aggregates)
 
