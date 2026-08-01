@@ -101,9 +101,9 @@ class WhiteBoxPatchAttack:
         self.mask = torch.zeros_like(self.image_normalized)
         self.mask[:, :, x:x + patch_h, y:y + patch_w] = 1.0
 
-    def _should_update_location(self, iteration):
+    def _should_update_location(self, iteration, success):
         return (
-            self.location_update_period > 0
+            success and self.location_update_period > 0
             and iteration > 1
             and (iteration - 1) % self.location_update_period == 0
         )
@@ -252,53 +252,40 @@ class WhiteBoxPatchAttack:
 
 class MaskedPGD(WhiteBoxPatchAttack):
     def run(self):
-        delta = torch.empty_like(self.image_normalized).uniform_(
-            -self.eps, self.eps
-        )
+        delta = torch.empty_like(self.image_normalized).uniform_(-self.eps, self.eps)
         delta = delta * self.mask
-        adversarial = (self.image_normalized + delta).clamp(0.0, 1.0)
-        adversarial = (
-            self.image_normalized * (1.0 - self.mask) + adversarial * self.mask
-        ).detach()
 
+        adversarial = (self.image_normalized + delta).clamp(0.0, 1.0)
+        adversarial = (self.image_normalized * (1.0 - self.mask) + adversarial * self.mask).detach()
+
+        success = False
         for iteration in tqdm(range(1, self.steps + 1)):
-            if self._should_update_location(iteration):
+            if self._should_update_location(iteration, success):
                 adversarial = self._move_best_patch(project_eps=True)
             adversarial.requires_grad_(True)
             logits = self._logits(adversarial)
             objective = self._ce_objective(logits)
-            success, _, _ = self._record(
-                iteration, adversarial, logits, objective
-            )
+            success, _, _ = self._record(iteration, adversarial, logits, objective)
             if self.early_stop and success:
-                adversarial = adversarial.detach()
                 break
             if iteration == self.steps:
                 adversarial = adversarial.detach()
                 continue
-
             gradient = torch.autograd.grad(objective, adversarial)[0]
             candidate = adversarial + self.step_size * gradient.sign() * self.mask
-            delta = (candidate - self.image_normalized).clamp(
-                -self.eps, self.eps
-            )
-            adversarial = (self.image_normalized + delta * self.mask).clamp(
-                0.0, 1.0
-            ).detach()
+            delta = (candidate - self.image_normalized).clamp(-self.eps, self.eps)
+            adversarial = (self.image_normalized + delta * self.mask).clamp(0.0, 1.0).detach()
 
         return self._result()
 
 
 class MaskedAutoPGD(WhiteBoxPatchAttack):
     def run(self):
-        delta = torch.empty_like(self.image_normalized).uniform_(
-            -self.eps, self.eps
-        )
+        delta = torch.empty_like(self.image_normalized).uniform_(-self.eps, self.eps)
         delta = delta * self.mask
+
         adversarial = (self.image_normalized + delta).clamp(0.0, 1.0)
-        adversarial = (
-            self.image_normalized * (1.0 - self.mask) + adversarial * self.mask
-        ).detach()
+        adversarial = (self.image_normalized * (1.0 - self.mask) + adversarial * self.mask).detach()
 
         previous = adversarial.clone()
         best = adversarial.clone()
@@ -307,8 +294,9 @@ class MaskedAutoPGD(WhiteBoxPatchAttack):
         checkpoint = max(self.steps // 10, 1)
         checkpoint_objectives = []
 
+        success = False
         for iteration in tqdm(range(1, self.steps + 1)):
-            if self._should_update_location(iteration):
+            if self._should_update_location(iteration, success):
                 adversarial = self._move_best_patch(project_eps=True)
                 previous = adversarial.clone()
                 best = adversarial.clone()
@@ -322,7 +310,6 @@ class MaskedAutoPGD(WhiteBoxPatchAttack):
                 iteration, adversarial, logits, objective
             )
             if self.early_stop and success:
-                adversarial = adversarial.detach()
                 break
 
             objective_value = float(objective.item())
@@ -337,22 +324,15 @@ class MaskedAutoPGD(WhiteBoxPatchAttack):
 
             gradient = torch.autograd.grad(objective, adversarial)[0]
             projected = adversarial + step_size * gradient.sign() * self.mask
-            delta = (projected - self.image_normalized).clamp(
-                -self.eps, self.eps
-            )
-            projected = (self.image_normalized + delta * self.mask).clamp(
-                0.0, 1.0
-            )
+            delta = (projected - self.image_normalized).clamp(-self.eps, self.eps)
+            projected = (self.image_normalized + delta * self.mask).clamp(0.0, 1.0)
 
             momentum = 0.75 if iteration > 1 else 1.0
             candidate = adversarial + momentum * (projected - adversarial)
             candidate += (1.0 - momentum) * (adversarial - previous)
-            delta = (candidate - self.image_normalized).clamp(
-                -self.eps, self.eps
-            )
-            candidate = (self.image_normalized + delta * self.mask).clamp(
-                0.0, 1.0
-            )
+            delta = (candidate - self.image_normalized).clamp(-self.eps, self.eps)
+
+            candidate = (self.image_normalized + delta * self.mask).clamp(0.0, 1.0)
             previous = adversarial.detach()
             adversarial = candidate.detach()
 
@@ -391,10 +371,7 @@ class LaVAN(WhiteBoxPatchAttack):
         patch = np.random.uniform(
             0.0, 1.0, (1, 3, patch_h, patch_w)
         ).astype(np.float32)
-        return torch.from_numpy(patch).to(
-            device=self.device,
-            dtype=self.image_normalized.dtype,
-        )
+        return torch.from_numpy(patch).to(device=self.device,dtype=self.image_normalized.dtype)
 
     def run(self):
         patch = self._initial_patch()
@@ -402,11 +379,10 @@ class LaVAN(WhiteBoxPatchAttack):
         adversarial.requires_grad_(True)
         logits = self._logits(adversarial)
 
+        success = False
         for iteration in tqdm(range(1, self.steps + 1)):
-            if self._should_update_location(iteration):
-                self._set_location(
-                    self._sample_location(exclude=self.location)
-                )
+            if self._should_update_location(iteration, success):
+                self._set_location(self._sample_location(exclude=self.location))
                 patch = self.best_patch.detach().clone()
                 adversarial = self._place_normalized_patch(patch).detach()
                 adversarial.requires_grad_(True)
@@ -415,26 +391,19 @@ class LaVAN(WhiteBoxPatchAttack):
             if self.targeted:
                 update_loss = self._targeted_repo_loss(logits)
                 gradient = torch.autograd.grad(update_loss, adversarial)[0]
-                patch = patch - self.step_size * self._normalized_patch(
-                    gradient
-                )
+                patch = patch - self.step_size * self._normalized_patch(gradient)
             else:
                 objective = self._margin_objective(logits)
                 gradient = torch.autograd.grad(objective, adversarial)[0]
-                patch = patch + self.step_size * self._normalized_patch(
-                    gradient
-                )
+                patch = patch + self.step_size * self._normalized_patch(gradient)
 
             patch = patch.clamp(0.0, 1.0).detach()
             adversarial = self._place_normalized_patch(patch).detach()
             adversarial.requires_grad_(True)
             logits = self._logits(adversarial)
             objective = self._record_objective(logits)
-            success, _, _ = self._record(
-                iteration, adversarial, logits, objective
-            )
+            success, _, _ = self._record(iteration, adversarial, logits, objective)
             if self.early_stop and success:
-                adversarial = adversarial.detach()
                 break
 
         return self._result()
@@ -588,20 +557,14 @@ class LOAP(WhiteBoxPatchAttack):
         current_location = self.location
         with torch.no_grad():
             current_logits = self._logits_for_patch(patch, current_location)
-            best_objective = float(
-                self._optimization_objective(current_logits).item()
-            )
+            best_objective = float(self._optimization_objective(current_logits).item())
             best_location = current_location
             for direction in directions:
-                candidate = self._candidate_location(
-                    current_location, direction
-                )
+                candidate = self._candidate_location(current_location, direction)
                 if candidate == current_location:
                     continue
                 candidate_logits = self._logits_for_patch(patch, candidate)
-                candidate_objective = float(
-                    self._optimization_objective(candidate_logits).item()
-                )
+                candidate_objective = float(self._optimization_objective(candidate_logits).item())
                 if candidate_objective > best_objective:
                     best_objective = candidate_objective
                     best_location = candidate
@@ -619,9 +582,7 @@ class LOAP(WhiteBoxPatchAttack):
                 logits = self._logits_for_patch(patch, self.location)
                 objective = self._optimization_objective(logits)
                 gradient = torch.autograd.grad(objective, patch)[0]
-                patch = (
-                    patch + self.step_size * gradient.sign()
-                ).clamp(0.0, 1.0).detach()
+                patch = (patch + self.step_size * gradient.sign()).clamp(0.0, 1.0).detach()
 
                 self._optimize_location(patch)
                 adversarial = self._place_normalized_patch(patch)

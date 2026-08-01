@@ -149,7 +149,7 @@ def _record_result(args, save_folder, entry, result, metrics, summary, aggregate
     }
     if args.attack_method == "LOAP":
         final_result.update(lo_mode=args.lo_mode, stride=args.stride, attempts=args.attempts, exclude_box=args.exclude_box)
-    if args.save_images:
+    if args.save_imgs:
         with open(entry["process_path"], "wb") as file:
             pickle.dump(result["process"], file)
     with open(entry["final_result_path"], "wb") as file:
