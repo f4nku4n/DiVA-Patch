@@ -1,23 +1,22 @@
-import argparse
-import json
 import os
+import json
 import pickle
+import argparse
 
-import numpy as np
 import torch
+import numpy as np
 from PIL import Image
 
-from utils import (
-    NumpyEncoder,
-    PerceptualMetrics,
-    PerceptualMetricTracker,
-    pytorch_switch,
-    sample_image_labels,
-    set_seed
-)
+from utils import set_seed, pytorch_switch, sample_image_labels
+from utils import NumpyEncoder, PerceptualMetrics, PerceptualMetricTracker
 
 
 ATTACK_NAMES = ["MaskedPGD", "MaskedAutoPGD", "LaVAN", "LOAP"]
+VALID_MODELS = {
+    "ImageNet1K": ("VGGNet16", "ResNet50", "ViT16"),
+    "Flower102": ("EfficientNetV2S",),
+    "Food101": ("Swin",),
+}
 DEFAULTS = {
     "MaskedPGD": {"steps": 10000, "eps": 1.0, "step_size": 0.01, "location_update_period": 100},
     "MaskedAutoPGD": {"steps": 10000,  "eps": 0.3, "step_size": 0.1, "location_update_period": 100},
@@ -30,10 +29,13 @@ def build_parser(default_setting=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("--setting", choices=["common", "realistic"], default=default_setting or "realistic", help="common uses batched 224x224 images; realistic uses raw images one at a time")
     parser.add_argument("--exp_root", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "exp_result"))
+
     parser.add_argument("--attack_method", choices=ATTACK_NAMES, default="MaskedPGD")
     parser.add_argument("--seed", type=int, default=42)
+
     parser.add_argument("--steps", "--max_query", dest="steps", type=int)
-    parser.add_argument("--vision_model", choices=["VGGNet16", "ResNet50", "ViT16"], default="VGGNet16")
+    parser.add_argument("--dataset", choices=list(VALID_MODELS), default="ImageNet1K")
+    parser.add_argument("--vision_model", choices=["VGGNet16", "ResNet50", "ViT16", "EfficientNetV2S", "Swin"], default="VGGNet16")
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--dataset_root", required=True)
     parser.add_argument("--attack_type", choices=["targeted", "non_targeted"], default="non_targeted")
@@ -54,16 +56,34 @@ def build_parser(default_setting=None):
     return parser
 
 
-def _components(setting):
+def _components(dataset, vision_model, setting):
     if setting == "common":
         from attack_methods.WhiteBoxPatchBatch import BatchedLOAP, BatchedLaVAN, BatchedMaskedAutoPGD, BatchedMaskedPGD
-        from models.ImageNetModels import ImageNetModel
         attacks = {"MaskedPGD": BatchedMaskedPGD, "MaskedAutoPGD": BatchedMaskedAutoPGD, "LaVAN": BatchedLaVAN, "LOAP": BatchedLOAP}
     else:
         from attack_methods.WhiteBoxPatch import LOAP, LaVAN, MaskedAutoPGD, MaskedPGD
-        from models.ImageNetModels_realistic import ImageNetModel
         attacks = {"MaskedPGD": MaskedPGD, "MaskedAutoPGD": MaskedAutoPGD, "LaVAN": LaVAN, "LOAP": LOAP}
-    return attacks, ImageNetModel
+
+    if dataset == "ImageNet1K":
+        if setting == "common":
+            from models.ImageNetModels import ImageNetModel as ModelClass
+        else:
+            from models.ImageNetModels_realistic import ImageNetModel as ModelClass
+        model_args = ({"VGGNet16": 0, "ResNet50": 1, "ViT16": 2}[vision_model],)
+    elif dataset == "Flower102":
+        if setting == "common":
+            from models.Flower102Models import Flower102Model as ModelClass
+        else:
+            from models.Flower102Models import Flower102ModelRealistic as ModelClass
+        model_args = ()
+    else:
+        if setting == "common":
+            from models.Food101Models import Food101Model as ModelClass
+        else:
+            from models.Food101Models import Food101ModelRealistic as ModelClass
+        model_args = ()
+
+    return attacks, ModelClass, model_args
 
 
 def _resolved_hyperparameters(args):
@@ -76,12 +96,18 @@ def _resolved_hyperparameters(args):
 
 def _label_file(args):
     if args.demo:
+        if args.dataset != "ImageNet1K":
+            raise ValueError("--demo is only supported with --dataset ImageNet1K")
         return f"TEST_IMGs/demo_{'targeted' if args.attack_type == 'targeted' else 'untargeted'}.json"
+    if args.dataset == "Flower102":
+        return "TEST_IMGs/EfficientNetV2S_Flower102.json"
+    if args.dataset == "Food101":
+        return "TEST_IMGs/Swin_Food101.json"
     return f"TEST_IMGs/{args.vision_model}_ImgNet1K.json"
 
 
 def _save_folder(args):
-    return f"{args.exp_root}/{args.attack_method}-{args.vision_model}-{args.setting}-{args.attack_type}/SEED_{args.seed}"
+    return f"{args.exp_root}/{args.attack_method}-{args.dataset}-{args.vision_model}-{args.setting}-{args.attack_type}/SEED_{args.seed}"
 
 
 def _add_existing(path_img, result_path, aggregates):
@@ -170,7 +196,23 @@ def _record_result(args, save_folder, entry, result, metrics, summary, aggregate
 def _run_common(args, model, attack_class, path_labels, save_folder, steps, eps, step_size, aggregates):
     from torchvision import transforms
 
-    transform = transforms.Compose([transforms.Resize(256), transforms.CenterCrop(224), transforms.ToTensor()])
+    if args.dataset == "Flower102":
+        transform = transforms.Compose([
+            transforms.Resize((256, 256)),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+        ])
+    elif args.dataset == "Food101":
+        transform = transforms.Compose([
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+        ])
+    else:
+        transform = transforms.Compose([
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+        ])
     perceptual_metrics = None
     targeted = args.attack_type == "targeted"
 
@@ -233,6 +275,7 @@ def _run_realistic(args, model, attack_class, path_labels, save_folder, steps, e
             clean = torch.from_numpy(image).permute(2, 0, 1)[None, :].to(args.device)
             initial_label = int(model.predict(clean).argmax(dim=1).item())
         if initial_label != true_label:
+            print('Wrong label fucking shit')
             continue
         set_seed(args.seed)
         attack_kwargs = dict(image=image, model=model, true_label=true_label, target_label=target_label, targeted=targeted, patch_size=(args.patch_h, args.patch_w), steps=steps, step_size=step_size, eps=eps, clip_min=0.0, clip_max=255.0, device=args.device, location_update_period=args.location_update_period, early_stop=args.early_stop)
@@ -258,14 +301,17 @@ def main():
         parser.error("--patch_h and --patch_w must be positive")
 
     set_seed(args.seed)
-    attacks, ImageNetModel = _components(args.setting)
-    model = ImageNetModel({"VGGNet16": 0, "ResNet50": 1, "ViT16": 2}[args.vision_model], args.device)
+
+    attacks, ModelClass, model_args = _components(args.dataset, args.vision_model, args.setting)
     label_file = _label_file(args)
+    model = ModelClass(*model_args, args.device)
     with open(label_file) as file:
         path_labels = json.load(file)
+
     save_folder = _save_folder(args)
     for directory in ("processes", "results", "examples"):
         os.makedirs(os.path.join(save_folder, directory), exist_ok=True)
+
     path_labels = sample_image_labels(path_labels, args.num_images, args.seed, label_file, os.path.join(save_folder, "sampled_images.json"))
     steps, eps, step_size = _resolved_hyperparameters(args)
     aggregates = {"successes": [], "distances": [], "ssim": [], "lpips": []}

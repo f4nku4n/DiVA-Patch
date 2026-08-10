@@ -17,6 +17,12 @@ from utils import (
 
 from utils.LossFunctions import Targeted, UnTargeted
 
+VALID_MODELS = {
+    "ImageNet1K": ("VGGNet16", "ResNet50", "ViT16"),
+    "Flower102": ("EfficientNetV2S",),
+    "Food101": ("Swin",),
+}
+
 
 def build_parser():
     parser = argparse.ArgumentParser()
@@ -31,7 +37,8 @@ def build_parser():
     parser.add_argument("--update_loc_period", type=int, default=4, help="number of queries between location updates")
     parser.add_argument("--max_query", type=int, default=10000)
     parser.add_argument("--num_images", type=int, default=100)
-    parser.add_argument("--vision_model", default="VGGNet16", choices=["VGGNet16", "ResNet50", "ViT16"])
+    parser.add_argument("--dataset", choices=list(VALID_MODELS), default="ImageNet1K")
+    parser.add_argument("--vision_model", default="VGGNet16", choices=["VGGNet16", "ResNet50", "ViT16", "EfficientNetV2S", "Swin"])
     parser.add_argument("--device", default="cuda", help="cuda/cpu")
     parser.add_argument("--dataset_root", required=True, help="ImageNet1K path")
     parser.add_argument("--attack_type", default="non_targeted", choices=["targeted", "non_targeted"])
@@ -40,17 +47,36 @@ def build_parser():
     return parser
 
 
-def _components(setting):
+def _components(dataset, vision_model, setting):
+    if vision_model not in VALID_MODELS[dataset]:
+        allowed = ", ".join(VALID_MODELS[dataset])
+        raise ValueError(f"--vision_model {vision_model!r} is not valid for --dataset {dataset!r}; choose one of: {allowed}")
     if setting == "common":
         from attack_methods.PatchRS_common import PatchRS_common as PatchRS
-        from models.ImageNetModels import ImageNetModel
     else:
         from attack_methods.PatchRS import PatchRS
-        from models.ImageNetModels_realistic import ImageNetModel
-    return PatchRS, ImageNetModel
+    if dataset == "ImageNet1K":
+        if setting == "common":
+            from models.ImageNetModels import ImageNetModel as ModelClass
+        else:
+            from models.ImageNetModels_realistic import ImageNetModel as ModelClass
+        model_args = ({"VGGNet16": 0, "ResNet50": 1, "ViT16": 2}[vision_model],)
+    elif dataset == "Flower102":
+        if setting == "common":
+            from models.Flower102Models import Flower102Model as ModelClass
+        else:
+            from models.Flower102Models import Flower102ModelRealistic as ModelClass
+        model_args = ()
+    else:
+        if setting == "common":
+            from models.Food101Models import Food101Model as ModelClass
+        else:
+            from models.Food101Models import Food101ModelRealistic as ModelClass
+        model_args = ()
+    return PatchRS, ModelClass, model_args
 
 
-def _image_loader(setting):
+def _image_loader(dataset, setting):
     if setting == "realistic":
         def load_realistic(path):
             return np.asarray(Image.open(path).convert("RGB"), dtype=np.float32)
@@ -59,7 +85,17 @@ def _image_loader(setting):
 
     from torchvision import transforms
 
-    transform = transforms.Compose([transforms.Resize(256), transforms.CenterCrop(224), transforms.ToTensor()])
+    if dataset == "Flower102":
+        resize = transforms.Resize((256, 256))
+    elif dataset == "Food101":
+        resize = transforms.Resize((224, 224))
+    else:
+        resize = transforms.Resize(256)
+    operations = [resize]
+    if dataset != "Food101":
+        operations.append(transforms.CenterCrop(224))
+    operations.append(transforms.ToTensor())
+    transform = transforms.Compose(operations)
 
     def load_common(path):
         return pytorch_switch(transform(Image.open(path).convert("RGB"))).detach().numpy()
@@ -68,8 +104,20 @@ def _image_loader(setting):
 
 
 def _save_folder(args):
-    name = f"PatchRS-{args.vision_model}-{args.setting}-{args.attack_type}/SEED_{args.seed}"
+    name = f"PatchRS-{args.dataset}-{args.vision_model}-{args.setting}-{args.attack_type}/SEED_{args.seed}"
     return os.path.join(args.exp_root, name)
+
+
+def _label_file(args):
+    if args.demo:
+        if args.dataset != "ImageNet1K":
+            raise ValueError("--demo is only supported with --dataset ImageNet1K")
+        return "TEST_IMGs/demo_targeted.json" if args.attack_type == "targeted" else "TEST_IMGs/demo_untargeted.json"
+    if args.dataset == "Flower102":
+        return "TEST_IMGs/EfficientNetV2S_Flower102.json"
+    if args.dataset == "Food101":
+        return "TEST_IMGs/Swin_Food101.json"
+    return f"TEST_IMGs/{args.vision_model}_ImgNet1K.json"
 
 
 def main():
@@ -84,15 +132,14 @@ def main():
     if args.update_loc_period <= 0:
         parser.error("--update_loc_period must be positive")
 
-    PatchRS, ImageNetModel = _components(args.setting)
-    model_index = {"VGGNet16": 0, "ResNet50": 1, "ViT16": 2}[args.vision_model]
-    model = ImageNetModel(model_index, args.device)
+    try:
+        PatchRS, ModelClass, model_args = _components(args.dataset, args.vision_model, args.setting)
+        label_file = _label_file(args)
+    except ValueError as exc:
+        parser.error(str(exc))
+    model = ModelClass(*model_args, args.device)
     set_seed(args.seed)
 
-    if args.demo:
-        label_file = "TEST_IMGs/demo_targeted.json" if args.attack_type == "targeted" else "TEST_IMGs/demo_untargeted.json"
-    else:
-        label_file = f"TEST_IMGs/{args.vision_model}_ImgNet1K.json"
     with open(label_file) as file:
         path_labels = json.load(file)
 
@@ -111,7 +158,7 @@ def main():
         os.path.join(save_folder, "sampled_images.json")
     )
     metric_tracker = PerceptualMetricTracker(device=args.device, data_range=1.0 if args.setting == "common" else 255.0)
-    load_image = _image_loader(args.setting)
+    load_image = _image_loader(args.dataset, args.setting)
     adversarial, l2_values = [], []
 
     for index, path_img in enumerate(path_labels, start=1):

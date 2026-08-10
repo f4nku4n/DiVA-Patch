@@ -126,6 +126,57 @@ AlexNet backbone. Existing black-box process artifacts are backfilled without
 rerunning the attack. Both metrics are also available through
 `utils.PerceptualMetrics`.
 
+### Train and evaluate with PatchZero
+
+`run_PatchZero.py` contains the complete prepare/train/evaluate workflow. Its
+dataset and stage-1 training losses follow the original PatchZero code; the
+adaptation is that training pairs and exact masks are reconstructed from this
+repository's saved attack artifacts.
+
+Prepare a dataset from one or more attack runs:
+
+```shell
+python run_PatchZero.py --mode prepare \
+  --experiment_dir exp_result/PatchRS-VGGNet16-realistic-non_targeted/SEED_42 \
+  --experiment_dir exp_result/DevoPatch-VGGNet16-realistic-non_targeted/SEED_42 \
+  --dataset_root "$DATASET_PATH" --patchzero_dataset patchzero_dataset \
+  --setting realistic
+```
+
+Train stage 1. As in the authors' repository, `--patchzero_repo` must contain
+the `pspnet` package from `Lextal/pspnet-pytorch`:
+
+```shell
+python run_PatchZero.py --mode train --patchzero_dataset patchzero_dataset \
+  --patchzero_repo /path/to/PatchZero --backend resnet50 --device cuda \
+  --epochs 20 --batch_size 8 --models_path patchzero_checkpoints
+```
+
+Evaluate attack success before/after the trained defense:
+
+```shell
+python run_PatchZero.py --mode evaluate \
+  --experiment_dir exp_result/PatchRS-VGGNet16-realistic-non_targeted/SEED_42 \
+  --dataset_root "$DATASET_PATH" \
+  --patchzero_repo /path/to/PatchZero \
+  --checkpoint /path/to/PSPNet_5 \
+  --backend resnet50 --vision_model VGGNet16 --setting realistic \
+  --attack_type non_targeted --device cuda --save_images
+```
+
+The per-image report is written to `patchzero_results.csv`. Use the same
+command for DiVA-Patch, Patch-RS, DevoPatch, CamoPatch, and white-box result
+folders. Missing final-patch artifacts are skipped explicitly.
+
+For inference from Python, load the model once and call the defense directly:
+
+```python
+from run_PatchZero import PatchZeroDefense
+
+defense = PatchZeroDefense("/path/to/PatchZero", "patchzero_checkpoints/PSPNet_20")
+defended_image = defense(adversarial_image)
+```
+
 PatchRS, DevoPatch, and all white-box methods also save a per-image
 `results/*_result.p` artifact. It contains the final patch content and
 location together with success, L2, loss or fitness, query information,

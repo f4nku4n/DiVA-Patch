@@ -33,6 +33,11 @@ def first_success_query_from_process(process, success_index, query_index=None):
             return int(record[query_index])
     return None
 
+def apply_patch(clean_image, location, patch):
+    adversarial = clean_image.copy()
+    loc_x, loc_y = location
+    adversarial[loc_x:loc_x + patch.shape[0], loc_y:loc_y + patch.shape[1], :] = patch
+    return adversarial
 
 def sample_image_labels(
     labels,

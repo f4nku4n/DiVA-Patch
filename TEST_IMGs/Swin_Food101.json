@@ -1,0 +1,4002 @@
+{
+    "food-101/images/pho/1385019.jpg": {
+        "true_label": 75,
+        "target_label": 77
+    },
+    "food-101/images/bibimbap/677162.jpg": {
+        "true_label": 7,
+        "target_label": 58
+    },
+    "food-101/images/sashimi/2221064.jpg": {
+        "true_label": 86,
+        "target_label": 83
+    },
+    "food-101/images/baklava/332407.jpg": {
+        "true_label": 2,
+        "target_label": 65
+    },
+    "food-101/images/tiramisu/2422213.jpg": {
+        "true_label": 98,
+        "target_label": 11
+    },
+    "food-101/images/creme_brulee/1923396.jpg": {
+        "true_label": 27,
+        "target_label": 63
+    },
+    "food-101/images/paella/1334015.jpg": {
+        "true_label": 71,
+        "target_label": 46
+    },
+    "food-101/images/pulled_pork_sandwich/3724476.jpg": {
+        "true_label": 80,
+        "target_label": 54
+    },
+    "food-101/images/lobster_roll_sandwich/2597503.jpg": {
+        "true_label": 61,
+        "target_label": 44
+    },
+    "food-101/images/eggs_benedict/1013425.jpg": {
+        "true_label": 34,
+        "target_label": 44
+    },
+    "food-101/images/poutine/3073839.jpg": {
+        "true_label": 78,
+        "target_label": 88
+    },
+    "food-101/images/macarons/2184035.jpg": {
+        "true_label": 63,
+        "target_label": 13
+    },
+    "food-101/images/beef_carpaccio/1666577.jpg": {
+        "true_label": 3,
+        "target_label": 23
+    },
+    "food-101/images/pork_chop/2409035.jpg": {
+        "true_label": 77,
+        "target_label": 44
+    },
+    "food-101/images/pork_chop/1252633.jpg": {
+        "true_label": 77,
+        "target_label": 54
+    },
+    "food-101/images/ramen/2885623.jpg": {
+        "true_label": 81,
+        "target_label": 91
+    },
+    "food-101/images/caprese_salad/3205165.jpg": {
+        "true_label": 13,
+        "target_label": 66
+    },
+    "food-101/images/escargots/2954916.jpg": {
+        "true_label": 35,
+        "target_label": 39
+    },
+    "food-101/images/shrimp_and_grits/1463123.jpg": {
+        "true_label": 89,
+        "target_label": 86
+    },
+    "food-101/images/waffles/819721.jpg": {
+        "true_label": 100,
+        "target_label": 53
+    },
+    "food-101/images/sashimi/3021235.jpg": {
+        "true_label": 86,
+        "target_label": 100
+    },
+    "food-101/images/takoyaki/1488746.jpg": {
+        "true_label": 97,
+        "target_label": 72
+    },
+    "food-101/images/bread_pudding/411513.jpg": {
+        "true_label": 8,
+        "target_label": 4
+    },
+    "food-101/images/prime_rib/3001960.jpg": {
+        "true_label": 79,
+        "target_label": 60
+    },
+    "food-101/images/sushi/894318.jpg": {
+        "true_label": 95,
+        "target_label": 11
+    },
+    "food-101/images/french_onion_soup/559296.jpg": {
+        "true_label": 41,
+        "target_label": 43
+    },
+    "food-101/images/caprese_salad/648661.jpg": {
+        "true_label": 13,
+        "target_label": 35
+    },
+    "food-101/images/ravioli/1093582.jpg": {
+        "true_label": 82,
+        "target_label": 43
+    },
+    "food-101/images/macarons/1637902.jpg": {
+        "true_label": 63,
+        "target_label": 14
+    },
+    "food-101/images/edamame/1275299.jpg": {
+        "true_label": 33,
+        "target_label": 54
+    },
+    "food-101/images/churros/555011.jpg": {
+        "true_label": 23,
+        "target_label": 68
+    },
+    "food-101/images/miso_soup/1849701.jpg": {
+        "true_label": 64,
+        "target_label": 0
+    },
+    "food-101/images/beef_carpaccio/1990775.jpg": {
+        "true_label": 3,
+        "target_label": 87
+    },
+    "food-101/images/chicken_curry/478992.jpg": {
+        "true_label": 18,
+        "target_label": 72
+    },
+    "food-101/images/edamame/118247.jpg": {
+        "true_label": 33,
+        "target_label": 62
+    },
+    "food-101/images/baby_back_ribs/3222671.jpg": {
+        "true_label": 1,
+        "target_label": 55
+    },
+    "food-101/images/caprese_salad/1592100.jpg": {
+        "true_label": 13,
+        "target_label": 6
+    },
+    "food-101/images/chicken_curry/194828.jpg": {
+        "true_label": 18,
+        "target_label": 27
+    },
+    "food-101/images/pulled_pork_sandwich/3552437.jpg": {
+        "true_label": 80,
+        "target_label": 68
+    },
+    "food-101/images/ramen/244504.jpg": {
+        "true_label": 81,
+        "target_label": 48
+    },
+    "food-101/images/peking_duck/2620045.jpg": {
+        "true_label": 74,
+        "target_label": 82
+    },
+    "food-101/images/ramen/650537.jpg": {
+        "true_label": 81,
+        "target_label": 99
+    },
+    "food-101/images/hummus/263106.jpg": {
+        "true_label": 57,
+        "target_label": 66
+    },
+    "food-101/images/deviled_eggs/2069547.jpg": {
+        "true_label": 30,
+        "target_label": 83
+    },
+    "food-101/images/seaweed_salad/1479513.jpg": {
+        "true_label": 88,
+        "target_label": 58
+    },
+    "food-101/images/scallops/1401468.jpg": {
+        "true_label": 87,
+        "target_label": 100
+    },
+    "food-101/images/panna_cotta/1392967.jpg": {
+        "true_label": 73,
+        "target_label": 6
+    },
+    "food-101/images/fried_calamari/2762307.jpg": {
+        "true_label": 43,
+        "target_label": 28
+    },
+    "food-101/images/tuna_tartare/3695025.jpg": {
+        "true_label": 99,
+        "target_label": 36
+    },
+    "food-101/images/apple_pie/661475.jpg": {
+        "true_label": 0,
+        "target_label": 73
+    },
+    "food-101/images/peking_duck/168671.jpg": {
+        "true_label": 74,
+        "target_label": 18
+    },
+    "food-101/images/pad_thai/2628702.jpg": {
+        "true_label": 70,
+        "target_label": 38
+    },
+    "food-101/images/eggs_benedict/768879.jpg": {
+        "true_label": 34,
+        "target_label": 59
+    },
+    "food-101/images/pancakes/1380408.jpg": {
+        "true_label": 72,
+        "target_label": 92
+    },
+    "food-101/images/pizza/3442426.jpg": {
+        "true_label": 76,
+        "target_label": 64
+    },
+    "food-101/images/huevos_rancheros/1680819.jpg": {
+        "true_label": 56,
+        "target_label": 15
+    },
+    "food-101/images/hummus/452287.jpg": {
+        "true_label": 57,
+        "target_label": 3
+    },
+    "food-101/images/breakfast_burrito/3042237.jpg": {
+        "true_label": 9,
+        "target_label": 83
+    },
+    "food-101/images/falafel/3801792.jpg": {
+        "true_label": 36,
+        "target_label": 80
+    },
+    "food-101/images/tacos/1441211.jpg": {
+        "true_label": 96,
+        "target_label": 32
+    },
+    "food-101/images/panna_cotta/2736493.jpg": {
+        "true_label": 73,
+        "target_label": 93
+    },
+    "food-101/images/omelette/2282705.jpg": {
+        "true_label": 67,
+        "target_label": 22
+    },
+    "food-101/images/creme_brulee/795179.jpg": {
+        "true_label": 27,
+        "target_label": 42
+    },
+    "food-101/images/macaroni_and_cheese/3062769.jpg": {
+        "true_label": 62,
+        "target_label": 73
+    },
+    "food-101/images/pad_thai/3001291.jpg": {
+        "true_label": 70,
+        "target_label": 1
+    },
+    "food-101/images/escargots/3038248.jpg": {
+        "true_label": 35,
+        "target_label": 73
+    },
+    "food-101/images/pulled_pork_sandwich/2547435.jpg": {
+        "true_label": 80,
+        "target_label": 54
+    },
+    "food-101/images/peking_duck/2652505.jpg": {
+        "true_label": 74,
+        "target_label": 11
+    },
+    "food-101/images/edamame/1202767.jpg": {
+        "true_label": 33,
+        "target_label": 30
+    },
+    "food-101/images/ravioli/3473513.jpg": {
+        "true_label": 82,
+        "target_label": 14
+    },
+    "food-101/images/chicken_quesadilla/3006163.jpg": {
+        "true_label": 19,
+        "target_label": 62
+    },
+    "food-101/images/fish_and_chips/1784894.jpg": {
+        "true_label": 38,
+        "target_label": 15
+    },
+    "food-101/images/miso_soup/3160994.jpg": {
+        "true_label": 64,
+        "target_label": 85
+    },
+    "food-101/images/fish_and_chips/753322.jpg": {
+        "true_label": 38,
+        "target_label": 21
+    },
+    "food-101/images/caesar_salad/545444.jpg": {
+        "true_label": 11,
+        "target_label": 66
+    },
+    "food-101/images/gnocchi/2411650.jpg": {
+        "true_label": 47,
+        "target_label": 94
+    },
+    "food-101/images/grilled_cheese_sandwich/316773.jpg": {
+        "true_label": 49,
+        "target_label": 39
+    },
+    "food-101/images/scallops/2866821.jpg": {
+        "true_label": 87,
+        "target_label": 67
+    },
+    "food-101/images/nachos/2688651.jpg": {
+        "true_label": 66,
+        "target_label": 93
+    },
+    "food-101/images/prime_rib/1971300.jpg": {
+        "true_label": 79,
+        "target_label": 36
+    },
+    "food-101/images/tacos/2352494.jpg": {
+        "true_label": 96,
+        "target_label": 55
+    },
+    "food-101/images/seaweed_salad/673987.jpg": {
+        "true_label": 88,
+        "target_label": 63
+    },
+    "food-101/images/chicken_quesadilla/2817589.jpg": {
+        "true_label": 19,
+        "target_label": 63
+    },
+    "food-101/images/frozen_yogurt/413896.jpg": {
+        "true_label": 45,
+        "target_label": 33
+    },
+    "food-101/images/tuna_tartare/253787.jpg": {
+        "true_label": 99,
+        "target_label": 60
+    },
+    "food-101/images/tiramisu/23840.jpg": {
+        "true_label": 98,
+        "target_label": 72
+    },
+    "food-101/images/miso_soup/3454724.jpg": {
+        "true_label": 64,
+        "target_label": 20
+    },
+    "food-101/images/fried_calamari/742025.jpg": {
+        "true_label": 43,
+        "target_label": 52
+    },
+    "food-101/images/peking_duck/2383763.jpg": {
+        "true_label": 74,
+        "target_label": 26
+    },
+    "food-101/images/scallops/818127.jpg": {
+        "true_label": 87,
+        "target_label": 78
+    },
+    "food-101/images/pho/1626546.jpg": {
+        "true_label": 75,
+        "target_label": 67
+    },
+    "food-101/images/oysters/142616.jpg": {
+        "true_label": 69,
+        "target_label": 98
+    },
+    "food-101/images/cup_cakes/3031063.jpg": {
+        "true_label": 29,
+        "target_label": 19
+    },
+    "food-101/images/caprese_salad/3766069.jpg": {
+        "true_label": 13,
+        "target_label": 8
+    },
+    "food-101/images/nachos/3187929.jpg": {
+        "true_label": 66,
+        "target_label": 37
+    },
+    "food-101/images/red_velvet_cake/2777218.jpg": {
+        "true_label": 83,
+        "target_label": 55
+    },
+    "food-101/images/beef_tartare/901569.jpg": {
+        "true_label": 4,
+        "target_label": 46
+    },
+    "food-101/images/escargots/1294149.jpg": {
+        "true_label": 35,
+        "target_label": 67
+    },
+    "food-101/images/pork_chop/248505.jpg": {
+        "true_label": 77,
+        "target_label": 36
+    },
+    "food-101/images/onion_rings/2224579.jpg": {
+        "true_label": 68,
+        "target_label": 0
+    },
+    "food-101/images/clam_chowder/216411.jpg": {
+        "true_label": 24,
+        "target_label": 39
+    },
+    "food-101/images/scallops/3287530.jpg": {
+        "true_label": 87,
+        "target_label": 95
+    },
+    "food-101/images/foie_gras/2949484.jpg": {
+        "true_label": 39,
+        "target_label": 41
+    },
+    "food-101/images/gnocchi/3250316.jpg": {
+        "true_label": 47,
+        "target_label": 78
+    },
+    "food-101/images/takoyaki/804118.jpg": {
+        "true_label": 97,
+        "target_label": 76
+    },
+    "food-101/images/onion_rings/1945852.jpg": {
+        "true_label": 68,
+        "target_label": 87
+    },
+    "food-101/images/gnocchi/519225.jpg": {
+        "true_label": 47,
+        "target_label": 65
+    },
+    "food-101/images/ice_cream/2757240.jpg": {
+        "true_label": 58,
+        "target_label": 21
+    },
+    "food-101/images/french_fries/2248373.jpg": {
+        "true_label": 40,
+        "target_label": 60
+    },
+    "food-101/images/strawberry_shortcake/2945587.jpg": {
+        "true_label": 94,
+        "target_label": 70
+    },
+    "food-101/images/pho/3087779.jpg": {
+        "true_label": 75,
+        "target_label": 63
+    },
+    "food-101/images/fried_calamari/2539494.jpg": {
+        "true_label": 43,
+        "target_label": 47
+    },
+    "food-101/images/paella/2811643.jpg": {
+        "true_label": 71,
+        "target_label": 44
+    },
+    "food-101/images/scallops/1521510.jpg": {
+        "true_label": 87,
+        "target_label": 72
+    },
+    "food-101/images/paella/1346503.jpg": {
+        "true_label": 71,
+        "target_label": 100
+    },
+    "food-101/images/tiramisu/3389698.jpg": {
+        "true_label": 98,
+        "target_label": 71
+    },
+    "food-101/images/takoyaki/1578933.jpg": {
+        "true_label": 97,
+        "target_label": 50
+    },
+    "food-101/images/sushi/1392674.jpg": {
+        "true_label": 95,
+        "target_label": 60
+    },
+    "food-101/images/mussels/558357.jpg": {
+        "true_label": 65,
+        "target_label": 43
+    },
+    "food-101/images/hot_dog/3049823.jpg": {
+        "true_label": 55,
+        "target_label": 26
+    },
+    "food-101/images/fried_rice/1299959.jpg": {
+        "true_label": 44,
+        "target_label": 92
+    },
+    "food-101/images/hot_dog/2295811.jpg": {
+        "true_label": 55,
+        "target_label": 32
+    },
+    "food-101/images/clam_chowder/1193098.jpg": {
+        "true_label": 24,
+        "target_label": 76
+    },
+    "food-101/images/hummus/555828.jpg": {
+        "true_label": 57,
+        "target_label": 51
+    },
+    "food-101/images/caprese_salad/3579079.jpg": {
+        "true_label": 13,
+        "target_label": 32
+    },
+    "food-101/images/risotto/713431.jpg": {
+        "true_label": 84,
+        "target_label": 54
+    },
+    "food-101/images/shrimp_and_grits/366599.jpg": {
+        "true_label": 89,
+        "target_label": 5
+    },
+    "food-101/images/bruschetta/2818786.jpg": {
+        "true_label": 10,
+        "target_label": 43
+    },
+    "food-101/images/ramen/1222951.jpg": {
+        "true_label": 81,
+        "target_label": 98
+    },
+    "food-101/images/panna_cotta/338472.jpg": {
+        "true_label": 73,
+        "target_label": 62
+    },
+    "food-101/images/bibimbap/3389349.jpg": {
+        "true_label": 7,
+        "target_label": 93
+    },
+    "food-101/images/baby_back_ribs/1967177.jpg": {
+        "true_label": 1,
+        "target_label": 51
+    },
+    "food-101/images/pizza/2631321.jpg": {
+        "true_label": 76,
+        "target_label": 51
+    },
+    "food-101/images/miso_soup/1918547.jpg": {
+        "true_label": 64,
+        "target_label": 87
+    },
+    "food-101/images/nachos/1075209.jpg": {
+        "true_label": 66,
+        "target_label": 86
+    },
+    "food-101/images/beef_carpaccio/1742911.jpg": {
+        "true_label": 3,
+        "target_label": 22
+    },
+    "food-101/images/waffles/1544230.jpg": {
+        "true_label": 100,
+        "target_label": 65
+    },
+    "food-101/images/foie_gras/1300855.jpg": {
+        "true_label": 39,
+        "target_label": 4
+    },
+    "food-101/images/guacamole/1248568.jpg": {
+        "true_label": 51,
+        "target_label": 18
+    },
+    "food-101/images/peking_duck/3170098.jpg": {
+        "true_label": 74,
+        "target_label": 66
+    },
+    "food-101/images/waffles/1313096.jpg": {
+        "true_label": 100,
+        "target_label": 77
+    },
+    "food-101/images/spaghetti_carbonara/3640949.jpg": {
+        "true_label": 91,
+        "target_label": 44
+    },
+    "food-101/images/dumplings/29978.jpg": {
+        "true_label": 32,
+        "target_label": 12
+    },
+    "food-101/images/spaghetti_bolognese/2079699.jpg": {
+        "true_label": 90,
+        "target_label": 58
+    },
+    "food-101/images/cup_cakes/1169877.jpg": {
+        "true_label": 29,
+        "target_label": 12
+    },
+    "food-101/images/hot_and_sour_soup/2792993.jpg": {
+        "true_label": 54,
+        "target_label": 70
+    },
+    "food-101/images/lobster_roll_sandwich/946365.jpg": {
+        "true_label": 61,
+        "target_label": 60
+    },
+    "food-101/images/beignets/209932.jpg": {
+        "true_label": 6,
+        "target_label": 1
+    },
+    "food-101/images/nachos/1546806.jpg": {
+        "true_label": 66,
+        "target_label": 95
+    },
+    "food-101/images/tuna_tartare/3923808.jpg": {
+        "true_label": 99,
+        "target_label": 20
+    },
+    "food-101/images/scallops/2801681.jpg": {
+        "true_label": 87,
+        "target_label": 54
+    },
+    "food-101/images/pho/2187789.jpg": {
+        "true_label": 75,
+        "target_label": 86
+    },
+    "food-101/images/chicken_curry/39376.jpg": {
+        "true_label": 18,
+        "target_label": 22
+    },
+    "food-101/images/bibimbap/762451.jpg": {
+        "true_label": 7,
+        "target_label": 10
+    },
+    "food-101/images/pancakes/159822.jpg": {
+        "true_label": 72,
+        "target_label": 62
+    },
+    "food-101/images/fried_rice/931764.jpg": {
+        "true_label": 44,
+        "target_label": 35
+    },
+    "food-101/images/miso_soup/1033834.jpg": {
+        "true_label": 64,
+        "target_label": 45
+    },
+    "food-101/images/ravioli/3653273.jpg": {
+        "true_label": 82,
+        "target_label": 81
+    },
+    "food-101/images/churros/2623176.jpg": {
+        "true_label": 23,
+        "target_label": 91
+    },
+    "food-101/images/mussels/872069.jpg": {
+        "true_label": 65,
+        "target_label": 52
+    },
+    "food-101/images/french_fries/2823700.jpg": {
+        "true_label": 40,
+        "target_label": 86
+    },
+    "food-101/images/club_sandwich/546775.jpg": {
+        "true_label": 25,
+        "target_label": 10
+    },
+    "food-101/images/shrimp_and_grits/2677351.jpg": {
+        "true_label": 89,
+        "target_label": 44
+    },
+    "food-101/images/bibimbap/1789615.jpg": {
+        "true_label": 7,
+        "target_label": 89
+    },
+    "food-101/images/pizza/1507019.jpg": {
+        "true_label": 76,
+        "target_label": 70
+    },
+    "food-101/images/pancakes/47437.jpg": {
+        "true_label": 72,
+        "target_label": 50
+    },
+    "food-101/images/pho/1146478.jpg": {
+        "true_label": 75,
+        "target_label": 42
+    },
+    "food-101/images/seaweed_salad/634056.jpg": {
+        "true_label": 88,
+        "target_label": 82
+    },
+    "food-101/images/bread_pudding/502200.jpg": {
+        "true_label": 8,
+        "target_label": 94
+    },
+    "food-101/images/lasagna/2958902.jpg": {
+        "true_label": 59,
+        "target_label": 100
+    },
+    "food-101/images/miso_soup/2702196.jpg": {
+        "true_label": 64,
+        "target_label": 65
+    },
+    "food-101/images/sushi/1630323.jpg": {
+        "true_label": 95,
+        "target_label": 71
+    },
+    "food-101/images/dumplings/3658594.jpg": {
+        "true_label": 32,
+        "target_label": 4
+    },
+    "food-101/images/churros/1239292.jpg": {
+        "true_label": 23,
+        "target_label": 82
+    },
+    "food-101/images/waffles/272795.jpg": {
+        "true_label": 100,
+        "target_label": 8
+    },
+    "food-101/images/red_velvet_cake/272773.jpg": {
+        "true_label": 83,
+        "target_label": 32
+    },
+    "food-101/images/ceviche/3791639.jpg": {
+        "true_label": 15,
+        "target_label": 83
+    },
+    "food-101/images/samosa/3205640.jpg": {
+        "true_label": 85,
+        "target_label": 90
+    },
+    "food-101/images/bibimbap/962321.jpg": {
+        "true_label": 7,
+        "target_label": 39
+    },
+    "food-101/images/hummus/894954.jpg": {
+        "true_label": 57,
+        "target_label": 31
+    },
+    "food-101/images/beet_salad/1468927.jpg": {
+        "true_label": 5,
+        "target_label": 98
+    },
+    "food-101/images/chocolate_cake/3112266.jpg": {
+        "true_label": 21,
+        "target_label": 11
+    },
+    "food-101/images/greek_salad/2125806.jpg": {
+        "true_label": 48,
+        "target_label": 58
+    },
+    "food-101/images/chocolate_cake/3707204.jpg": {
+        "true_label": 21,
+        "target_label": 12
+    },
+    "food-101/images/takoyaki/889607.jpg": {
+        "true_label": 97,
+        "target_label": 100
+    },
+    "food-101/images/pad_thai/255199.jpg": {
+        "true_label": 70,
+        "target_label": 84
+    },
+    "food-101/images/poutine/2361572.jpg": {
+        "true_label": 78,
+        "target_label": 93
+    },
+    "food-101/images/ceviche/2124836.jpg": {
+        "true_label": 15,
+        "target_label": 12
+    },
+    "food-101/images/tacos/1205090.jpg": {
+        "true_label": 96,
+        "target_label": 58
+    },
+    "food-101/images/tuna_tartare/1573089.jpg": {
+        "true_label": 99,
+        "target_label": 23
+    },
+    "food-101/images/crab_cakes/1151457.jpg": {
+        "true_label": 26,
+        "target_label": 91
+    },
+    "food-101/images/crab_cakes/2459541.jpg": {
+        "true_label": 26,
+        "target_label": 41
+    },
+    "food-101/images/omelette/1380765.jpg": {
+        "true_label": 67,
+        "target_label": 3
+    },
+    "food-101/images/french_toast/3510138.jpg": {
+        "true_label": 42,
+        "target_label": 5
+    },
+    "food-101/images/eggs_benedict/3225684.jpg": {
+        "true_label": 34,
+        "target_label": 44
+    },
+    "food-101/images/miso_soup/962402.jpg": {
+        "true_label": 64,
+        "target_label": 7
+    },
+    "food-101/images/scallops/1625790.jpg": {
+        "true_label": 87,
+        "target_label": 39
+    },
+    "food-101/images/dumplings/2355090.jpg": {
+        "true_label": 32,
+        "target_label": 48
+    },
+    "food-101/images/seaweed_salad/2779537.jpg": {
+        "true_label": 88,
+        "target_label": 49
+    },
+    "food-101/images/beef_carpaccio/2125731.jpg": {
+        "true_label": 3,
+        "target_label": 58
+    },
+    "food-101/images/gnocchi/3581617.jpg": {
+        "true_label": 47,
+        "target_label": 20
+    },
+    "food-101/images/sushi/1586894.jpg": {
+        "true_label": 95,
+        "target_label": 33
+    },
+    "food-101/images/oysters/2463366.jpg": {
+        "true_label": 69,
+        "target_label": 70
+    },
+    "food-101/images/chicken_wings/1662742.jpg": {
+        "true_label": 20,
+        "target_label": 55
+    },
+    "food-101/images/beet_salad/394248.jpg": {
+        "true_label": 5,
+        "target_label": 75
+    },
+    "food-101/images/clam_chowder/1019608.jpg": {
+        "true_label": 24,
+        "target_label": 90
+    },
+    "food-101/images/grilled_cheese_sandwich/645786.jpg": {
+        "true_label": 49,
+        "target_label": 25
+    },
+    "food-101/images/lasagna/2704381.jpg": {
+        "true_label": 59,
+        "target_label": 23
+    },
+    "food-101/images/donuts/2602953.jpg": {
+        "true_label": 31,
+        "target_label": 24
+    },
+    "food-101/images/filet_mignon/958383.jpg": {
+        "true_label": 37,
+        "target_label": 10
+    },
+    "food-101/images/ravioli/2452402.jpg": {
+        "true_label": 82,
+        "target_label": 80
+    },
+    "food-101/images/apple_pie/2218771.jpg": {
+        "true_label": 0,
+        "target_label": 51
+    },
+    "food-101/images/tiramisu/522617.jpg": {
+        "true_label": 98,
+        "target_label": 81
+    },
+    "food-101/images/creme_brulee/254028.jpg": {
+        "true_label": 27,
+        "target_label": 90
+    },
+    "food-101/images/foie_gras/1558542.jpg": {
+        "true_label": 39,
+        "target_label": 32
+    },
+    "food-101/images/chicken_curry/2755111.jpg": {
+        "true_label": 18,
+        "target_label": 66
+    },
+    "food-101/images/samosa/526270.jpg": {
+        "true_label": 85,
+        "target_label": 76
+    },
+    "food-101/images/macarons/1354001.jpg": {
+        "true_label": 63,
+        "target_label": 20
+    },
+    "food-101/images/cup_cakes/1484592.jpg": {
+        "true_label": 29,
+        "target_label": 32
+    },
+    "food-101/images/escargots/1684019.jpg": {
+        "true_label": 35,
+        "target_label": 62
+    },
+    "food-101/images/macarons/1408086.jpg": {
+        "true_label": 63,
+        "target_label": 84
+    },
+    "food-101/images/caprese_salad/577920.jpg": {
+        "true_label": 13,
+        "target_label": 35
+    },
+    "food-101/images/churros/864848.jpg": {
+        "true_label": 23,
+        "target_label": 61
+    },
+    "food-101/images/tacos/2143962.jpg": {
+        "true_label": 96,
+        "target_label": 34
+    },
+    "food-101/images/pizza/897300.jpg": {
+        "true_label": 76,
+        "target_label": 88
+    },
+    "food-101/images/greek_salad/2510634.jpg": {
+        "true_label": 48,
+        "target_label": 1
+    },
+    "food-101/images/escargots/1224760.jpg": {
+        "true_label": 35,
+        "target_label": 62
+    },
+    "food-101/images/foie_gras/3763946.jpg": {
+        "true_label": 39,
+        "target_label": 38
+    },
+    "food-101/images/pork_chop/2240183.jpg": {
+        "true_label": 77,
+        "target_label": 89
+    },
+    "food-101/images/grilled_salmon/2590751.jpg": {
+        "true_label": 50,
+        "target_label": 72
+    },
+    "food-101/images/tacos/2066856.jpg": {
+        "true_label": 96,
+        "target_label": 22
+    },
+    "food-101/images/filet_mignon/2396290.jpg": {
+        "true_label": 37,
+        "target_label": 9
+    },
+    "food-101/images/chocolate_cake/2481867.jpg": {
+        "true_label": 21,
+        "target_label": 59
+    },
+    "food-101/images/edamame/1378606.jpg": {
+        "true_label": 33,
+        "target_label": 47
+    },
+    "food-101/images/grilled_cheese_sandwich/2561662.jpg": {
+        "true_label": 49,
+        "target_label": 78
+    },
+    "food-101/images/ceviche/172523.jpg": {
+        "true_label": 15,
+        "target_label": 41
+    },
+    "food-101/images/caprese_salad/1092179.jpg": {
+        "true_label": 13,
+        "target_label": 84
+    },
+    "food-101/images/sushi/1541594.jpg": {
+        "true_label": 95,
+        "target_label": 56
+    },
+    "food-101/images/risotto/1063373.jpg": {
+        "true_label": 84,
+        "target_label": 91
+    },
+    "food-101/images/chocolate_mousse/3135156.jpg": {
+        "true_label": 22,
+        "target_label": 35
+    },
+    "food-101/images/breakfast_burrito/2327667.jpg": {
+        "true_label": 9,
+        "target_label": 61
+    },
+    "food-101/images/french_toast/2138470.jpg": {
+        "true_label": 42,
+        "target_label": 40
+    },
+    "food-101/images/tiramisu/1471445.jpg": {
+        "true_label": 98,
+        "target_label": 27
+    },
+    "food-101/images/french_toast/2258345.jpg": {
+        "true_label": 42,
+        "target_label": 52
+    },
+    "food-101/images/croque_madame/1412836.jpg": {
+        "true_label": 28,
+        "target_label": 64
+    },
+    "food-101/images/falafel/2744661.jpg": {
+        "true_label": 36,
+        "target_label": 13
+    },
+    "food-101/images/ramen/313648.jpg": {
+        "true_label": 81,
+        "target_label": 32
+    },
+    "food-101/images/ramen/725200.jpg": {
+        "true_label": 81,
+        "target_label": 50
+    },
+    "food-101/images/ice_cream/857808.jpg": {
+        "true_label": 58,
+        "target_label": 76
+    },
+    "food-101/images/fried_rice/2569230.jpg": {
+        "true_label": 44,
+        "target_label": 48
+    },
+    "food-101/images/caesar_salad/3640443.jpg": {
+        "true_label": 11,
+        "target_label": 76
+    },
+    "food-101/images/beef_carpaccio/2305461.jpg": {
+        "true_label": 3,
+        "target_label": 40
+    },
+    "food-101/images/croque_madame/352259.jpg": {
+        "true_label": 28,
+        "target_label": 92
+    },
+    "food-101/images/spaghetti_carbonara/3006491.jpg": {
+        "true_label": 91,
+        "target_label": 39
+    },
+    "food-101/images/beef_tartare/3526635.jpg": {
+        "true_label": 4,
+        "target_label": 2
+    },
+    "food-101/images/lobster_roll_sandwich/1232616.jpg": {
+        "true_label": 61,
+        "target_label": 87
+    },
+    "food-101/images/ice_cream/1609293.jpg": {
+        "true_label": 58,
+        "target_label": 52
+    },
+    "food-101/images/prime_rib/1147009.jpg": {
+        "true_label": 79,
+        "target_label": 37
+    },
+    "food-101/images/pulled_pork_sandwich/1395290.jpg": {
+        "true_label": 80,
+        "target_label": 1
+    },
+    "food-101/images/greek_salad/3518520.jpg": {
+        "true_label": 48,
+        "target_label": 75
+    },
+    "food-101/images/clam_chowder/2789238.jpg": {
+        "true_label": 24,
+        "target_label": 90
+    },
+    "food-101/images/chicken_curry/3488944.jpg": {
+        "true_label": 18,
+        "target_label": 98
+    },
+    "food-101/images/bibimbap/3187646.jpg": {
+        "true_label": 7,
+        "target_label": 6
+    },
+    "food-101/images/tiramisu/856381.jpg": {
+        "true_label": 98,
+        "target_label": 79
+    },
+    "food-101/images/falafel/3457567.jpg": {
+        "true_label": 36,
+        "target_label": 98
+    },
+    "food-101/images/falafel/2600944.jpg": {
+        "true_label": 36,
+        "target_label": 66
+    },
+    "food-101/images/tuna_tartare/3707041.jpg": {
+        "true_label": 99,
+        "target_label": 38
+    },
+    "food-101/images/gyoza/789811.jpg": {
+        "true_label": 52,
+        "target_label": 31
+    },
+    "food-101/images/paella/1510159.jpg": {
+        "true_label": 71,
+        "target_label": 80
+    },
+    "food-101/images/beef_carpaccio/1662207.jpg": {
+        "true_label": 3,
+        "target_label": 48
+    },
+    "food-101/images/carrot_cake/2927224.jpg": {
+        "true_label": 14,
+        "target_label": 31
+    },
+    "food-101/images/edamame/1416646.jpg": {
+        "true_label": 33,
+        "target_label": 84
+    },
+    "food-101/images/fried_calamari/875936.jpg": {
+        "true_label": 43,
+        "target_label": 26
+    },
+    "food-101/images/spaghetti_bolognese/1394656.jpg": {
+        "true_label": 90,
+        "target_label": 81
+    },
+    "food-101/images/tacos/910144.jpg": {
+        "true_label": 96,
+        "target_label": 34
+    },
+    "food-101/images/gyoza/1632894.jpg": {
+        "true_label": 52,
+        "target_label": 89
+    },
+    "food-101/images/eggs_benedict/3462110.jpg": {
+        "true_label": 34,
+        "target_label": 99
+    },
+    "food-101/images/pulled_pork_sandwich/12086.jpg": {
+        "true_label": 80,
+        "target_label": 95
+    },
+    "food-101/images/beef_tartare/1563489.jpg": {
+        "true_label": 4,
+        "target_label": 87
+    },
+    "food-101/images/prime_rib/69564.jpg": {
+        "true_label": 79,
+        "target_label": 90
+    },
+    "food-101/images/sushi/2291643.jpg": {
+        "true_label": 95,
+        "target_label": 19
+    },
+    "food-101/images/hot_and_sour_soup/968546.jpg": {
+        "true_label": 54,
+        "target_label": 83
+    },
+    "food-101/images/ramen/2703834.jpg": {
+        "true_label": 81,
+        "target_label": 12
+    },
+    "food-101/images/chocolate_cake/1367998.jpg": {
+        "true_label": 21,
+        "target_label": 83
+    },
+    "food-101/images/frozen_yogurt/1511699.jpg": {
+        "true_label": 45,
+        "target_label": 85
+    },
+    "food-101/images/croque_madame/1121399.jpg": {
+        "true_label": 28,
+        "target_label": 5
+    },
+    "food-101/images/ceviche/1915397.jpg": {
+        "true_label": 15,
+        "target_label": 42
+    },
+    "food-101/images/lobster_bisque/2987125.jpg": {
+        "true_label": 60,
+        "target_label": 58
+    },
+    "food-101/images/gnocchi/8880.jpg": {
+        "true_label": 47,
+        "target_label": 4
+    },
+    "food-101/images/clam_chowder/2101819.jpg": {
+        "true_label": 24,
+        "target_label": 77
+    },
+    "food-101/images/greek_salad/2413947.jpg": {
+        "true_label": 48,
+        "target_label": 49
+    },
+    "food-101/images/miso_soup/799552.jpg": {
+        "true_label": 64,
+        "target_label": 96
+    },
+    "food-101/images/peking_duck/2064937.jpg": {
+        "true_label": 74,
+        "target_label": 18
+    },
+    "food-101/images/churros/2149879.jpg": {
+        "true_label": 23,
+        "target_label": 11
+    },
+    "food-101/images/guacamole/496267.jpg": {
+        "true_label": 51,
+        "target_label": 39
+    },
+    "food-101/images/scallops/1685011.jpg": {
+        "true_label": 87,
+        "target_label": 43
+    },
+    "food-101/images/ravioli/696902.jpg": {
+        "true_label": 82,
+        "target_label": 98
+    },
+    "food-101/images/edamame/934964.jpg": {
+        "true_label": 33,
+        "target_label": 56
+    },
+    "food-101/images/beef_carpaccio/2098481.jpg": {
+        "true_label": 3,
+        "target_label": 25
+    },
+    "food-101/images/cup_cakes/2365399.jpg": {
+        "true_label": 29,
+        "target_label": 27
+    },
+    "food-101/images/omelette/2572700.jpg": {
+        "true_label": 67,
+        "target_label": 18
+    },
+    "food-101/images/ceviche/2609815.jpg": {
+        "true_label": 15,
+        "target_label": 72
+    },
+    "food-101/images/baby_back_ribs/2816200.jpg": {
+        "true_label": 1,
+        "target_label": 49
+    },
+    "food-101/images/falafel/2389263.jpg": {
+        "true_label": 36,
+        "target_label": 70
+    },
+    "food-101/images/pancakes/3238798.jpg": {
+        "true_label": 72,
+        "target_label": 66
+    },
+    "food-101/images/caprese_salad/2680862.jpg": {
+        "true_label": 13,
+        "target_label": 37
+    },
+    "food-101/images/greek_salad/2308318.jpg": {
+        "true_label": 48,
+        "target_label": 23
+    },
+    "food-101/images/breakfast_burrito/566378.jpg": {
+        "true_label": 9,
+        "target_label": 35
+    },
+    "food-101/images/sushi/3268416.jpg": {
+        "true_label": 95,
+        "target_label": 63
+    },
+    "food-101/images/greek_salad/3617524.jpg": {
+        "true_label": 48,
+        "target_label": 39
+    },
+    "food-101/images/onion_rings/131668.jpg": {
+        "true_label": 68,
+        "target_label": 98
+    },
+    "food-101/images/greek_salad/1749952.jpg": {
+        "true_label": 48,
+        "target_label": 45
+    },
+    "food-101/images/beef_tartare/137352.jpg": {
+        "true_label": 4,
+        "target_label": 15
+    },
+    "food-101/images/hot_dog/27044.jpg": {
+        "true_label": 55,
+        "target_label": 62
+    },
+    "food-101/images/french_toast/83425.jpg": {
+        "true_label": 42,
+        "target_label": 9
+    },
+    "food-101/images/french_fries/391321.jpg": {
+        "true_label": 40,
+        "target_label": 20
+    },
+    "food-101/images/dumplings/619473.jpg": {
+        "true_label": 32,
+        "target_label": 99
+    },
+    "food-101/images/baby_back_ribs/759979.jpg": {
+        "true_label": 1,
+        "target_label": 31
+    },
+    "food-101/images/greek_salad/1608448.jpg": {
+        "true_label": 48,
+        "target_label": 89
+    },
+    "food-101/images/shrimp_and_grits/2860747.jpg": {
+        "true_label": 89,
+        "target_label": 95
+    },
+    "food-101/images/pad_thai/3195957.jpg": {
+        "true_label": 70,
+        "target_label": 89
+    },
+    "food-101/images/carrot_cake/48061.jpg": {
+        "true_label": 14,
+        "target_label": 53
+    },
+    "food-101/images/foie_gras/790777.jpg": {
+        "true_label": 39,
+        "target_label": 74
+    },
+    "food-101/images/macarons/869998.jpg": {
+        "true_label": 63,
+        "target_label": 48
+    },
+    "food-101/images/foie_gras/582792.jpg": {
+        "true_label": 39,
+        "target_label": 11
+    },
+    "food-101/images/lobster_roll_sandwich/199404.jpg": {
+        "true_label": 61,
+        "target_label": 52
+    },
+    "food-101/images/escargots/728265.jpg": {
+        "true_label": 35,
+        "target_label": 1
+    },
+    "food-101/images/clam_chowder/3142771.jpg": {
+        "true_label": 24,
+        "target_label": 36
+    },
+    "food-101/images/apple_pie/1364847.jpg": {
+        "true_label": 0,
+        "target_label": 71
+    },
+    "food-101/images/chocolate_mousse/2242181.jpg": {
+        "true_label": 22,
+        "target_label": 15
+    },
+    "food-101/images/tiramisu/3290255.jpg": {
+        "true_label": 98,
+        "target_label": 60
+    },
+    "food-101/images/breakfast_burrito/508606.jpg": {
+        "true_label": 9,
+        "target_label": 50
+    },
+    "food-101/images/macarons/597949.jpg": {
+        "true_label": 63,
+        "target_label": 89
+    },
+    "food-101/images/spring_rolls/3199790.jpg": {
+        "true_label": 92,
+        "target_label": 98
+    },
+    "food-101/images/huevos_rancheros/2220441.jpg": {
+        "true_label": 56,
+        "target_label": 89
+    },
+    "food-101/images/pad_thai/523164.jpg": {
+        "true_label": 70,
+        "target_label": 35
+    },
+    "food-101/images/french_onion_soup/454841.jpg": {
+        "true_label": 41,
+        "target_label": 77
+    },
+    "food-101/images/ice_cream/3885955.jpg": {
+        "true_label": 58,
+        "target_label": 50
+    },
+    "food-101/images/hot_dog/2394823.jpg": {
+        "true_label": 55,
+        "target_label": 84
+    },
+    "food-101/images/takoyaki/3341016.jpg": {
+        "true_label": 97,
+        "target_label": 49
+    },
+    "food-101/images/hamburger/3702789.jpg": {
+        "true_label": 53,
+        "target_label": 13
+    },
+    "food-101/images/onion_rings/2594313.jpg": {
+        "true_label": 68,
+        "target_label": 89
+    },
+    "food-101/images/mussels/3248418.jpg": {
+        "true_label": 65,
+        "target_label": 31
+    },
+    "food-101/images/chicken_wings/3334666.jpg": {
+        "true_label": 20,
+        "target_label": 63
+    },
+    "food-101/images/grilled_cheese_sandwich/2921472.jpg": {
+        "true_label": 49,
+        "target_label": 3
+    },
+    "food-101/images/onion_rings/171800.jpg": {
+        "true_label": 68,
+        "target_label": 82
+    },
+    "food-101/images/chocolate_cake/2774050.jpg": {
+        "true_label": 21,
+        "target_label": 74
+    },
+    "food-101/images/scallops/193455.jpg": {
+        "true_label": 87,
+        "target_label": 43
+    },
+    "food-101/images/strawberry_shortcake/3042869.jpg": {
+        "true_label": 94,
+        "target_label": 80
+    },
+    "food-101/images/crab_cakes/508126.jpg": {
+        "true_label": 26,
+        "target_label": 31
+    },
+    "food-101/images/pho/869909.jpg": {
+        "true_label": 75,
+        "target_label": 85
+    },
+    "food-101/images/garlic_bread/1126401.jpg": {
+        "true_label": 46,
+        "target_label": 8
+    },
+    "food-101/images/fried_calamari/1868403.jpg": {
+        "true_label": 43,
+        "target_label": 84
+    },
+    "food-101/images/onion_rings/252573.jpg": {
+        "true_label": 68,
+        "target_label": 61
+    },
+    "food-101/images/tacos/3151905.jpg": {
+        "true_label": 96,
+        "target_label": 91
+    },
+    "food-101/images/hot_and_sour_soup/1654702.jpg": {
+        "true_label": 54,
+        "target_label": 40
+    },
+    "food-101/images/fried_calamari/2246730.jpg": {
+        "true_label": 43,
+        "target_label": 86
+    },
+    "food-101/images/huevos_rancheros/324484.jpg": {
+        "true_label": 56,
+        "target_label": 54
+    },
+    "food-101/images/takoyaki/2312574.jpg": {
+        "true_label": 97,
+        "target_label": 14
+    },
+    "food-101/images/pulled_pork_sandwich/2103386.jpg": {
+        "true_label": 80,
+        "target_label": 19
+    },
+    "food-101/images/tacos/3491721.jpg": {
+        "true_label": 96,
+        "target_label": 5
+    },
+    "food-101/images/tuna_tartare/666481.jpg": {
+        "true_label": 99,
+        "target_label": 4
+    },
+    "food-101/images/gnocchi/663698.jpg": {
+        "true_label": 47,
+        "target_label": 40
+    },
+    "food-101/images/shrimp_and_grits/1731084.jpg": {
+        "true_label": 89,
+        "target_label": 65
+    },
+    "food-101/images/risotto/1169969.jpg": {
+        "true_label": 84,
+        "target_label": 14
+    },
+    "food-101/images/caesar_salad/1186415.jpg": {
+        "true_label": 11,
+        "target_label": 13
+    },
+    "food-101/images/foie_gras/982330.jpg": {
+        "true_label": 39,
+        "target_label": 32
+    },
+    "food-101/images/tiramisu/2080503.jpg": {
+        "true_label": 98,
+        "target_label": 70
+    },
+    "food-101/images/fish_and_chips/497629.jpg": {
+        "true_label": 38,
+        "target_label": 19
+    },
+    "food-101/images/edamame/789564.jpg": {
+        "true_label": 33,
+        "target_label": 52
+    },
+    "food-101/images/baby_back_ribs/910021.jpg": {
+        "true_label": 1,
+        "target_label": 61
+    },
+    "food-101/images/donuts/2634179.jpg": {
+        "true_label": 31,
+        "target_label": 50
+    },
+    "food-101/images/sushi/3835320.jpg": {
+        "true_label": 95,
+        "target_label": 87
+    },
+    "food-101/images/garlic_bread/2436856.jpg": {
+        "true_label": 46,
+        "target_label": 98
+    },
+    "food-101/images/cannoli/1859511.jpg": {
+        "true_label": 12,
+        "target_label": 92
+    },
+    "food-101/images/ice_cream/1981410.jpg": {
+        "true_label": 58,
+        "target_label": 72
+    },
+    "food-101/images/dumplings/2834398.jpg": {
+        "true_label": 32,
+        "target_label": 56
+    },
+    "food-101/images/hot_and_sour_soup/111951.jpg": {
+        "true_label": 54,
+        "target_label": 78
+    },
+    "food-101/images/grilled_cheese_sandwich/1925018.jpg": {
+        "true_label": 49,
+        "target_label": 98
+    },
+    "food-101/images/cup_cakes/1892118.jpg": {
+        "true_label": 29,
+        "target_label": 96
+    },
+    "food-101/images/pancakes/918179.jpg": {
+        "true_label": 72,
+        "target_label": 21
+    },
+    "food-101/images/omelette/3270928.jpg": {
+        "true_label": 67,
+        "target_label": 55
+    },
+    "food-101/images/pulled_pork_sandwich/71210.jpg": {
+        "true_label": 80,
+        "target_label": 86
+    },
+    "food-101/images/risotto/2032761.jpg": {
+        "true_label": 84,
+        "target_label": 12
+    },
+    "food-101/images/scallops/1392773.jpg": {
+        "true_label": 87,
+        "target_label": 64
+    },
+    "food-101/images/beignets/2555987.jpg": {
+        "true_label": 6,
+        "target_label": 81
+    },
+    "food-101/images/bibimbap/2137869.jpg": {
+        "true_label": 7,
+        "target_label": 55
+    },
+    "food-101/images/baby_back_ribs/314812.jpg": {
+        "true_label": 1,
+        "target_label": 38
+    },
+    "food-101/images/baklava/1885421.jpg": {
+        "true_label": 2,
+        "target_label": 5
+    },
+    "food-101/images/edamame/2921528.jpg": {
+        "true_label": 33,
+        "target_label": 91
+    },
+    "food-101/images/seaweed_salad/200177.jpg": {
+        "true_label": 88,
+        "target_label": 49
+    },
+    "food-101/images/gnocchi/3105830.jpg": {
+        "true_label": 47,
+        "target_label": 29
+    },
+    "food-101/images/deviled_eggs/1625605.jpg": {
+        "true_label": 30,
+        "target_label": 59
+    },
+    "food-101/images/chicken_wings/2997531.jpg": {
+        "true_label": 20,
+        "target_label": 59
+    },
+    "food-101/images/nachos/98976.jpg": {
+        "true_label": 66,
+        "target_label": 32
+    },
+    "food-101/images/chicken_quesadilla/2364093.jpg": {
+        "true_label": 19,
+        "target_label": 49
+    },
+    "food-101/images/scallops/1165733.jpg": {
+        "true_label": 87,
+        "target_label": 12
+    },
+    "food-101/images/shrimp_and_grits/148817.jpg": {
+        "true_label": 89,
+        "target_label": 90
+    },
+    "food-101/images/ceviche/3783853.jpg": {
+        "true_label": 15,
+        "target_label": 50
+    },
+    "food-101/images/spaghetti_bolognese/1981054.jpg": {
+        "true_label": 90,
+        "target_label": 71
+    },
+    "food-101/images/beef_tartare/1685187.jpg": {
+        "true_label": 4,
+        "target_label": 85
+    },
+    "food-101/images/ramen/204137.jpg": {
+        "true_label": 81,
+        "target_label": 47
+    },
+    "food-101/images/chicken_quesadilla/2425028.jpg": {
+        "true_label": 19,
+        "target_label": 7
+    },
+    "food-101/images/baklava/50627.jpg": {
+        "true_label": 2,
+        "target_label": 53
+    },
+    "food-101/images/panna_cotta/1644527.jpg": {
+        "true_label": 73,
+        "target_label": 37
+    },
+    "food-101/images/churros/2748152.jpg": {
+        "true_label": 23,
+        "target_label": 27
+    },
+    "food-101/images/grilled_salmon/419294.jpg": {
+        "true_label": 50,
+        "target_label": 15
+    },
+    "food-101/images/crab_cakes/454514.jpg": {
+        "true_label": 26,
+        "target_label": 61
+    },
+    "food-101/images/chicken_quesadilla/3652005.jpg": {
+        "true_label": 19,
+        "target_label": 11
+    },
+    "food-101/images/mussels/374654.jpg": {
+        "true_label": 65,
+        "target_label": 87
+    },
+    "food-101/images/miso_soup/2702360.jpg": {
+        "true_label": 64,
+        "target_label": 29
+    },
+    "food-101/images/donuts/881348.jpg": {
+        "true_label": 31,
+        "target_label": 85
+    },
+    "food-101/images/eggs_benedict/642440.jpg": {
+        "true_label": 34,
+        "target_label": 84
+    },
+    "food-101/images/fried_rice/1028939.jpg": {
+        "true_label": 44,
+        "target_label": 79
+    },
+    "food-101/images/takoyaki/1339207.jpg": {
+        "true_label": 97,
+        "target_label": 2
+    },
+    "food-101/images/hot_and_sour_soup/1782992.jpg": {
+        "true_label": 54,
+        "target_label": 6
+    },
+    "food-101/images/tacos/853830.jpg": {
+        "true_label": 96,
+        "target_label": 44
+    },
+    "food-101/images/oysters/2974986.jpg": {
+        "true_label": 69,
+        "target_label": 33
+    },
+    "food-101/images/steak/3352834.jpg": {
+        "true_label": 93,
+        "target_label": 18
+    },
+    "food-101/images/eggs_benedict/116694.jpg": {
+        "true_label": 34,
+        "target_label": 75
+    },
+    "food-101/images/spring_rolls/1363251.jpg": {
+        "true_label": 92,
+        "target_label": 28
+    },
+    "food-101/images/fish_and_chips/422241.jpg": {
+        "true_label": 38,
+        "target_label": 8
+    },
+    "food-101/images/hot_dog/1829891.jpg": {
+        "true_label": 55,
+        "target_label": 100
+    },
+    "food-101/images/eggs_benedict/92864.jpg": {
+        "true_label": 34,
+        "target_label": 73
+    },
+    "food-101/images/steak/2814314.jpg": {
+        "true_label": 93,
+        "target_label": 28
+    },
+    "food-101/images/fried_rice/1916330.jpg": {
+        "true_label": 44,
+        "target_label": 78
+    },
+    "food-101/images/crab_cakes/1966370.jpg": {
+        "true_label": 26,
+        "target_label": 30
+    },
+    "food-101/images/spring_rolls/792012.jpg": {
+        "true_label": 92,
+        "target_label": 31
+    },
+    "food-101/images/beet_salad/1987153.jpg": {
+        "true_label": 5,
+        "target_label": 45
+    },
+    "food-101/images/fish_and_chips/1662738.jpg": {
+        "true_label": 38,
+        "target_label": 20
+    },
+    "food-101/images/spring_rolls/3313443.jpg": {
+        "true_label": 92,
+        "target_label": 78
+    },
+    "food-101/images/hummus/1974301.jpg": {
+        "true_label": 57,
+        "target_label": 0
+    },
+    "food-101/images/gnocchi/2762453.jpg": {
+        "true_label": 47,
+        "target_label": 37
+    },
+    "food-101/images/nachos/175246.jpg": {
+        "true_label": 66,
+        "target_label": 20
+    },
+    "food-101/images/spaghetti_bolognese/1244357.jpg": {
+        "true_label": 90,
+        "target_label": 18
+    },
+    "food-101/images/grilled_cheese_sandwich/1416508.jpg": {
+        "true_label": 49,
+        "target_label": 72
+    },
+    "food-101/images/pulled_pork_sandwich/420628.jpg": {
+        "true_label": 80,
+        "target_label": 34
+    },
+    "food-101/images/caesar_salad/3368125.jpg": {
+        "true_label": 11,
+        "target_label": 25
+    },
+    "food-101/images/cup_cakes/951611.jpg": {
+        "true_label": 29,
+        "target_label": 14
+    },
+    "food-101/images/croque_madame/1121140.jpg": {
+        "true_label": 28,
+        "target_label": 87
+    },
+    "food-101/images/huevos_rancheros/2994635.jpg": {
+        "true_label": 56,
+        "target_label": 3
+    },
+    "food-101/images/baby_back_ribs/26834.jpg": {
+        "true_label": 1,
+        "target_label": 19
+    },
+    "food-101/images/chocolate_cake/1596779.jpg": {
+        "true_label": 21,
+        "target_label": 1
+    },
+    "food-101/images/miso_soup/3096726.jpg": {
+        "true_label": 64,
+        "target_label": 47
+    },
+    "food-101/images/club_sandwich/3341688.jpg": {
+        "true_label": 25,
+        "target_label": 33
+    },
+    "food-101/images/croque_madame/56038.jpg": {
+        "true_label": 28,
+        "target_label": 78
+    },
+    "food-101/images/sashimi/2171679.jpg": {
+        "true_label": 86,
+        "target_label": 43
+    },
+    "food-101/images/club_sandwich/799509.jpg": {
+        "true_label": 25,
+        "target_label": 2
+    },
+    "food-101/images/grilled_salmon/3417595.jpg": {
+        "true_label": 50,
+        "target_label": 24
+    },
+    "food-101/images/croque_madame/3878877.jpg": {
+        "true_label": 28,
+        "target_label": 36
+    },
+    "food-101/images/grilled_cheese_sandwich/3021628.jpg": {
+        "true_label": 49,
+        "target_label": 6
+    },
+    "food-101/images/tiramisu/576905.jpg": {
+        "true_label": 98,
+        "target_label": 18
+    },
+    "food-101/images/scallops/2787380.jpg": {
+        "true_label": 87,
+        "target_label": 97
+    },
+    "food-101/images/miso_soup/1584977.jpg": {
+        "true_label": 64,
+        "target_label": 55
+    },
+    "food-101/images/bibimbap/2671015.jpg": {
+        "true_label": 7,
+        "target_label": 70
+    },
+    "food-101/images/peking_duck/3675968.jpg": {
+        "true_label": 74,
+        "target_label": 14
+    },
+    "food-101/images/spring_rolls/2439594.jpg": {
+        "true_label": 92,
+        "target_label": 98
+    },
+    "food-101/images/french_toast/1220815.jpg": {
+        "true_label": 42,
+        "target_label": 8
+    },
+    "food-101/images/creme_brulee/1447826.jpg": {
+        "true_label": 27,
+        "target_label": 63
+    },
+    "food-101/images/bread_pudding/871205.jpg": {
+        "true_label": 8,
+        "target_label": 60
+    },
+    "food-101/images/fried_calamari/3221335.jpg": {
+        "true_label": 43,
+        "target_label": 49
+    },
+    "food-101/images/caesar_salad/1560776.jpg": {
+        "true_label": 11,
+        "target_label": 68
+    },
+    "food-101/images/garlic_bread/3784226.jpg": {
+        "true_label": 46,
+        "target_label": 78
+    },
+    "food-101/images/creme_brulee/67067.jpg": {
+        "true_label": 27,
+        "target_label": 13
+    },
+    "food-101/images/creme_brulee/1727538.jpg": {
+        "true_label": 27,
+        "target_label": 60
+    },
+    "food-101/images/sashimi/156200.jpg": {
+        "true_label": 86,
+        "target_label": 66
+    },
+    "food-101/images/omelette/1516619.jpg": {
+        "true_label": 67,
+        "target_label": 30
+    },
+    "food-101/images/falafel/648774.jpg": {
+        "true_label": 36,
+        "target_label": 81
+    },
+    "food-101/images/strawberry_shortcake/836696.jpg": {
+        "true_label": 94,
+        "target_label": 5
+    },
+    "food-101/images/grilled_salmon/153354.jpg": {
+        "true_label": 50,
+        "target_label": 96
+    },
+    "food-101/images/edamame/1426533.jpg": {
+        "true_label": 33,
+        "target_label": 87
+    },
+    "food-101/images/tacos/1320199.jpg": {
+        "true_label": 96,
+        "target_label": 68
+    },
+    "food-101/images/edamame/1641799.jpg": {
+        "true_label": 33,
+        "target_label": 41
+    },
+    "food-101/images/caesar_salad/2134121.jpg": {
+        "true_label": 11,
+        "target_label": 61
+    },
+    "food-101/images/pho/2556461.jpg": {
+        "true_label": 75,
+        "target_label": 85
+    },
+    "food-101/images/shrimp_and_grits/3590886.jpg": {
+        "true_label": 89,
+        "target_label": 3
+    },
+    "food-101/images/clam_chowder/1368462.jpg": {
+        "true_label": 24,
+        "target_label": 7
+    },
+    "food-101/images/lobster_roll_sandwich/784347.jpg": {
+        "true_label": 61,
+        "target_label": 64
+    },
+    "food-101/images/tuna_tartare/3674298.jpg": {
+        "true_label": 99,
+        "target_label": 53
+    },
+    "food-101/images/grilled_salmon/3013641.jpg": {
+        "true_label": 50,
+        "target_label": 57
+    },
+    "food-101/images/sashimi/3571712.jpg": {
+        "true_label": 86,
+        "target_label": 90
+    },
+    "food-101/images/beignets/2527706.jpg": {
+        "true_label": 6,
+        "target_label": 14
+    },
+    "food-101/images/mussels/3440260.jpg": {
+        "true_label": 65,
+        "target_label": 64
+    },
+    "food-101/images/club_sandwich/508258.jpg": {
+        "true_label": 25,
+        "target_label": 94
+    },
+    "food-101/images/hot_dog/1086677.jpg": {
+        "true_label": 55,
+        "target_label": 59
+    },
+    "food-101/images/scallops/179232.jpg": {
+        "true_label": 87,
+        "target_label": 9
+    },
+    "food-101/images/spring_rolls/2236163.jpg": {
+        "true_label": 92,
+        "target_label": 10
+    },
+    "food-101/images/bibimbap/2774404.jpg": {
+        "true_label": 7,
+        "target_label": 44
+    },
+    "food-101/images/waffles/1576252.jpg": {
+        "true_label": 100,
+        "target_label": 79
+    },
+    "food-101/images/fried_rice/865507.jpg": {
+        "true_label": 44,
+        "target_label": 20
+    },
+    "food-101/images/deviled_eggs/3021655.jpg": {
+        "true_label": 30,
+        "target_label": 8
+    },
+    "food-101/images/onion_rings/138101.jpg": {
+        "true_label": 68,
+        "target_label": 18
+    },
+    "food-101/images/donuts/1829382.jpg": {
+        "true_label": 31,
+        "target_label": 38
+    },
+    "food-101/images/seaweed_salad/2678051.jpg": {
+        "true_label": 88,
+        "target_label": 81
+    },
+    "food-101/images/shrimp_and_grits/916436.jpg": {
+        "true_label": 89,
+        "target_label": 83
+    },
+    "food-101/images/beignets/2650512.jpg": {
+        "true_label": 6,
+        "target_label": 77
+    },
+    "food-101/images/guacamole/1407255.jpg": {
+        "true_label": 51,
+        "target_label": 73
+    },
+    "food-101/images/breakfast_burrito/2672221.jpg": {
+        "true_label": 9,
+        "target_label": 94
+    },
+    "food-101/images/falafel/2503462.jpg": {
+        "true_label": 36,
+        "target_label": 44
+    },
+    "food-101/images/spaghetti_bolognese/3664496.jpg": {
+        "true_label": 90,
+        "target_label": 50
+    },
+    "food-101/images/panna_cotta/1953515.jpg": {
+        "true_label": 73,
+        "target_label": 79
+    },
+    "food-101/images/donuts/1656474.jpg": {
+        "true_label": 31,
+        "target_label": 70
+    },
+    "food-101/images/churros/1904318.jpg": {
+        "true_label": 23,
+        "target_label": 40
+    },
+    "food-101/images/hamburger/221845.jpg": {
+        "true_label": 53,
+        "target_label": 61
+    },
+    "food-101/images/sushi/1143615.jpg": {
+        "true_label": 95,
+        "target_label": 66
+    },
+    "food-101/images/nachos/561936.jpg": {
+        "true_label": 66,
+        "target_label": 80
+    },
+    "food-101/images/grilled_cheese_sandwich/3613572.jpg": {
+        "true_label": 49,
+        "target_label": 58
+    },
+    "food-101/images/bread_pudding/2931439.jpg": {
+        "true_label": 8,
+        "target_label": 13
+    },
+    "food-101/images/fish_and_chips/1445435.jpg": {
+        "true_label": 38,
+        "target_label": 92
+    },
+    "food-101/images/fried_rice/2696016.jpg": {
+        "true_label": 44,
+        "target_label": 14
+    },
+    "food-101/images/tacos/1658157.jpg": {
+        "true_label": 96,
+        "target_label": 85
+    },
+    "food-101/images/omelette/3669006.jpg": {
+        "true_label": 67,
+        "target_label": 86
+    },
+    "food-101/images/grilled_salmon/243804.jpg": {
+        "true_label": 50,
+        "target_label": 73
+    },
+    "food-101/images/huevos_rancheros/649853.jpg": {
+        "true_label": 56,
+        "target_label": 95
+    },
+    "food-101/images/onion_rings/1498308.jpg": {
+        "true_label": 68,
+        "target_label": 29
+    },
+    "food-101/images/apple_pie/486170.jpg": {
+        "true_label": 0,
+        "target_label": 58
+    },
+    "food-101/images/garlic_bread/1244438.jpg": {
+        "true_label": 46,
+        "target_label": 60
+    },
+    "food-101/images/shrimp_and_grits/2304119.jpg": {
+        "true_label": 89,
+        "target_label": 31
+    },
+    "food-101/images/beet_salad/2646314.jpg": {
+        "true_label": 5,
+        "target_label": 55
+    },
+    "food-101/images/grilled_cheese_sandwich/1384460.jpg": {
+        "true_label": 49,
+        "target_label": 45
+    },
+    "food-101/images/croque_madame/2018951.jpg": {
+        "true_label": 28,
+        "target_label": 61
+    },
+    "food-101/images/red_velvet_cake/3821025.jpg": {
+        "true_label": 83,
+        "target_label": 53
+    },
+    "food-101/images/clam_chowder/2699667.jpg": {
+        "true_label": 24,
+        "target_label": 56
+    },
+    "food-101/images/pancakes/2659153.jpg": {
+        "true_label": 72,
+        "target_label": 96
+    },
+    "food-101/images/cup_cakes/185423.jpg": {
+        "true_label": 29,
+        "target_label": 12
+    },
+    "food-101/images/crab_cakes/1901626.jpg": {
+        "true_label": 26,
+        "target_label": 43
+    },
+    "food-101/images/falafel/3611787.jpg": {
+        "true_label": 36,
+        "target_label": 57
+    },
+    "food-101/images/beef_carpaccio/100853.jpg": {
+        "true_label": 3,
+        "target_label": 43
+    },
+    "food-101/images/omelette/486418.jpg": {
+        "true_label": 67,
+        "target_label": 88
+    },
+    "food-101/images/peking_duck/2167093.jpg": {
+        "true_label": 74,
+        "target_label": 34
+    },
+    "food-101/images/lobster_roll_sandwich/3018133.jpg": {
+        "true_label": 61,
+        "target_label": 49
+    },
+    "food-101/images/club_sandwich/165094.jpg": {
+        "true_label": 25,
+        "target_label": 21
+    },
+    "food-101/images/cannoli/3701203.jpg": {
+        "true_label": 12,
+        "target_label": 90
+    },
+    "food-101/images/chocolate_mousse/1964146.jpg": {
+        "true_label": 22,
+        "target_label": 63
+    },
+    "food-101/images/garlic_bread/1757124.jpg": {
+        "true_label": 46,
+        "target_label": 8
+    },
+    "food-101/images/clam_chowder/948137.jpg": {
+        "true_label": 24,
+        "target_label": 11
+    },
+    "food-101/images/eggs_benedict/2153543.jpg": {
+        "true_label": 34,
+        "target_label": 10
+    },
+    "food-101/images/churros/1173613.jpg": {
+        "true_label": 23,
+        "target_label": 11
+    },
+    "food-101/images/garlic_bread/3142950.jpg": {
+        "true_label": 46,
+        "target_label": 58
+    },
+    "food-101/images/macaroni_and_cheese/1888050.jpg": {
+        "true_label": 62,
+        "target_label": 12
+    },
+    "food-101/images/gnocchi/2838599.jpg": {
+        "true_label": 47,
+        "target_label": 98
+    },
+    "food-101/images/fried_rice/1972338.jpg": {
+        "true_label": 44,
+        "target_label": 97
+    },
+    "food-101/images/breakfast_burrito/835264.jpg": {
+        "true_label": 9,
+        "target_label": 50
+    },
+    "food-101/images/seaweed_salad/2856499.jpg": {
+        "true_label": 88,
+        "target_label": 18
+    },
+    "food-101/images/ice_cream/2281789.jpg": {
+        "true_label": 58,
+        "target_label": 74
+    },
+    "food-101/images/red_velvet_cake/1872011.jpg": {
+        "true_label": 83,
+        "target_label": 7
+    },
+    "food-101/images/spaghetti_carbonara/2085991.jpg": {
+        "true_label": 91,
+        "target_label": 77
+    },
+    "food-101/images/donuts/861022.jpg": {
+        "true_label": 31,
+        "target_label": 74
+    },
+    "food-101/images/gyoza/1055276.jpg": {
+        "true_label": 52,
+        "target_label": 74
+    },
+    "food-101/images/lobster_roll_sandwich/2158038.jpg": {
+        "true_label": 61,
+        "target_label": 44
+    },
+    "food-101/images/gnocchi/886232.jpg": {
+        "true_label": 47,
+        "target_label": 88
+    },
+    "food-101/images/shrimp_and_grits/836501.jpg": {
+        "true_label": 89,
+        "target_label": 15
+    },
+    "food-101/images/french_toast/2349257.jpg": {
+        "true_label": 42,
+        "target_label": 55
+    },
+    "food-101/images/frozen_yogurt/3109675.jpg": {
+        "true_label": 45,
+        "target_label": 48
+    },
+    "food-101/images/ice_cream/786773.jpg": {
+        "true_label": 58,
+        "target_label": 88
+    },
+    "food-101/images/poutine/1957330.jpg": {
+        "true_label": 78,
+        "target_label": 99
+    },
+    "food-101/images/edamame/3923470.jpg": {
+        "true_label": 33,
+        "target_label": 57
+    },
+    "food-101/images/filet_mignon/3030953.jpg": {
+        "true_label": 37,
+        "target_label": 95
+    },
+    "food-101/images/omelette/3544259.jpg": {
+        "true_label": 67,
+        "target_label": 6
+    },
+    "food-101/images/chicken_quesadilla/184813.jpg": {
+        "true_label": 19,
+        "target_label": 39
+    },
+    "food-101/images/huevos_rancheros/2115045.jpg": {
+        "true_label": 56,
+        "target_label": 79
+    },
+    "food-101/images/chicken_curry/1236329.jpg": {
+        "true_label": 18,
+        "target_label": 42
+    },
+    "food-101/images/ramen/2789255.jpg": {
+        "true_label": 81,
+        "target_label": 47
+    },
+    "food-101/images/escargots/554207.jpg": {
+        "true_label": 35,
+        "target_label": 13
+    },
+    "food-101/images/grilled_cheese_sandwich/89862.jpg": {
+        "true_label": 49,
+        "target_label": 76
+    },
+    "food-101/images/beet_salad/3287877.jpg": {
+        "true_label": 5,
+        "target_label": 67
+    },
+    "food-101/images/creme_brulee/2537149.jpg": {
+        "true_label": 27,
+        "target_label": 30
+    },
+    "food-101/images/bread_pudding/588483.jpg": {
+        "true_label": 8,
+        "target_label": 22
+    },
+    "food-101/images/steak/2056621.jpg": {
+        "true_label": 93,
+        "target_label": 86
+    },
+    "food-101/images/sashimi/1974913.jpg": {
+        "true_label": 86,
+        "target_label": 63
+    },
+    "food-101/images/panna_cotta/290630.jpg": {
+        "true_label": 73,
+        "target_label": 30
+    },
+    "food-101/images/tiramisu/2414053.jpg": {
+        "true_label": 98,
+        "target_label": 13
+    },
+    "food-101/images/french_toast/3383510.jpg": {
+        "true_label": 42,
+        "target_label": 47
+    },
+    "food-101/images/cannoli/1628010.jpg": {
+        "true_label": 12,
+        "target_label": 74
+    },
+    "food-101/images/tacos/3233123.jpg": {
+        "true_label": 96,
+        "target_label": 49
+    },
+    "food-101/images/ravioli/88545.jpg": {
+        "true_label": 82,
+        "target_label": 14
+    },
+    "food-101/images/french_onion_soup/1617170.jpg": {
+        "true_label": 41,
+        "target_label": 100
+    },
+    "food-101/images/pizza/419962.jpg": {
+        "true_label": 76,
+        "target_label": 37
+    },
+    "food-101/images/breakfast_burrito/2103422.jpg": {
+        "true_label": 9,
+        "target_label": 76
+    },
+    "food-101/images/bread_pudding/1315149.jpg": {
+        "true_label": 8,
+        "target_label": 31
+    },
+    "food-101/images/peking_duck/834026.jpg": {
+        "true_label": 74,
+        "target_label": 56
+    },
+    "food-101/images/bruschetta/3387698.jpg": {
+        "true_label": 10,
+        "target_label": 74
+    },
+    "food-101/images/clam_chowder/1362252.jpg": {
+        "true_label": 24,
+        "target_label": 82
+    },
+    "food-101/images/tiramisu/1964907.jpg": {
+        "true_label": 98,
+        "target_label": 80
+    },
+    "food-101/images/steak/2229090.jpg": {
+        "true_label": 93,
+        "target_label": 88
+    },
+    "food-101/images/ice_cream/3210539.jpg": {
+        "true_label": 58,
+        "target_label": 85
+    },
+    "food-101/images/oysters/1017801.jpg": {
+        "true_label": 69,
+        "target_label": 74
+    },
+    "food-101/images/churros/3698417.jpg": {
+        "true_label": 23,
+        "target_label": 3
+    },
+    "food-101/images/bibimbap/1884233.jpg": {
+        "true_label": 7,
+        "target_label": 80
+    },
+    "food-101/images/beef_carpaccio/3184691.jpg": {
+        "true_label": 3,
+        "target_label": 87
+    },
+    "food-101/images/caprese_salad/3276271.jpg": {
+        "true_label": 13,
+        "target_label": 91
+    },
+    "food-101/images/club_sandwich/2728386.jpg": {
+        "true_label": 25,
+        "target_label": 37
+    },
+    "food-101/images/hamburger/1084912.jpg": {
+        "true_label": 53,
+        "target_label": 3
+    },
+    "food-101/images/spaghetti_carbonara/1900436.jpg": {
+        "true_label": 91,
+        "target_label": 25
+    },
+    "food-101/images/beef_tartare/1407028.jpg": {
+        "true_label": 4,
+        "target_label": 37
+    },
+    "food-101/images/cup_cakes/3370592.jpg": {
+        "true_label": 29,
+        "target_label": 92
+    },
+    "food-101/images/spaghetti_bolognese/1095558.jpg": {
+        "true_label": 90,
+        "target_label": 100
+    },
+    "food-101/images/apple_pie/2395631.jpg": {
+        "true_label": 0,
+        "target_label": 42
+    },
+    "food-101/images/fried_calamari/1489082.jpg": {
+        "true_label": 43,
+        "target_label": 46
+    },
+    "food-101/images/risotto/165782.jpg": {
+        "true_label": 84,
+        "target_label": 46
+    },
+    "food-101/images/spaghetti_carbonara/1940744.jpg": {
+        "true_label": 91,
+        "target_label": 0
+    },
+    "food-101/images/grilled_cheese_sandwich/1749190.jpg": {
+        "true_label": 49,
+        "target_label": 25
+    },
+    "food-101/images/dumplings/636766.jpg": {
+        "true_label": 32,
+        "target_label": 20
+    },
+    "food-101/images/cup_cakes/630678.jpg": {
+        "true_label": 29,
+        "target_label": 75
+    },
+    "food-101/images/waffles/11088.jpg": {
+        "true_label": 100,
+        "target_label": 86
+    },
+    "food-101/images/onion_rings/3022006.jpg": {
+        "true_label": 68,
+        "target_label": 53
+    },
+    "food-101/images/gyoza/1351818.jpg": {
+        "true_label": 52,
+        "target_label": 8
+    },
+    "food-101/images/cannoli/2216243.jpg": {
+        "true_label": 12,
+        "target_label": 21
+    },
+    "food-101/images/shrimp_and_grits/1217802.jpg": {
+        "true_label": 89,
+        "target_label": 97
+    },
+    "food-101/images/beef_carpaccio/484148.jpg": {
+        "true_label": 3,
+        "target_label": 84
+    },
+    "food-101/images/eggs_benedict/2110009.jpg": {
+        "true_label": 34,
+        "target_label": 3
+    },
+    "food-101/images/gyoza/3097244.jpg": {
+        "true_label": 52,
+        "target_label": 11
+    },
+    "food-101/images/miso_soup/1555182.jpg": {
+        "true_label": 64,
+        "target_label": 98
+    },
+    "food-101/images/french_toast/3219959.jpg": {
+        "true_label": 42,
+        "target_label": 70
+    },
+    "food-101/images/ravioli/155986.jpg": {
+        "true_label": 82,
+        "target_label": 29
+    },
+    "food-101/images/mussels/2589221.jpg": {
+        "true_label": 65,
+        "target_label": 50
+    },
+    "food-101/images/tiramisu/3618054.jpg": {
+        "true_label": 98,
+        "target_label": 55
+    },
+    "food-101/images/chicken_quesadilla/571602.jpg": {
+        "true_label": 19,
+        "target_label": 61
+    },
+    "food-101/images/baklava/796010.jpg": {
+        "true_label": 2,
+        "target_label": 46
+    },
+    "food-101/images/hamburger/2906023.jpg": {
+        "true_label": 53,
+        "target_label": 22
+    },
+    "food-101/images/ceviche/1241806.jpg": {
+        "true_label": 15,
+        "target_label": 50
+    },
+    "food-101/images/pizza/2296393.jpg": {
+        "true_label": 76,
+        "target_label": 41
+    },
+    "food-101/images/chocolate_cake/3021534.jpg": {
+        "true_label": 21,
+        "target_label": 95
+    },
+    "food-101/images/baklava/3067354.jpg": {
+        "true_label": 2,
+        "target_label": 44
+    },
+    "food-101/images/donuts/3475839.jpg": {
+        "true_label": 31,
+        "target_label": 75
+    },
+    "food-101/images/pad_thai/1981040.jpg": {
+        "true_label": 70,
+        "target_label": 79
+    },
+    "food-101/images/macaroni_and_cheese/1164869.jpg": {
+        "true_label": 62,
+        "target_label": 10
+    },
+    "food-101/images/escargots/3755631.jpg": {
+        "true_label": 35,
+        "target_label": 6
+    },
+    "food-101/images/baklava/1540948.jpg": {
+        "true_label": 2,
+        "target_label": 22
+    },
+    "food-101/images/chicken_curry/1574275.jpg": {
+        "true_label": 18,
+        "target_label": 23
+    },
+    "food-101/images/onion_rings/63624.jpg": {
+        "true_label": 68,
+        "target_label": 99
+    },
+    "food-101/images/sushi/2011810.jpg": {
+        "true_label": 95,
+        "target_label": 81
+    },
+    "food-101/images/pad_thai/3446942.jpg": {
+        "true_label": 70,
+        "target_label": 6
+    },
+    "food-101/images/risotto/71446.jpg": {
+        "true_label": 84,
+        "target_label": 89
+    },
+    "food-101/images/steak/90930.jpg": {
+        "true_label": 93,
+        "target_label": 10
+    },
+    "food-101/images/escargots/2274918.jpg": {
+        "true_label": 35,
+        "target_label": 37
+    },
+    "food-101/images/peking_duck/4042.jpg": {
+        "true_label": 74,
+        "target_label": 58
+    },
+    "food-101/images/oysters/527025.jpg": {
+        "true_label": 69,
+        "target_label": 87
+    },
+    "food-101/images/baby_back_ribs/1964783.jpg": {
+        "true_label": 1,
+        "target_label": 57
+    },
+    "food-101/images/gnocchi/937649.jpg": {
+        "true_label": 47,
+        "target_label": 65
+    },
+    "food-101/images/foie_gras/1679263.jpg": {
+        "true_label": 39,
+        "target_label": 80
+    },
+    "food-101/images/french_onion_soup/1826564.jpg": {
+        "true_label": 41,
+        "target_label": 59
+    },
+    "food-101/images/croque_madame/1618784.jpg": {
+        "true_label": 28,
+        "target_label": 56
+    },
+    "food-101/images/grilled_salmon/2814989.jpg": {
+        "true_label": 50,
+        "target_label": 36
+    },
+    "food-101/images/sushi/3401466.jpg": {
+        "true_label": 95,
+        "target_label": 29
+    },
+    "food-101/images/spaghetti_carbonara/2422311.jpg": {
+        "true_label": 91,
+        "target_label": 99
+    },
+    "food-101/images/french_onion_soup/2317133.jpg": {
+        "true_label": 41,
+        "target_label": 68
+    },
+    "food-101/images/greek_salad/650940.jpg": {
+        "true_label": 48,
+        "target_label": 14
+    },
+    "food-101/images/chicken_wings/942013.jpg": {
+        "true_label": 20,
+        "target_label": 47
+    },
+    "food-101/images/french_onion_soup/851577.jpg": {
+        "true_label": 41,
+        "target_label": 58
+    },
+    "food-101/images/guacamole/3526689.jpg": {
+        "true_label": 51,
+        "target_label": 14
+    },
+    "food-101/images/hot_dog/2667843.jpg": {
+        "true_label": 55,
+        "target_label": 38
+    },
+    "food-101/images/samosa/327105.jpg": {
+        "true_label": 85,
+        "target_label": 89
+    },
+    "food-101/images/breakfast_burrito/2109905.jpg": {
+        "true_label": 9,
+        "target_label": 89
+    },
+    "food-101/images/peking_duck/278771.jpg": {
+        "true_label": 74,
+        "target_label": 78
+    },
+    "food-101/images/french_toast/891917.jpg": {
+        "true_label": 42,
+        "target_label": 65
+    },
+    "food-101/images/churros/3882299.jpg": {
+        "true_label": 23,
+        "target_label": 70
+    },
+    "food-101/images/caesar_salad/2418102.jpg": {
+        "true_label": 11,
+        "target_label": 88
+    },
+    "food-101/images/pancakes/520721.jpg": {
+        "true_label": 72,
+        "target_label": 41
+    },
+    "food-101/images/guacamole/3842147.jpg": {
+        "true_label": 51,
+        "target_label": 5
+    },
+    "food-101/images/french_onion_soup/380597.jpg": {
+        "true_label": 41,
+        "target_label": 30
+    },
+    "food-101/images/sushi/1032052.jpg": {
+        "true_label": 95,
+        "target_label": 52
+    },
+    "food-101/images/eggs_benedict/1417189.jpg": {
+        "true_label": 34,
+        "target_label": 79
+    },
+    "food-101/images/seaweed_salad/1237672.jpg": {
+        "true_label": 88,
+        "target_label": 7
+    },
+    "food-101/images/caprese_salad/685845.jpg": {
+        "true_label": 13,
+        "target_label": 0
+    },
+    "food-101/images/ceviche/3663994.jpg": {
+        "true_label": 15,
+        "target_label": 29
+    },
+    "food-101/images/caprese_salad/3713822.jpg": {
+        "true_label": 13,
+        "target_label": 41
+    },
+    "food-101/images/baklava/2186251.jpg": {
+        "true_label": 2,
+        "target_label": 30
+    },
+    "food-101/images/donuts/1538020.jpg": {
+        "true_label": 31,
+        "target_label": 19
+    },
+    "food-101/images/sashimi/730221.jpg": {
+        "true_label": 86,
+        "target_label": 100
+    },
+    "food-101/images/guacamole/3253357.jpg": {
+        "true_label": 51,
+        "target_label": 34
+    },
+    "food-101/images/chicken_curry/1707089.jpg": {
+        "true_label": 18,
+        "target_label": 40
+    },
+    "food-101/images/grilled_cheese_sandwich/2483695.jpg": {
+        "true_label": 49,
+        "target_label": 43
+    },
+    "food-101/images/lobster_roll_sandwich/706320.jpg": {
+        "true_label": 61,
+        "target_label": 15
+    },
+    "food-101/images/clam_chowder/3606649.jpg": {
+        "true_label": 24,
+        "target_label": 0
+    },
+    "food-101/images/miso_soup/94402.jpg": {
+        "true_label": 64,
+        "target_label": 66
+    },
+    "food-101/images/spaghetti_carbonara/3139962.jpg": {
+        "true_label": 91,
+        "target_label": 98
+    },
+    "food-101/images/crab_cakes/2097465.jpg": {
+        "true_label": 26,
+        "target_label": 58
+    },
+    "food-101/images/huevos_rancheros/3792010.jpg": {
+        "true_label": 56,
+        "target_label": 24
+    },
+    "food-101/images/sashimi/3170341.jpg": {
+        "true_label": 86,
+        "target_label": 18
+    },
+    "food-101/images/strawberry_shortcake/2139220.jpg": {
+        "true_label": 94,
+        "target_label": 50
+    },
+    "food-101/images/macarons/288344.jpg": {
+        "true_label": 63,
+        "target_label": 71
+    },
+    "food-101/images/takoyaki/2911817.jpg": {
+        "true_label": 97,
+        "target_label": 92
+    },
+    "food-101/images/omelette/3127643.jpg": {
+        "true_label": 67,
+        "target_label": 31
+    },
+    "food-101/images/sashimi/3280794.jpg": {
+        "true_label": 86,
+        "target_label": 66
+    },
+    "food-101/images/poutine/1486309.jpg": {
+        "true_label": 78,
+        "target_label": 73
+    },
+    "food-101/images/pho/3023284.jpg": {
+        "true_label": 75,
+        "target_label": 88
+    },
+    "food-101/images/fried_rice/137130.jpg": {
+        "true_label": 44,
+        "target_label": 48
+    },
+    "food-101/images/risotto/2674768.jpg": {
+        "true_label": 84,
+        "target_label": 9
+    },
+    "food-101/images/fried_calamari/600766.jpg": {
+        "true_label": 43,
+        "target_label": 53
+    },
+    "food-101/images/carrot_cake/2021442.jpg": {
+        "true_label": 14,
+        "target_label": 97
+    },
+    "food-101/images/beef_tartare/143332.jpg": {
+        "true_label": 4,
+        "target_label": 6
+    },
+    "food-101/images/mussels/3042656.jpg": {
+        "true_label": 65,
+        "target_label": 57
+    },
+    "food-101/images/peking_duck/2166043.jpg": {
+        "true_label": 74,
+        "target_label": 2
+    },
+    "food-101/images/red_velvet_cake/918999.jpg": {
+        "true_label": 83,
+        "target_label": 60
+    },
+    "food-101/images/gnocchi/3506122.jpg": {
+        "true_label": 47,
+        "target_label": 9
+    },
+    "food-101/images/ravioli/578087.jpg": {
+        "true_label": 82,
+        "target_label": 42
+    },
+    "food-101/images/red_velvet_cake/670868.jpg": {
+        "true_label": 83,
+        "target_label": 75
+    },
+    "food-101/images/chicken_curry/2400693.jpg": {
+        "true_label": 18,
+        "target_label": 57
+    },
+    "food-101/images/edamame/1290777.jpg": {
+        "true_label": 33,
+        "target_label": 76
+    },
+    "food-101/images/beef_carpaccio/1488494.jpg": {
+        "true_label": 3,
+        "target_label": 54
+    },
+    "food-101/images/spaghetti_bolognese/2495059.jpg": {
+        "true_label": 90,
+        "target_label": 93
+    },
+    "food-101/images/pad_thai/517387.jpg": {
+        "true_label": 70,
+        "target_label": 84
+    },
+    "food-101/images/french_toast/1013397.jpg": {
+        "true_label": 42,
+        "target_label": 56
+    },
+    "food-101/images/samosa/3185927.jpg": {
+        "true_label": 85,
+        "target_label": 39
+    },
+    "food-101/images/sushi/1654256.jpg": {
+        "true_label": 95,
+        "target_label": 14
+    },
+    "food-101/images/beef_tartare/2443022.jpg": {
+        "true_label": 4,
+        "target_label": 54
+    },
+    "food-101/images/caesar_salad/1665706.jpg": {
+        "true_label": 11,
+        "target_label": 2
+    },
+    "food-101/images/creme_brulee/2272244.jpg": {
+        "true_label": 27,
+        "target_label": 44
+    },
+    "food-101/images/prime_rib/3213578.jpg": {
+        "true_label": 79,
+        "target_label": 23
+    },
+    "food-101/images/foie_gras/870728.jpg": {
+        "true_label": 39,
+        "target_label": 82
+    },
+    "food-101/images/prime_rib/546072.jpg": {
+        "true_label": 79,
+        "target_label": 60
+    },
+    "food-101/images/spring_rolls/3558731.jpg": {
+        "true_label": 92,
+        "target_label": 90
+    },
+    "food-101/images/pork_chop/2022865.jpg": {
+        "true_label": 77,
+        "target_label": 48
+    },
+    "food-101/images/tiramisu/3648317.jpg": {
+        "true_label": 98,
+        "target_label": 11
+    },
+    "food-101/images/bread_pudding/682677.jpg": {
+        "true_label": 8,
+        "target_label": 58
+    },
+    "food-101/images/samosa/3633981.jpg": {
+        "true_label": 85,
+        "target_label": 13
+    },
+    "food-101/images/huevos_rancheros/328751.jpg": {
+        "true_label": 56,
+        "target_label": 33
+    },
+    "food-101/images/baby_back_ribs/1667679.jpg": {
+        "true_label": 1,
+        "target_label": 58
+    },
+    "food-101/images/chocolate_cake/2694691.jpg": {
+        "true_label": 21,
+        "target_label": 78
+    },
+    "food-101/images/crab_cakes/1326535.jpg": {
+        "true_label": 26,
+        "target_label": 54
+    },
+    "food-101/images/french_toast/2622582.jpg": {
+        "true_label": 42,
+        "target_label": 70
+    },
+    "food-101/images/grilled_cheese_sandwich/2768916.jpg": {
+        "true_label": 49,
+        "target_label": 10
+    },
+    "food-101/images/beignets/1973137.jpg": {
+        "true_label": 6,
+        "target_label": 53
+    },
+    "food-101/images/takoyaki/277883.jpg": {
+        "true_label": 97,
+        "target_label": 41
+    },
+    "food-101/images/caprese_salad/2856090.jpg": {
+        "true_label": 13,
+        "target_label": 98
+    },
+    "food-101/images/spaghetti_carbonara/2090857.jpg": {
+        "true_label": 91,
+        "target_label": 45
+    },
+    "food-101/images/spaghetti_bolognese/944060.jpg": {
+        "true_label": 90,
+        "target_label": 30
+    },
+    "food-101/images/fish_and_chips/3834954.jpg": {
+        "true_label": 38,
+        "target_label": 45
+    },
+    "food-101/images/frozen_yogurt/2035004.jpg": {
+        "true_label": 45,
+        "target_label": 23
+    },
+    "food-101/images/seaweed_salad/2558822.jpg": {
+        "true_label": 88,
+        "target_label": 9
+    },
+    "food-101/images/seaweed_salad/3174875.jpg": {
+        "true_label": 88,
+        "target_label": 67
+    },
+    "food-101/images/miso_soup/3798289.jpg": {
+        "true_label": 64,
+        "target_label": 84
+    },
+    "food-101/images/beet_salad/3488983.jpg": {
+        "true_label": 5,
+        "target_label": 15
+    },
+    "food-101/images/breakfast_burrito/439966.jpg": {
+        "true_label": 9,
+        "target_label": 70
+    },
+    "food-101/images/sashimi/2668477.jpg": {
+        "true_label": 86,
+        "target_label": 67
+    },
+    "food-101/images/beet_salad/508389.jpg": {
+        "true_label": 5,
+        "target_label": 27
+    },
+    "food-101/images/breakfast_burrito/2189426.jpg": {
+        "true_label": 9,
+        "target_label": 47
+    },
+    "food-101/images/lobster_roll_sandwich/3029532.jpg": {
+        "true_label": 61,
+        "target_label": 46
+    },
+    "food-101/images/lasagna/359413.jpg": {
+        "true_label": 59,
+        "target_label": 96
+    },
+    "food-101/images/strawberry_shortcake/3626999.jpg": {
+        "true_label": 94,
+        "target_label": 84
+    },
+    "food-101/images/bread_pudding/3607118.jpg": {
+        "true_label": 8,
+        "target_label": 21
+    },
+    "food-101/images/pad_thai/1301737.jpg": {
+        "true_label": 70,
+        "target_label": 32
+    },
+    "food-101/images/macarons/2949217.jpg": {
+        "true_label": 63,
+        "target_label": 13
+    },
+    "food-101/images/oysters/2812622.jpg": {
+        "true_label": 69,
+        "target_label": 20
+    },
+    "food-101/images/pizza/2549661.jpg": {
+        "true_label": 76,
+        "target_label": 34
+    },
+    "food-101/images/tiramisu/139188.jpg": {
+        "true_label": 98,
+        "target_label": 27
+    },
+    "food-101/images/pulled_pork_sandwich/324037.jpg": {
+        "true_label": 80,
+        "target_label": 24
+    },
+    "food-101/images/garlic_bread/2102175.jpg": {
+        "true_label": 46,
+        "target_label": 80
+    },
+    "food-101/images/nachos/2989735.jpg": {
+        "true_label": 66,
+        "target_label": 21
+    },
+    "food-101/images/waffles/3483574.jpg": {
+        "true_label": 100,
+        "target_label": 99
+    },
+    "food-101/images/apple_pie/224383.jpg": {
+        "true_label": 0,
+        "target_label": 100
+    },
+    "food-101/images/takoyaki/3716689.jpg": {
+        "true_label": 97,
+        "target_label": 85
+    },
+    "food-101/images/spring_rolls/45817.jpg": {
+        "true_label": 92,
+        "target_label": 9
+    },
+    "food-101/images/deviled_eggs/3869325.jpg": {
+        "true_label": 30,
+        "target_label": 24
+    },
+    "food-101/images/tuna_tartare/1574469.jpg": {
+        "true_label": 99,
+        "target_label": 82
+    },
+    "food-101/images/fried_rice/128946.jpg": {
+        "true_label": 44,
+        "target_label": 66
+    },
+    "food-101/images/omelette/2404243.jpg": {
+        "true_label": 67,
+        "target_label": 61
+    },
+    "food-101/images/fish_and_chips/975592.jpg": {
+        "true_label": 38,
+        "target_label": 99
+    },
+    "food-101/images/tacos/1066762.jpg": {
+        "true_label": 96,
+        "target_label": 74
+    },
+    "food-101/images/shrimp_and_grits/1773331.jpg": {
+        "true_label": 89,
+        "target_label": 100
+    },
+    "food-101/images/prime_rib/1757065.jpg": {
+        "true_label": 79,
+        "target_label": 76
+    },
+    "food-101/images/chicken_curry/959641.jpg": {
+        "true_label": 18,
+        "target_label": 60
+    },
+    "food-101/images/hot_and_sour_soup/3336712.jpg": {
+        "true_label": 54,
+        "target_label": 90
+    },
+    "food-101/images/french_onion_soup/798877.jpg": {
+        "true_label": 41,
+        "target_label": 75
+    },
+    "food-101/images/ceviche/953430.jpg": {
+        "true_label": 15,
+        "target_label": 85
+    },
+    "food-101/images/bibimbap/1316450.jpg": {
+        "true_label": 7,
+        "target_label": 84
+    },
+    "food-101/images/fried_rice/3860345.jpg": {
+        "true_label": 44,
+        "target_label": 82
+    },
+    "food-101/images/hummus/604997.jpg": {
+        "true_label": 57,
+        "target_label": 43
+    },
+    "food-101/images/chicken_quesadilla/2991536.jpg": {
+        "true_label": 19,
+        "target_label": 83
+    },
+    "food-101/images/fried_calamari/2892863.jpg": {
+        "true_label": 43,
+        "target_label": 42
+    },
+    "food-101/images/baby_back_ribs/2032061.jpg": {
+        "true_label": 1,
+        "target_label": 22
+    },
+    "food-101/images/donuts/1309523.jpg": {
+        "true_label": 31,
+        "target_label": 59
+    },
+    "food-101/images/club_sandwich/2859409.jpg": {
+        "true_label": 25,
+        "target_label": 8
+    },
+    "food-101/images/hamburger/3199592.jpg": {
+        "true_label": 53,
+        "target_label": 63
+    },
+    "food-101/images/prime_rib/3394968.jpg": {
+        "true_label": 79,
+        "target_label": 58
+    },
+    "food-101/images/scallops/862090.jpg": {
+        "true_label": 87,
+        "target_label": 82
+    },
+    "food-101/images/cannoli/3832416.jpg": {
+        "true_label": 12,
+        "target_label": 41
+    },
+    "food-101/images/sushi/101625.jpg": {
+        "true_label": 95,
+        "target_label": 37
+    },
+    "food-101/images/lobster_bisque/649265.jpg": {
+        "true_label": 60,
+        "target_label": 78
+    },
+    "food-101/images/spaghetti_carbonara/2008462.jpg": {
+        "true_label": 91,
+        "target_label": 7
+    },
+    "food-101/images/donuts/132845.jpg": {
+        "true_label": 31,
+        "target_label": 48
+    },
+    "food-101/images/macarons/3253580.jpg": {
+        "true_label": 63,
+        "target_label": 67
+    },
+    "food-101/images/scallops/3520622.jpg": {
+        "true_label": 87,
+        "target_label": 9
+    },
+    "food-101/images/red_velvet_cake/1889034.jpg": {
+        "true_label": 83,
+        "target_label": 41
+    },
+    "food-101/images/tiramisu/2763909.jpg": {
+        "true_label": 98,
+        "target_label": 61
+    },
+    "food-101/images/poutine/2903629.jpg": {
+        "true_label": 78,
+        "target_label": 59
+    },
+    "food-101/images/edamame/1571165.jpg": {
+        "true_label": 33,
+        "target_label": 4
+    },
+    "food-101/images/ravioli/2091092.jpg": {
+        "true_label": 82,
+        "target_label": 7
+    },
+    "food-101/images/tiramisu/1914210.jpg": {
+        "true_label": 98,
+        "target_label": 49
+    },
+    "food-101/images/spaghetti_carbonara/1972846.jpg": {
+        "true_label": 91,
+        "target_label": 38
+    },
+    "food-101/images/chocolate_mousse/2303080.jpg": {
+        "true_label": 22,
+        "target_label": 9
+    },
+    "food-101/images/cannoli/1209704.jpg": {
+        "true_label": 12,
+        "target_label": 85
+    },
+    "food-101/images/grilled_cheese_sandwich/2063100.jpg": {
+        "true_label": 49,
+        "target_label": 11
+    },
+    "food-101/images/chicken_curry/1781992.jpg": {
+        "true_label": 18,
+        "target_label": 81
+    },
+    "food-101/images/sashimi/559058.jpg": {
+        "true_label": 86,
+        "target_label": 78
+    },
+    "food-101/images/bruschetta/3356880.jpg": {
+        "true_label": 10,
+        "target_label": 67
+    },
+    "food-101/images/red_velvet_cake/3093907.jpg": {
+        "true_label": 83,
+        "target_label": 51
+    },
+    "food-101/images/carrot_cake/2051310.jpg": {
+        "true_label": 14,
+        "target_label": 62
+    },
+    "food-101/images/ceviche/3343795.jpg": {
+        "true_label": 15,
+        "target_label": 77
+    },
+    "food-101/images/gnocchi/3825205.jpg": {
+        "true_label": 47,
+        "target_label": 73
+    },
+    "food-101/images/caesar_salad/3845880.jpg": {
+        "true_label": 11,
+        "target_label": 97
+    },
+    "food-101/images/mussels/2122438.jpg": {
+        "true_label": 65,
+        "target_label": 5
+    },
+    "food-101/images/chicken_curry/501240.jpg": {
+        "true_label": 18,
+        "target_label": 60
+    },
+    "food-101/images/edamame/1868306.jpg": {
+        "true_label": 33,
+        "target_label": 76
+    },
+    "food-101/images/waffles/1408987.jpg": {
+        "true_label": 100,
+        "target_label": 85
+    },
+    "food-101/images/baklava/3765756.jpg": {
+        "true_label": 2,
+        "target_label": 27
+    },
+    "food-101/images/cup_cakes/2387227.jpg": {
+        "true_label": 29,
+        "target_label": 44
+    },
+    "food-101/images/hot_and_sour_soup/2152728.jpg": {
+        "true_label": 54,
+        "target_label": 80
+    },
+    "food-101/images/filet_mignon/384251.jpg": {
+        "true_label": 37,
+        "target_label": 63
+    },
+    "food-101/images/falafel/3070593.jpg": {
+        "true_label": 36,
+        "target_label": 67
+    },
+    "food-101/images/poutine/2354170.jpg": {
+        "true_label": 78,
+        "target_label": 21
+    },
+    "food-101/images/chocolate_cake/543149.jpg": {
+        "true_label": 21,
+        "target_label": 7
+    },
+    "food-101/images/ceviche/3784572.jpg": {
+        "true_label": 15,
+        "target_label": 60
+    },
+    "food-101/images/cup_cakes/2115228.jpg": {
+        "true_label": 29,
+        "target_label": 13
+    },
+    "food-101/images/chocolate_cake/3493807.jpg": {
+        "true_label": 21,
+        "target_label": 46
+    },
+    "food-101/images/oysters/280510.jpg": {
+        "true_label": 69,
+        "target_label": 94
+    },
+    "food-101/images/french_toast/520948.jpg": {
+        "true_label": 42,
+        "target_label": 10
+    },
+    "food-101/images/prime_rib/102197.jpg": {
+        "true_label": 79,
+        "target_label": 66
+    },
+    "food-101/images/bruschetta/1318604.jpg": {
+        "true_label": 10,
+        "target_label": 85
+    },
+    "food-101/images/gyoza/538040.jpg": {
+        "true_label": 52,
+        "target_label": 24
+    },
+    "food-101/images/samosa/2255127.jpg": {
+        "true_label": 85,
+        "target_label": 5
+    },
+    "food-101/images/ramen/2612951.jpg": {
+        "true_label": 81,
+        "target_label": 33
+    },
+    "food-101/images/pancakes/2002220.jpg": {
+        "true_label": 72,
+        "target_label": 93
+    },
+    "food-101/images/creme_brulee/1054619.jpg": {
+        "true_label": 27,
+        "target_label": 59
+    },
+    "food-101/images/clam_chowder/3648290.jpg": {
+        "true_label": 24,
+        "target_label": 59
+    },
+    "food-101/images/oysters/3237294.jpg": {
+        "true_label": 69,
+        "target_label": 70
+    },
+    "food-101/images/tiramisu/1653292.jpg": {
+        "true_label": 98,
+        "target_label": 68
+    },
+    "food-101/images/garlic_bread/911265.jpg": {
+        "true_label": 46,
+        "target_label": 81
+    },
+    "food-101/images/omelette/358078.jpg": {
+        "true_label": 67,
+        "target_label": 22
+    },
+    "food-101/images/hot_dog/1436057.jpg": {
+        "true_label": 55,
+        "target_label": 48
+    },
+    "food-101/images/fish_and_chips/3887462.jpg": {
+        "true_label": 38,
+        "target_label": 50
+    },
+    "food-101/images/french_toast/2377513.jpg": {
+        "true_label": 42,
+        "target_label": 38
+    },
+    "food-101/images/cup_cakes/1264740.jpg": {
+        "true_label": 29,
+        "target_label": 52
+    },
+    "food-101/images/dumplings/513541.jpg": {
+        "true_label": 32,
+        "target_label": 55
+    },
+    "food-101/images/deviled_eggs/1930944.jpg": {
+        "true_label": 30,
+        "target_label": 46
+    },
+    "food-101/images/beef_carpaccio/3296135.jpg": {
+        "true_label": 3,
+        "target_label": 89
+    },
+    "food-101/images/eggs_benedict/3516091.jpg": {
+        "true_label": 34,
+        "target_label": 79
+    },
+    "food-101/images/grilled_salmon/277691.jpg": {
+        "true_label": 50,
+        "target_label": 6
+    },
+    "food-101/images/caesar_salad/2421496.jpg": {
+        "true_label": 11,
+        "target_label": 83
+    },
+    "food-101/images/ravioli/367481.jpg": {
+        "true_label": 82,
+        "target_label": 85
+    },
+    "food-101/images/baklava/1208747.jpg": {
+        "true_label": 2,
+        "target_label": 45
+    },
+    "food-101/images/beet_salad/114487.jpg": {
+        "true_label": 5,
+        "target_label": 9
+    },
+    "food-101/images/spaghetti_bolognese/2078332.jpg": {
+        "true_label": 90,
+        "target_label": 44
+    },
+    "food-101/images/escargots/1917493.jpg": {
+        "true_label": 35,
+        "target_label": 12
+    },
+    "food-101/images/apple_pie/2034818.jpg": {
+        "true_label": 0,
+        "target_label": 74
+    },
+    "food-101/images/falafel/466987.jpg": {
+        "true_label": 36,
+        "target_label": 89
+    },
+    "food-101/images/onion_rings/2254620.jpg": {
+        "true_label": 68,
+        "target_label": 51
+    },
+    "food-101/images/apple_pie/1167170.jpg": {
+        "true_label": 0,
+        "target_label": 39
+    },
+    "food-101/images/tuna_tartare/3499885.jpg": {
+        "true_label": 99,
+        "target_label": 34
+    },
+    "food-101/images/oysters/2616366.jpg": {
+        "true_label": 69,
+        "target_label": 95
+    },
+    "food-101/images/carrot_cake/3520105.jpg": {
+        "true_label": 14,
+        "target_label": 87
+    },
+    "food-101/images/falafel/3394578.jpg": {
+        "true_label": 36,
+        "target_label": 80
+    },
+    "food-101/images/caprese_salad/2086221.jpg": {
+        "true_label": 13,
+        "target_label": 22
+    },
+    "food-101/images/lobster_bisque/983248.jpg": {
+        "true_label": 60,
+        "target_label": 44
+    },
+    "food-101/images/baklava/3885250.jpg": {
+        "true_label": 2,
+        "target_label": 11
+    },
+    "food-101/images/macarons/1789768.jpg": {
+        "true_label": 63,
+        "target_label": 77
+    },
+    "food-101/images/hamburger/91710.jpg": {
+        "true_label": 53,
+        "target_label": 87
+    },
+    "food-101/images/waffles/1648664.jpg": {
+        "true_label": 100,
+        "target_label": 20
+    },
+    "food-101/images/edamame/3377411.jpg": {
+        "true_label": 33,
+        "target_label": 47
+    },
+    "food-101/images/pulled_pork_sandwich/2351586.jpg": {
+        "true_label": 80,
+        "target_label": 41
+    },
+    "food-101/images/bread_pudding/1227385.jpg": {
+        "true_label": 8,
+        "target_label": 86
+    },
+    "food-101/images/pancakes/2997254.jpg": {
+        "true_label": 72,
+        "target_label": 92
+    },
+    "food-101/images/creme_brulee/63855.jpg": {
+        "true_label": 27,
+        "target_label": 87
+    },
+    "food-101/images/hummus/3530680.jpg": {
+        "true_label": 57,
+        "target_label": 52
+    },
+    "food-101/images/club_sandwich/819992.jpg": {
+        "true_label": 25,
+        "target_label": 18
+    },
+    "food-101/images/garlic_bread/2337571.jpg": {
+        "true_label": 46,
+        "target_label": 79
+    },
+    "food-101/images/hot_and_sour_soup/583805.jpg": {
+        "true_label": 54,
+        "target_label": 93
+    },
+    "food-101/images/crab_cakes/157450.jpg": {
+        "true_label": 26,
+        "target_label": 10
+    },
+    "food-101/images/baklava/2924742.jpg": {
+        "true_label": 2,
+        "target_label": 42
+    },
+    "food-101/images/panna_cotta/2534221.jpg": {
+        "true_label": 73,
+        "target_label": 74
+    },
+    "food-101/images/beef_tartare/3666528.jpg": {
+        "true_label": 4,
+        "target_label": 51
+    },
+    "food-101/images/cup_cakes/1232197.jpg": {
+        "true_label": 29,
+        "target_label": 85
+    },
+    "food-101/images/macaroni_and_cheese/894544.jpg": {
+        "true_label": 62,
+        "target_label": 44
+    },
+    "food-101/images/crab_cakes/1327056.jpg": {
+        "true_label": 26,
+        "target_label": 18
+    },
+    "food-101/images/chicken_quesadilla/693569.jpg": {
+        "true_label": 19,
+        "target_label": 88
+    },
+    "food-101/images/bruschetta/1373778.jpg": {
+        "true_label": 10,
+        "target_label": 92
+    },
+    "food-101/images/pulled_pork_sandwich/3760542.jpg": {
+        "true_label": 80,
+        "target_label": 97
+    },
+    "food-101/images/hot_and_sour_soup/3049467.jpg": {
+        "true_label": 54,
+        "target_label": 90
+    },
+    "food-101/images/breakfast_burrito/1189623.jpg": {
+        "true_label": 9,
+        "target_label": 70
+    },
+    "food-101/images/edamame/576227.jpg": {
+        "true_label": 33,
+        "target_label": 11
+    },
+    "food-101/images/spaghetti_carbonara/646596.jpg": {
+        "true_label": 91,
+        "target_label": 84
+    },
+    "food-101/images/lobster_bisque/184830.jpg": {
+        "true_label": 60,
+        "target_label": 88
+    },
+    "food-101/images/donuts/3898934.jpg": {
+        "true_label": 31,
+        "target_label": 57
+    },
+    "food-101/images/chicken_curry/656500.jpg": {
+        "true_label": 18,
+        "target_label": 68
+    },
+    "food-101/images/carrot_cake/3289115.jpg": {
+        "true_label": 14,
+        "target_label": 49
+    },
+    "food-101/images/beef_tartare/2030974.jpg": {
+        "true_label": 4,
+        "target_label": 2
+    },
+    "food-101/images/spaghetti_bolognese/2675763.jpg": {
+        "true_label": 90,
+        "target_label": 48
+    },
+    "food-101/images/lobster_bisque/1236440.jpg": {
+        "true_label": 60,
+        "target_label": 41
+    },
+    "food-101/images/beignets/1830956.jpg": {
+        "true_label": 6,
+        "target_label": 26
+    },
+    "food-101/images/foie_gras/2355698.jpg": {
+        "true_label": 39,
+        "target_label": 29
+    },
+    "food-101/images/clam_chowder/1945153.jpg": {
+        "true_label": 24,
+        "target_label": 46
+    },
+    "food-101/images/bruschetta/2017541.jpg": {
+        "true_label": 10,
+        "target_label": 65
+    },
+    "food-101/images/tacos/403868.jpg": {
+        "true_label": 96,
+        "target_label": 26
+    },
+    "food-101/images/breakfast_burrito/294591.jpg": {
+        "true_label": 9,
+        "target_label": 31
+    },
+    "food-101/images/pizza/3814200.jpg": {
+        "true_label": 76,
+        "target_label": 19
+    },
+    "food-101/images/nachos/450661.jpg": {
+        "true_label": 66,
+        "target_label": 21
+    },
+    "food-101/images/beef_tartare/3191961.jpg": {
+        "true_label": 4,
+        "target_label": 10
+    },
+    "food-101/images/baby_back_ribs/139044.jpg": {
+        "true_label": 1,
+        "target_label": 40
+    },
+    "food-101/images/steak/3503350.jpg": {
+        "true_label": 93,
+        "target_label": 12
+    },
+    "food-101/images/takoyaki/2247872.jpg": {
+        "true_label": 97,
+        "target_label": 66
+    },
+    "food-101/images/garlic_bread/3139808.jpg": {
+        "true_label": 46,
+        "target_label": 72
+    },
+    "food-101/images/poutine/2170579.jpg": {
+        "true_label": 78,
+        "target_label": 97
+    },
+    "food-101/images/tiramisu/604564.jpg": {
+        "true_label": 98,
+        "target_label": 69
+    },
+    "food-101/images/beignets/564090.jpg": {
+        "true_label": 6,
+        "target_label": 4
+    },
+    "food-101/images/cup_cakes/421250.jpg": {
+        "true_label": 29,
+        "target_label": 87
+    },
+    "food-101/images/french_onion_soup/2517063.jpg": {
+        "true_label": 41,
+        "target_label": 46
+    },
+    "food-101/images/seaweed_salad/2684780.jpg": {
+        "true_label": 88,
+        "target_label": 81
+    },
+    "food-101/images/waffles/1406502.jpg": {
+        "true_label": 100,
+        "target_label": 18
+    },
+    "food-101/images/huevos_rancheros/164166.jpg": {
+        "true_label": 56,
+        "target_label": 79
+    },
+    "food-101/images/creme_brulee/3114148.jpg": {
+        "true_label": 27,
+        "target_label": 51
+    },
+    "food-101/images/hamburger/3655355.jpg": {
+        "true_label": 53,
+        "target_label": 21
+    },
+    "food-101/images/ravioli/1893671.jpg": {
+        "true_label": 82,
+        "target_label": 22
+    },
+    "food-101/images/gyoza/1424023.jpg": {
+        "true_label": 52,
+        "target_label": 25
+    },
+    "food-101/images/pancakes/3548681.jpg": {
+        "true_label": 72,
+        "target_label": 91
+    },
+    "food-101/images/macarons/1415844.jpg": {
+        "true_label": 63,
+        "target_label": 82
+    },
+    "food-101/images/fried_rice/1461091.jpg": {
+        "true_label": 44,
+        "target_label": 23
+    },
+    "food-101/images/garlic_bread/3823843.jpg": {
+        "true_label": 46,
+        "target_label": 95
+    },
+    "food-101/images/chocolate_mousse/1617352.jpg": {
+        "true_label": 22,
+        "target_label": 59
+    },
+    "food-101/images/huevos_rancheros/3132399.jpg": {
+        "true_label": 56,
+        "target_label": 5
+    },
+    "food-101/images/greek_salad/3401115.jpg": {
+        "true_label": 48,
+        "target_label": 55
+    },
+    "food-101/images/seaweed_salad/908175.jpg": {
+        "true_label": 88,
+        "target_label": 48
+    },
+    "food-101/images/pulled_pork_sandwich/1781800.jpg": {
+        "true_label": 80,
+        "target_label": 89
+    },
+    "food-101/images/gnocchi/1429946.jpg": {
+        "true_label": 47,
+        "target_label": 95
+    },
+    "food-101/images/pizza/1655630.jpg": {
+        "true_label": 76,
+        "target_label": 32
+    },
+    "food-101/images/gnocchi/3260773.jpg": {
+        "true_label": 47,
+        "target_label": 59
+    },
+    "food-101/images/scallops/1473407.jpg": {
+        "true_label": 87,
+        "target_label": 80
+    },
+    "food-101/images/omelette/1732647.jpg": {
+        "true_label": 67,
+        "target_label": 38
+    },
+    "food-101/images/pad_thai/3794322.jpg": {
+        "true_label": 70,
+        "target_label": 99
+    },
+    "food-101/images/baby_back_ribs/626550.jpg": {
+        "true_label": 1,
+        "target_label": 98
+    },
+    "food-101/images/chocolate_cake/3288526.jpg": {
+        "true_label": 21,
+        "target_label": 60
+    },
+    "food-101/images/club_sandwich/154380.jpg": {
+        "true_label": 25,
+        "target_label": 32
+    },
+    "food-101/images/eggs_benedict/7582.jpg": {
+        "true_label": 34,
+        "target_label": 71
+    },
+    "food-101/images/tacos/796326.jpg": {
+        "true_label": 96,
+        "target_label": 32
+    },
+    "food-101/images/baby_back_ribs/3887363.jpg": {
+        "true_label": 1,
+        "target_label": 42
+    },
+    "food-101/images/churros/2410744.jpg": {
+        "true_label": 23,
+        "target_label": 63
+    },
+    "food-101/images/croque_madame/213217.jpg": {
+        "true_label": 28,
+        "target_label": 26
+    },
+    "food-101/images/oysters/2281234.jpg": {
+        "true_label": 69,
+        "target_label": 49
+    },
+    "food-101/images/macarons/3898867.jpg": {
+        "true_label": 63,
+        "target_label": 89
+    },
+    "food-101/images/spaghetti_carbonara/834161.jpg": {
+        "true_label": 91,
+        "target_label": 75
+    },
+    "food-101/images/macaroni_and_cheese/546784.jpg": {
+        "true_label": 62,
+        "target_label": 58
+    },
+    "food-101/images/pork_chop/2830392.jpg": {
+        "true_label": 77,
+        "target_label": 61
+    },
+    "food-101/images/escargots/2396135.jpg": {
+        "true_label": 35,
+        "target_label": 39
+    },
+    "food-101/images/macaroni_and_cheese/257566.jpg": {
+        "true_label": 62,
+        "target_label": 50
+    },
+    "food-101/images/edamame/3253578.jpg": {
+        "true_label": 33,
+        "target_label": 67
+    },
+    "food-101/images/ravioli/3860850.jpg": {
+        "true_label": 82,
+        "target_label": 69
+    },
+    "food-101/images/tacos/2189723.jpg": {
+        "true_label": 96,
+        "target_label": 55
+    },
+    "food-101/images/nachos/93041.jpg": {
+        "true_label": 66,
+        "target_label": 22
+    },
+    "food-101/images/escargots/3318419.jpg": {
+        "true_label": 35,
+        "target_label": 27
+    },
+    "food-101/images/scallops/1404351.jpg": {
+        "true_label": 87,
+        "target_label": 79
+    },
+    "food-101/images/pizza/1445608.jpg": {
+        "true_label": 76,
+        "target_label": 19
+    },
+    "food-101/images/macarons/1871898.jpg": {
+        "true_label": 63,
+        "target_label": 34
+    },
+    "food-101/images/omelette/2245283.jpg": {
+        "true_label": 67,
+        "target_label": 6
+    },
+    "food-101/images/bread_pudding/3306095.jpg": {
+        "true_label": 8,
+        "target_label": 85
+    },
+    "food-101/images/beef_carpaccio/3177871.jpg": {
+        "true_label": 3,
+        "target_label": 64
+    },
+    "food-101/images/beignets/2192983.jpg": {
+        "true_label": 6,
+        "target_label": 50
+    },
+    "food-101/images/sushi/72926.jpg": {
+        "true_label": 95,
+        "target_label": 72
+    },
+    "food-101/images/creme_brulee/2593526.jpg": {
+        "true_label": 27,
+        "target_label": 13
+    },
+    "food-101/images/prime_rib/1814050.jpg": {
+        "true_label": 79,
+        "target_label": 94
+    },
+    "food-101/images/steak/3297938.jpg": {
+        "true_label": 93,
+        "target_label": 68
+    },
+    "food-101/images/scallops/1937060.jpg": {
+        "true_label": 87,
+        "target_label": 15
+    },
+    "food-101/images/paella/2442053.jpg": {
+        "true_label": 71,
+        "target_label": 38
+    },
+    "food-101/images/greek_salad/292534.jpg": {
+        "true_label": 48,
+        "target_label": 10
+    },
+    "food-101/images/frozen_yogurt/1346030.jpg": {
+        "true_label": 45,
+        "target_label": 100
+    },
+    "food-101/images/beet_salad/1512648.jpg": {
+        "true_label": 5,
+        "target_label": 23
+    },
+    "food-101/images/chocolate_mousse/2014753.jpg": {
+        "true_label": 22,
+        "target_label": 37
+    },
+    "food-101/images/macaroni_and_cheese/2715234.jpg": {
+        "true_label": 62,
+        "target_label": 59
+    },
+    "food-101/images/donuts/305695.jpg": {
+        "true_label": 31,
+        "target_label": 68
+    },
+    "food-101/images/apple_pie/406682.jpg": {
+        "true_label": 0,
+        "target_label": 21
+    },
+    "food-101/images/spaghetti_carbonara/426028.jpg": {
+        "true_label": 91,
+        "target_label": 57
+    },
+    "food-101/images/oysters/1752619.jpg": {
+        "true_label": 69,
+        "target_label": 11
+    },
+    "food-101/images/garlic_bread/3288265.jpg": {
+        "true_label": 46,
+        "target_label": 30
+    },
+    "food-101/images/clam_chowder/2762472.jpg": {
+        "true_label": 24,
+        "target_label": 60
+    },
+    "food-101/images/baklava/1823708.jpg": {
+        "true_label": 2,
+        "target_label": 47
+    },
+    "food-101/images/french_fries/2737860.jpg": {
+        "true_label": 40,
+        "target_label": 3
+    },
+    "food-101/images/sushi/192081.jpg": {
+        "true_label": 95,
+        "target_label": 55
+    },
+    "food-101/images/bruschetta/3026738.jpg": {
+        "true_label": 10,
+        "target_label": 6
+    },
+    "food-101/images/donuts/2512779.jpg": {
+        "true_label": 31,
+        "target_label": 53
+    },
+    "food-101/images/pad_thai/332598.jpg": {
+        "true_label": 70,
+        "target_label": 66
+    },
+    "food-101/images/waffles/2206406.jpg": {
+        "true_label": 100,
+        "target_label": 49
+    },
+    "food-101/images/spring_rolls/3307908.jpg": {
+        "true_label": 92,
+        "target_label": 32
+    },
+    "food-101/images/fried_rice/2897873.jpg": {
+        "true_label": 44,
+        "target_label": 52
+    },
+    "food-101/images/spaghetti_bolognese/1660402.jpg": {
+        "true_label": 90,
+        "target_label": 10
+    },
+    "food-101/images/sashimi/2779853.jpg": {
+        "true_label": 86,
+        "target_label": 49
+    },
+    "food-101/images/ramen/1545393.jpg": {
+        "true_label": 81,
+        "target_label": 30
+    },
+    "food-101/images/lobster_roll_sandwich/1687790.jpg": {
+        "true_label": 61,
+        "target_label": 3
+    },
+    "food-101/images/breakfast_burrito/1869289.jpg": {
+        "true_label": 9,
+        "target_label": 43
+    },
+    "food-101/images/hot_dog/76618.jpg": {
+        "true_label": 55,
+        "target_label": 12
+    },
+    "food-101/images/samosa/3845484.jpg": {
+        "true_label": 85,
+        "target_label": 94
+    },
+    "food-101/images/grilled_cheese_sandwich/75145.jpg": {
+        "true_label": 49,
+        "target_label": 86
+    },
+    "food-101/images/scallops/568607.jpg": {
+        "true_label": 87,
+        "target_label": 44
+    },
+    "food-101/images/breakfast_burrito/240513.jpg": {
+        "true_label": 9,
+        "target_label": 21
+    },
+    "food-101/images/spring_rolls/3555768.jpg": {
+        "true_label": 92,
+        "target_label": 19
+    },
+    "food-101/images/club_sandwich/2236792.jpg": {
+        "true_label": 25,
+        "target_label": 4
+    },
+    "food-101/images/french_toast/114090.jpg": {
+        "true_label": 42,
+        "target_label": 38
+    },
+    "food-101/images/hamburger/1636096.jpg": {
+        "true_label": 53,
+        "target_label": 63
+    },
+    "food-101/images/prime_rib/454303.jpg": {
+        "true_label": 79,
+        "target_label": 92
+    },
+    "food-101/images/gyoza/1060188.jpg": {
+        "true_label": 52,
+        "target_label": 19
+    },
+    "food-101/images/edamame/1272701.jpg": {
+        "true_label": 33,
+        "target_label": 100
+    },
+    "food-101/images/carrot_cake/1954230.jpg": {
+        "true_label": 14,
+        "target_label": 93
+    }
+}

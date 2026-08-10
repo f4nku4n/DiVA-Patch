@@ -1,10 +1,11 @@
-from .utils import (
+from .common import (
     NumpyEncoder,
     first_success_query_from_process,
     pytorch_switch,
     sample_image_labels,
     select_devopatch_target,
     set_seed,
+    apply_patch
 )
 from .PerceptualMetrics import (
     LPIPSAlexNet,

@@ -1,39 +1,50 @@
-import argparse
-import json
 import os
+import json
 import pickle
+import argparse
 
 import numpy as np
 from PIL import Image
 
 from utils import (
+    set_seed,
+    apply_patch,
     NumpyEncoder,
-    PerceptualMetricTracker,
-    first_success_query_from_process,
     pytorch_switch,
     sample_image_labels,
-    set_seed,
+    PerceptualMetricTracker,
+    first_success_query_from_process
 )
+
 from utils.LossFunctions import Targeted, UnTargeted
 
+VALID_MODELS = {
+    "ImageNet1K": ("VGGNet16", "ResNet50", "ViT16"),
+    "Flower102": ("EfficientNetV2S",),
+    "Food101": ("Swin",),
+}
 
-def build_parser(default_setting=None):
+
+def build_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--setting", choices=["common", "realistic"], default=default_setting or "realistic", help="common resizes/crops to 224 in [0,1]; realistic uses raw images (pre-processing)")
-    parser.add_argument("--exp_root", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "exp_result"))
+    parser.add_argument("--setting", choices=["common", "realistic"],
+                        default="realistic",
+                        help="common resizes/crops to 224 in [0,1]; realistic uses raw images (pre-processing)")
+    parser.add_argument("--exp_root", default='./exp_root')
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--max_query", type=int, default=10000)
     parser.add_argument("--num_images", type=int, default=100)
-    parser.add_argument("--vision_model", default="VGGNet16", choices=["VGGNet16", "ResNet50", "ViT16"])
+    parser.add_argument("--dataset", choices=list(VALID_MODELS), default="ImageNet1K")
+    parser.add_argument("--vision_model", default="VGGNet16", choices=["VGGNet16", "ResNet50", "ViT16", "EfficientNetV2S", "Swin"])
     parser.add_argument("--device", default="cuda", help="cuda/cpu")
-    parser.add_argument("--dataset_root", required=True, help="ImageNet1K path")
+    parser.add_argument("--dataset_root", required=True, help="dataset path")
     parser.add_argument("--attack_type", default="non_targeted", choices=["targeted", "non_targeted"])
     parser.add_argument("--N", type=int, default=100, help="number of semi-transparent circles")
     parser.add_argument("--patch_h", type=int, default=40, help="height of patch")
     parser.add_argument("--patch_w", type=int, default=40, help="width of patch")
     parser.add_argument("--grid_w", type=int, default=40, help="width of grid archive")
     parser.add_argument("--grid_h", type=int, default=40, help="height of grid archive")
-    parser.add_argument("--delta_max", type=float, default=10.0, help="maximum selection temperature")
+    parser.add_argument("--delta_max", type=float, default=20.0, help="maximum selection temperature")
     parser.add_argument("--delta_min", type=float, default=0.1, help="minimum selection temperature")
     parser.add_argument("--K", type=int, default=100, help="number of refinement queries")
     parser.add_argument("--save_imgs", action="store_true", help="save adversarial images")
@@ -41,17 +52,36 @@ def build_parser(default_setting=None):
     return parser
 
 
-def _components(setting):
+def _components(dataset, vision_model, setting):
+    if vision_model not in VALID_MODELS[dataset]:
+        allowed = ", ".join(VALID_MODELS[dataset])
+        raise ValueError(f"--vision_model {vision_model!r} is not valid for --dataset {dataset!r}; choose one of: {allowed}")
     if setting == "common":
         from attack_methods.DiVA_Patch_common import DiVA_Patch_common as DiVA_Patch
-        from models.ImageNetModels import ImageNetModel
     else:
         from attack_methods.DiVA_Patch import DiVA_Patch
-        from models.ImageNetModels_realistic import ImageNetModel
-    return DiVA_Patch, ImageNetModel
+    if dataset == "ImageNet1K":
+        if setting == "common":
+            from models.ImageNetModels import ImageNetModel as VisionModel
+        else:
+            from models.ImageNetModels_realistic import ImageNetModel as VisionModel
+        model_args = ({"VGGNet16": 0, "ResNet50": 1, "ViT16": 2}[vision_model],)
+    elif dataset == "Flower102":
+        if setting == "common":
+            from models.Flower102Models import Flower102Model as VisionModel
+        else:
+            from models.Flower102Models import Flower102ModelRealistic as VisionModel
+        model_args = ()
+    else:
+        if setting == "common":
+            from models.Food101Models import Food101Model as VisionModel
+        else:
+            from models.Food101Models import Food101ModelRealistic as VisionModel
+        model_args = ()
+    return DiVA_Patch, VisionModel, model_args
 
 
-def _image_loader(setting):
+def _image_loader(dataset, setting):
     if setting == "realistic":
         def load_realistic(path):
             return np.asarray(Image.open(path).convert("RGB"), dtype=np.float32)
@@ -60,60 +90,64 @@ def _image_loader(setting):
 
     from torchvision import transforms
 
-    transform = transforms.Compose([transforms.Resize(256), transforms.CenterCrop(224), transforms.ToTensor()])
+    if dataset == "Flower102":
+        resize = transforms.Resize((256, 256))
+    elif dataset == "Food101":
+        resize = transforms.Resize((224, 224))
+    else:
+        resize = transforms.Resize(256)
+    operations = [resize]
+    if dataset != "Food101":
+        operations.append(transforms.CenterCrop(224))
+    operations.append(transforms.ToTensor())
+    transform = transforms.Compose(operations)
 
     def load_common(path):
         return pytorch_switch(transform(Image.open(path).convert("RGB"))).detach().numpy()
 
     return load_common
 
-
-def _save_folder(args):
-    experiment = f"DiVA_Patch-GridSize_{args.grid_h}_{args.grid_w}-Delta_{args.delta_max}_{args.delta_min}-K{args.K}-{args.vision_model}-{args.setting}-{args.attack_type}"
-    return os.path.join(args.exp_root, experiment, f"SEED_{args.seed}")
-
-
 def _safe_name(path):
     return path.replace(".JPEG", "").replace("/", "_").replace("\\", "_")
 
 
-def _build_adversarial(image, location, patch):
-    adversarial = image.copy()
-    loc_x, loc_y = location
-    adversarial[loc_x:loc_x + patch.shape[0], loc_y:loc_y + patch.shape[1], :] = patch
-    return adversarial
+def _label_file(args):
+    if args.demo:
+        if args.dataset != "ImageNet1K":
+            raise ValueError("--demo is only supported with --dataset ImageNet1K")
+        return "TEST_IMGs/demo_targeted.json" if args.attack_type == "targeted" else "TEST_IMGs/demo_untargeted.json"
+    if args.dataset == "Flower102":
+        return "TEST_IMGs/EfficientNetV2S_Flower102.json"
+    if args.dataset == "Food101":
+        return "TEST_IMGs/Swin_Food101.json"
+    return f"TEST_IMGs/{args.vision_model}_ImgNet1K.json"
 
 
-def main(default_setting=None):
-    parser = build_parser(default_setting)
+def main():
+    parser = build_parser()
     args = parser.parse_args()
-    if args.num_images <= 0:
-        parser.error("--num_images must be positive")
-    if args.max_query <= 0:
-        parser.error("--max_query must be positive")
-    if args.patch_h <= 0 or args.patch_w <= 0:
-        parser.error("--patch_h and --patch_w must be positive")
-    if args.grid_h <= 0 or args.grid_w <= 0:
-        parser.error("--grid_h and --grid_w must be positive")
 
-    DiVA_Patch, ImageNetModel = _components(args.setting)
-    model_index = {"VGGNet16": 0, "ResNet50": 1, "ViT16": 2}[args.vision_model]
-    model = ImageNetModel(model_index, args.device)
-    load_image = _image_loader(args.setting)
+    try:
+        DiVA_Patch, VisionModel, model_args = _components(args.dataset, args.vision_model, args.setting)
+        label_file = _label_file(args)
+    except ValueError as exc:
+        parser.error(str(exc))
+    model = VisionModel(*model_args, args.device)
+
+    load_image = _image_loader(args.dataset, args.setting)
     set_seed(args.seed)
 
-    if args.demo:
-        label_file = "TEST_IMGs/demo_targeted.json" if args.attack_type == "targeted" else "TEST_IMGs/demo_untargeted.json"
-    else:
-        label_file = f"TEST_IMGs/{args.vision_model}_ImgNet1K.json"
     with open(label_file) as file:
         path_labels = json.load(file)
 
-    save_dir = _save_folder(args)
-    map_elites_dir = os.path.join(save_dir, "map_elites")
-    process_dir = os.path.join(save_dir, "processes")
+    experiment = f"DiVA_Patch-GridSize_{args.grid_h}_{args.grid_w}-Delta_{args.delta_max}_{args.delta_min}-K{args.K}-{args.dataset}-{args.vision_model}-{args.setting}-{args.attack_type}"
+    save_dir = f'{args.exp_root}/{experiment}/SEED_{args.seed}'
+
     result_dir = os.path.join(save_dir, "results")
     example_dir = os.path.join(save_dir, "examples")
+    process_dir = os.path.join(save_dir, "processes")
+    map_elites_dir = os.path.join(save_dir, "map_elites")
+
     for directory in (map_elites_dir, process_dir, result_dir, example_dir):
         os.makedirs(directory, exist_ok=True)
 
@@ -154,7 +188,7 @@ def main(default_setting=None):
             with open(process_path, "rb") as file:
                 process = pickle.load(file)
             best = process[-1]
-            img_adv = _build_adversarial(img_cls, best[2], np.asarray(best[3]))
+            img_adv = apply_patch(img_cls, best[2], np.asarray(best[3]))
             metrics = metric_tracker.compute(img_cls, img_adv)
             summary = {
                 "adversarial": best[1],
@@ -203,7 +237,7 @@ def main(default_setting=None):
         if best_idv.success_attack:
             location_counts.append(len(results))
 
-        img_adv = _build_adversarial(img_cls, best_idv.location, best_idv.patch)
+        img_adv = apply_patch(img_cls, best_idv.location, best_idv.patch)
         metrics = metric_tracker.compute(img_cls, img_adv)
         summary = {
             "adversarial": best_idv.success_attack,
