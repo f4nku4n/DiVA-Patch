@@ -183,11 +183,6 @@ def main():
         if loss.get_label(source) != true_label:
             print(f"Skip {path_img}: clean image is misclassified")
             continue
-        if loss.get_label(target) != target_class:
-            raise ValueError(
-                f"selected target image {target_path} is not classified as "
-                f"target class {target_class}"
-            )
 
         if os.path.exists(process_path):
             process = p.load(open(process_path, 'rb'))

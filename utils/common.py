@@ -43,11 +43,7 @@ def sample_image_labels(labels, num_images, seed, label_source, manifest_path):
     label_source = os.path.normpath(str(label_source))
     if os.path.exists(manifest_path):
         manifest = json.load(open(manifest_path))
-        expected = {
-            "seed": int(seed),
-            "num_images": int(num_images),
-            "label_source": label_source,
-        }
+        expected = {"seed": int(seed), "num_images": int(num_images), "label_source": label_source}
         for field, value in expected.items():
             if manifest.get(field) != value:
                 raise ValueError(
@@ -57,14 +53,10 @@ def sample_image_labels(labels, num_images, seed, label_source, manifest_path):
         images = manifest.get("images", [])
         expected_count = min(int(num_images), len(labels))
         if manifest.get("sampled_count") != expected_count:
-            raise ValueError(
-                "Sampling manifest count does not match the current label dict"
-            )
+            raise ValueError("Sampling manifest count does not match the current label dict")
         missing = [path for path in images if path not in labels]
         if missing:
-            raise ValueError(
-                f"Sampling manifest contains missing image: {missing[0]}"
-            )
+            raise ValueError(f"Sampling manifest contains missing image: {missing[0]}")
     else:
         candidates = sorted(labels)
         sample_size = min(int(num_images), len(candidates))
