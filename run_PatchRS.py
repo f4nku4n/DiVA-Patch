@@ -48,7 +48,7 @@ def main():
     args = parser.parse_args()
 
     # Load vision model
-    VisionModel, model_args = getVisionModel(args.dataset, args.vision_model, args.setting)
+    VisionModel, model_args = getVisionModel(args.dataset, args.vision_model)
     model = VisionModel(*model_args, args.device)
 
     label_file = getLabelFile(args)

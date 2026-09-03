@@ -7,28 +7,9 @@ from attack_methods.base import Attacker
 class DevoPatch(Attacker):
     """Decision-based differential-evolution adversarial patch attack."""
 
-    def __init__(
-        self,
-        img_cls,
-        target_image,
-        loss_function,
-        pop_size=10,
-        init_rate=0.35,
-        mutation_rate=1,
-        fitness_norm=0,
-        max_query=10000,
-    ):
+    def __init__(self, img_cls, target_image, loss_function, pop_size=10, init_rate=0.35, mutation_rate=1,
+                 fitness_norm=0, max_query=10000):
         super().__init__(max_query)
-        if pop_size <= 0:
-            raise ValueError("pop_size must be positive")
-        if not 0 < init_rate <= 1:
-            raise ValueError("init_rate must be in (0, 1]")
-        if mutation_rate < 0 or int(mutation_rate) != mutation_rate:
-            raise ValueError("mutation_rate must be a non-negative integer")
-        if fitness_norm not in (0, 1, 2):
-            raise ValueError("fitness_norm must be 0, 1, or 2")
-        if img_cls.shape != target_image.shape:
-            raise ValueError("source and target images must have the same shape")
 
         self.img_cls = np.asarray(img_cls)
         self.target_image = np.asarray(target_image)

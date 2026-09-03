@@ -3,22 +3,18 @@ from PIL import Image
 from utils import pytorch_switch
 from torchvision import transforms
 
-def getVisionModel(dataset, vision_model, setting):
-    if dataset == "ImageNet1K":
+def getVisionModel(dataset, vision_model):
+    if dataset == 'ImageNet1K':
         from models.ImageNetModels import ImageNetModel as VisionModel
         model_args = ({"VGGNet16": 0, "ResNet50": 1, "ViT16": 2}[vision_model],)
-    elif dataset == "Flower102":
-        if setting == "common":
-            from models.Flower102Models import Flower102Model as VisionModel
-        else:
-            from models.Flower102Models import Flower102ModelRealistic as VisionModel
+    elif dataset == 'Flower102':
+        from models.Flower102Models import Flower102Model as VisionModel
+        model_args = ()
+    elif dataset == 'Food101':
+        from models.Food101Models import Food101Model as VisionModel
         model_args = ()
     else:
-        if setting == "common":
-            from models.Food101Models import Food101Model as VisionModel
-        else:
-            from models.Food101Models import Food101ModelRealistic as VisionModel
-        model_args = ()
+        raise ValueError()
     return VisionModel, model_args
 
 def getImageLoader(dataset, setting):

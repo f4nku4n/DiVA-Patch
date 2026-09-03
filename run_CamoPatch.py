@@ -46,7 +46,7 @@ def main():
     args = parser.parse_args()
 
     # Load vision model
-    VisionModel, model_args = getVisionModel(args.dataset, args.vision_model, args.setting)
+    VisionModel, model_args = getVisionModel(args.dataset, args.vision_model)
     model = VisionModel(*model_args, args.device, args.setting)
 
     label_file = getLabelFile(args)
@@ -62,7 +62,7 @@ def main():
     for folder in (save_dir, process_dir, result_dir, example_dir):
         os.makedirs(folder, exist_ok=True)
 
-    path_labels = sample_image_labels(path_labels, args.num_images, args.seed, label_file, os.path.join(save_folder, "sampled_images.json"))
+    path_labels = sample_image_labels(path_labels, args.num_images, args.seed, label_file, os.path.join(save_dir, "sampled_images.json"))
     metric_tracker = PerceptualMetricTracker(device=args.device, data_range=1.0 if args.setting == "common" else 255.0)
 
     load_image = getImageLoader(args.dataset, args.setting)

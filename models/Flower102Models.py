@@ -1,18 +1,56 @@
 """Flowers102 victim model: EfficientNetV2-S fine-tuned on 102 classes."""
+import torch
+import torch.nn as nn
+import torchvision.transforms.functional as F
 
-from models.PretrainedVictimModels import PretrainedVictimModel
-from models.PretrainedVictimModels_realistic import RealisticPretrainedVictimModel
-
-
-class Flower102Model(PretrainedVictimModel):
-    """Accept NCHW float images in [0, 1] with spatial size 224 x 224."""
-
-    def __init__(self, device="cpu"):
-        super().__init__(0, device)
+from safetensors.torch import load_file
+from huggingface_hub import hf_hub_download
+from torchvision import models as torch_models
 
 
-class Flower102ModelRealistic(RealisticPretrainedVictimModel):
-    """Accept raw NCHW float images in [0, 255]."""
+def preprocess_for_inference(tensor):
+    if tensor.ndim != 4 or tensor.shape[1] != 3:
+        raise ValueError(f"expected an NCHW RGB tensor, received shape {tuple(tensor.shape)}")
 
-    def __init__(self, device="cpu"):
-        super().__init__(0, device)
+    # The Flowers checkpoint used Resize((256, 256)) followed by a 224 crop.
+    tensor = F.resize(tensor, size=[256, 256], interpolation=F.InterpolationMode.BILINEAR, antialias=True)
+    tensor = F.center_crop(tensor, [224, 224])
+    return tensor.float() / 255.0
+
+
+class Flower102Model:
+    def __init__(self, device='cpu', setting='realistic'):
+        repo_id = "bengid/efficientnetv2-s-flower-classifier"
+        weights_path = hf_hub_download(
+            repo_id=repo_id,
+            filename="efficientnetv2-s-flower-classifier.safetensors",
+        )
+        model = torch_models.efficientnet_v2_s(weights=None)
+        model.classifier[1] = nn.Linear(model.classifier[1].in_features, 102)
+        model.load_state_dict(load_file(weights_path, device="cpu"), strict=True)
+
+        self.setting = setting
+
+        self.model = model.to(device)
+        self.model.eval()
+
+        self.mu = torch.tensor((0.4727, 0.3996, 0.3193), dtype=torch.float32, device=device).view(1, 3, 1, 1)
+        self.sigma = torch.tensor((0.2965, 0.2471, 0.2812), dtype=torch.float32, device=device).view(1, 3, 1, 1)
+
+    def _logits(self, x):
+        output = self.model((x - self.mu) / self.sigma)
+        return output.logits if hasattr(output, "logits") else output
+
+    @torch.inference_mode()
+    def predict(self, x):
+        if self.setting == 'realistic':
+            x = preprocess_for_inference(x)
+        return self._logits(x)
+
+    def forward(self, x):
+        if self.setting == 'realistic':
+            x = preprocess_for_inference(x)
+        return self._logits(x)
+
+    def __call__(self, x):
+        return self.predict(x)
