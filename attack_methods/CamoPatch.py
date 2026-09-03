@@ -196,27 +196,28 @@ def render(x, h, w, setting='realistic'):
         phenotype = phenotype / 255.
     return phenotype
 
-def mutate(soln, mut=0.3, setting='realistic'):
+def mutate(soln, mut=0.3, setting='realistic', rng=None):
+    rng = np.random if rng is None else rng
     new_specie = soln.copy()
 
     # Randomization for Evolution
     genes = soln.shape[0]
     length = soln.shape[1]
-    y = np.random.randint(0, genes)
-    change = np.random.randint(0, length + 1)
+    y = rng.randint(0, genes)
+    change = rng.randint(0, length + 1)
 
-    selection = np.random.choice(length, size=change, replace=False)
+    selection = rng.choice(length, size=change, replace=False)
 
-    if np.random.rand() < mut:
+    if rng.rand() < mut:
         if setting == 'realistic':
-            new_specie[y, selection] = np.random.randint(0, 256, size=len(selection))
+            new_specie[y, selection] = rng.randint(0, 256, size=len(selection))
         else:
-            new_specie[y, selection] = np.random.rand(len(selection))
+            new_specie[y, selection] = rng.rand(len(selection))
     else:
         if setting == 'realistic':
-            new_specie[y, selection] += np.random.randint(-43, 43, size=len(selection))
+            new_specie[y, selection] += rng.randint(-43, 43, size=len(selection))
             new_specie[y, selection] = np.clip(new_specie[y, selection], 0, 255)
         else:
-            new_specie[y, selection] += (np.random.rand(len(selection)) - 0.5) / 3
+            new_specie[y, selection] += (rng.rand(len(selection)) - 0.5) / 3
             new_specie[y, selection] = np.clip(new_specie[y, selection], 0, 1)
     return new_specie

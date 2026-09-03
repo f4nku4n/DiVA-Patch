@@ -13,24 +13,27 @@ class Individual:
         self.loss = None
         self.setting = setting
 
-    def rand(self, img_h, img_w, lx=None, ux=None, ly=None, uy=None):
+    def rand(self, img_h, img_w, lx=None, ux=None, ly=None, uy=None, rng=None):
+        rng = np.random if rng is None else rng
         if lx is None and ux is None and ly is None and uy is None:
             lx, ux = 0, img_h
             ly, uy = 0, img_w
         else:
             ux = min(ux, img_h)
             uy = min(uy, img_w)
-        self.rand_loc(lx=lx, ux=ux, ly=ly, uy=uy)
-        self.rand_patch()
+        self.rand_loc(lx=lx, ux=ux, ly=ly, uy=uy, rng=rng)
+        self.rand_patch(rng=rng)
 
-    def rand_loc(self, lx, ux, ly, uy):
-        self.location = [np.random.randint(lx, ux), np.random.randint(ly, uy)]
+    def rand_loc(self, lx, ux, ly, uy, rng=None):
+        rng = np.random if rng is None else rng
+        self.location = [rng.randint(lx, ux), rng.randint(ly, uy)]
 
-    def rand_patch(self):
+    def rand_patch(self, rng=None):
+        rng = np.random if rng is None else rng
         if self.setting == 'realistic':
-            self.patch_geno = np.random.randint(0, 256, size=(self.N, 7))
+            self.patch_geno = rng.randint(0, 256, size=(self.N, 7))
         else:
-            self.patch_geno = np.random.rand(self.N, 7)
+            self.patch_geno = rng.rand(self.N, 7)
         self.patch = render(self.patch_geno, self.s[0], self.s[1], self.setting)
 
 def render(x, h, w, setting='realistic'):

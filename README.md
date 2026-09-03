@@ -67,8 +67,11 @@ python run_DiVA_Patch.py --setting common --vision_model VGGNet16 --dataset_root
 
 python run_DiVA_Patch.py --setting realistic --vision_model VGGNet16 --dataset_root "$DATASET_PATH" --attack_type targeted
 ```
-Use `--save_imgs` to save example images. The old common and realistic
-entry points remain compatibility wrappers.
+Use `--batch_size 8` (or another value that fits GPU memory) to attack that
+many images concurrently with one batched victim-model evaluation per query
+round. The default is `1` for compatibility; CUDA out-of-memory errors require
+rerunning with a smaller value. Use `--save_imgs` to save example images. The
+old common and realistic entry points remain compatibility wrappers.
 
 The repository also includes the following white-box localized attacks in
 `attack_methods/WhiteBoxPatch.py`:

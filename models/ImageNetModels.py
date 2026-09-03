@@ -40,6 +40,18 @@ class ImageNetModel:
         out = (x - self.mu) / self.sigma
         return self.model(out)
 
+    @torch.inference_mode()
+    def predict_many(self, images):
+        if self.setting == 'realistic':
+            images = [preprocess_for_inference(image) for image in images]
+        else:
+            images = list(images)
+        if not images:
+            raise ValueError("predict_many() requires at least one image")
+        x = torch.cat(images, dim=0)
+        out = (x - self.mu) / self.sigma
+        return self.model(out)
+
     def forward(self, x):
         if self.setting == 'realistic':
             x = preprocess_for_inference(x)

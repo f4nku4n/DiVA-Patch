@@ -56,12 +56,12 @@ class squeezenet(torch.nn.Module):
 class alexnet(torch.nn.Module):
     def __init__(self, requires_grad=False, pretrained=True):
         super(alexnet, self).__init__()
-        # alexnet_pretrained_features = tv.alexnet(pretrained=pretrained).features
-        alexnet_pretrained = tv.alexnet(pretrained=False)
-        # state_dict = torch.load('/kaggle/input/models/f4nku4n99/weights/pytorch/default/1/alexnet-owt-7be5be79.pth', weights_only=True)
-        state_dict = torch.load('/kaggle/input/models/quanphanminhdede/diva-patch-models/pytorch/default/1/alexnet-owt-7be5be79.pth', weights_only=True)
-        alexnet_pretrained.load_state_dict(state_dict)
-        alexnet_pretrained_features = alexnet_pretrained.features
+        alexnet_pretrained_features = tv.alexnet(pretrained=pretrained).features
+        # alexnet_pretrained = tv.alexnet(pretrained=False)
+        # # state_dict = torch.load('/kaggle/input/models/f4nku4n99/weights/pytorch/default/1/alexnet-owt-7be5be79.pth', weights_only=True)
+        # state_dict = torch.load('/kaggle/input/models/quanphanminhdede/diva-patch-models/pytorch/default/1/alexnet-owt-7be5be79.pth', weights_only=True)
+        # alexnet_pretrained.load_state_dict(state_dict)
+        # alexnet_pretrained_features = alexnet_pretrained.features
 
         self.slice1 = torch.nn.Sequential()
         self.slice2 = torch.nn.Sequential()

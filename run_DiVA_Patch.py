@@ -2,16 +2,18 @@ import os
 import json
 import argparse
 import pickle as p
+from dataclasses import dataclass
 
 import numpy as np
 from PIL import Image
 
-from utils import NumpyEncoder, PerceptualMetricTracker
+from utils import BatchEvaluator, NumpyEncoder, PerceptualMetricTracker
 from utils import first_success_query_from_process, sample_image_labels, set_seed, apply_patch
 
 from attack_methods.DiVA_Patch import DiVA_Patch
+from attack_methods.controller import AttackController, AttackJob
 
-from utils.LossFunctions import Targeted, UnTargeted
+from utils.LossFunctions import Targeted, UnTargeted, _torch_input
 from factory import getVisionModel, getImageLoader, getLabelFile
 
 VALID_MODELS = {
@@ -19,6 +21,18 @@ VALID_MODELS = {
     "Flower102": ("EfficientNetV2S",),
     "Food101": ("Swin",),
 }
+
+
+@dataclass
+class DiVAJobContext:
+    index: int
+    path_img: str
+    save_file: str
+    result_json: str
+    process_path: str
+    img_cls: np.ndarray
+    true_label: int
+    target_label: int
 
 
 def build_parser():
@@ -30,6 +44,8 @@ def build_parser():
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--max_query", type=int, default=10000)
     parser.add_argument("--num_images", type=int, default=100)
+    parser.add_argument("--batch_size", type=int, default=1,
+                        help="maximum number of images attacked in each evaluator batch")
     parser.add_argument("--dataset", choices=list(VALID_MODELS), default="ImageNet1K")
     parser.add_argument("--vision_model", default="VGGNet16", choices=["VGGNet16", "ResNet50", "ViT16", "EfficientNetV2S", "Swin"])
     parser.add_argument("--device", default="cuda", help="cuda/cpu")
@@ -54,10 +70,13 @@ def _safe_name(path):
 def main():
     parser = build_parser()
     args = parser.parse_args()
+    if args.batch_size < 1:
+        parser.error("--batch_size must be at least 1")
 
     # Load vision model
     VisionModel, model_args = getVisionModel(args.dataset, args.vision_model)
     model = VisionModel(*model_args, args.device)
+    evaluator = BatchEvaluator(model)
 
     label_file = getLabelFile(args)
     path_labels = json.load(open(label_file))
@@ -79,92 +98,155 @@ def main():
     load_image = getImageLoader(args.dataset, args.setting)
     set_seed(args.seed)
 
-    # Run attack
+    # Run attacks. The source lazily preflights clean labels in batches and only
+    # keeps base images for the active attack window on the GPU.
     adversarial_results, l2_values, location_counts = [], [], []
-    for index, path_img in enumerate(path_labels, start=1):
-        save_file = _safe_name(path_img)
-        result_json = f'{result_dir}/{save_file}.json'
-        process_path = f'{process_dir}/{save_file}_process.p'
-        if os.path.exists(result_json):
-            existing_result = json.load(open(result_json))
-            if metric_tracker.is_complete(existing_result) and "first_success_query" in existing_result:
-                metric_tracker.add_summary(existing_result)
-                metric_tracker.print_result(path_img, existing_result)
-                adversarial_results.append(existing_result["adversarial"])
-                l2_values.append(existing_result["l2_distance"])
-                if existing_result["adversarial"]:
-                    location_counts.append(len(existing_result.get("#locs", [])))
+
+    def build_attack_jobs(contexts):
+        clean_inputs = [
+            _torch_input(context.img_cls, False, args.device)
+            for context in contexts
+        ]
+        predicted_labels = evaluator.predict_labels(clean_inputs)
+        del clean_inputs
+
+        for context, predicted_label in zip(contexts, predicted_labels):
+            if predicted_label != context.true_label:
+                continue
+            if args.attack_type == "non_targeted":
+                loss = UnTargeted(
+                    model, context.true_label, to_pytorch=True, device=args.device
+                )
+            else:
+                loss = Targeted(
+                    model,
+                    context.true_label,
+                    context.target_label,
+                    to_pytorch=True,
+                    device=args.device,
+                )
+
+            attacker = DiVA_Patch(
+                img_cls=context.img_cls,
+                loss_function=loss,
+                delta_max=args.delta_max,
+                delta_min=args.delta_min,
+                K=args.K,
+                patch_size=[args.patch_h, args.patch_w],
+                grid_size=[args.grid_h, args.grid_w],
+                max_query=args.max_query,
+                setting=args.setting,
+                rng=np.random.RandomState(args.seed),
+            )
+            yield AttackJob(attacker=attacker, context=context)
+
+    def attack_jobs():
+        clean_batch = []
+        for index, path_img in enumerate(path_labels, start=1):
+            save_file = _safe_name(path_img)
+            result_json = f'{result_dir}/{save_file}.json'
+            process_path = f'{process_dir}/{save_file}_process.p'
+            if os.path.exists(result_json):
+                existing_result = json.load(open(result_json))
+                if metric_tracker.is_complete(existing_result) and "first_success_query" in existing_result:
+                    metric_tracker.add_summary(existing_result)
+                    metric_tracker.print_result(path_img, existing_result)
+                    adversarial_results.append(existing_result["adversarial"])
+                    l2_values.append(existing_result["l2_distance"])
+                    if existing_result["adversarial"]:
+                        location_counts.append(len(existing_result.get("#locs", [])))
+                    continue
+
+            print(f'Image #{index}: {path_img}')
+            image_path = f'{args.dataset_root}/{path_img}'
+            true_label = path_labels[path_img]['true_label']
+            target_label = path_labels[path_img]['target_label']
+            img_cls = load_image(image_path)
+            if img_cls.shape[-1] != 3:
                 continue
 
-        print(f'Image #{index}: {path_img}')
-        image_path = f'{args.dataset_root}/{path_img}'
-        true_label = path_labels[path_img]['true_label']
-        target_label = path_labels[path_img]['target_label']
-        if args.attack_type == "non_targeted":
-            loss = UnTargeted(model, true_label, to_pytorch=True, device=args.device)
-        else:
-            loss = Targeted(model, true_label, target_label, to_pytorch=True, device=args.device)
+            # Preserve the existing completed-process recovery path.
+            if os.path.exists(process_path):
+                process = p.load(open(process_path, 'rb'))
+                best = process[-1]
+                img_adv = apply_patch(img_cls, best[2], np.asarray(best[3]))
+                metrics = metric_tracker.compute(img_cls, img_adv)
+                summary = {
+                    "adversarial": best[1],
+                    "l2_distance": best[4],
+                    "first_success_query": first_success_query_from_process(
+                        process, success_index=1, query_index=0
+                    ),
+                    "ssim": metrics["ssim"],
+                    "lpips": metrics["lpips"],
+                }
+                metric_tracker.print_result(path_img, summary)
+                with open(result_json, "w") as file:
+                    json.dump(summary, file, indent=4, cls=NumpyEncoder)
 
-        img_cls = load_image(image_path)
-        if img_cls.shape[-1] != 3:
-            continue
+                if args.save_imgs:
+                    output = img_adv * 255.0 if args.setting == "common" else img_adv
+                    Image.fromarray(np.clip(output, 0, 255).astype(np.uint8)).save(
+                        os.path.join(example_dir, f"{best[1]}_{path_img.replace('/', '_')}")
+                    )
 
-        ## If we attacked this image, continue
-        if os.path.exists(process_path):
-            process = p.load(open(process_path, 'rb'))
+                adversarial_results.append(best[1])
+                l2_values.append(best[4])
+                continue
 
-            best = process[-1]
-            img_adv = apply_patch(img_cls, best[2], np.asarray(best[3]))
-            metrics = metric_tracker.compute(img_cls, img_adv)
-            summary = {
-                "adversarial": best[1],
-                "l2_distance": best[4],
-                "first_success_query": first_success_query_from_process(process, success_index=1, query_index=0),
-                "ssim": metrics["ssim"],
-                "lpips": metrics["lpips"],
-            }
-            metric_tracker.print_result(path_img, summary)
-            with open(result_json, "w") as file:
-                json.dump(summary, file, indent=4, cls=NumpyEncoder)
+            clean_batch.append(DiVAJobContext(
+                index=index,
+                path_img=path_img,
+                save_file=save_file,
+                result_json=result_json,
+                process_path=process_path,
+                img_cls=img_cls,
+                true_label=true_label,
+                target_label=target_label,
+            ))
+            if len(clean_batch) == args.batch_size:
+                yield from build_attack_jobs(clean_batch)
+                clean_batch = []
 
-            if args.save_imgs:
-                output = img_adv * 255.0 if args.setting == "common" else img_adv
-                Image.fromarray(np.clip(output, 0, 255).astype(np.uint8)).save(os.path.join(example_dir, f"{best[1]}_{path_img.replace('/', '_')}"))
+        if clean_batch:
+            yield from build_attack_jobs(clean_batch)
 
-            adversarial_results.append(best[1])
-            l2_values.append(best[4])
-            continue
-
-        if loss.get_label(img_cls) != true_label:
-            continue
-
-        set_seed(args.seed)
-        attacker = DiVA_Patch(img_cls=img_cls, loss_function=loss,
-                              delta_max=args.delta_max, delta_min=args.delta_min,
-                              K=args.K, patch_size=[args.patch_h, args.patch_w], grid_size=[args.grid_h, args.grid_w],
-                              max_query=args.max_query, setting=args.setting)
-        attacker.run()
+    def save_completed_job(job):
+        attacker = job.attacker
+        context = job.context
 
         map_elites = attacker.return_map_elites()
-        p.dump(map_elites, open(os.path.join(map_elites_dir, f'{save_file}_map_elites.p'), 'wb'))
+        p.dump(
+            map_elites,
+            open(os.path.join(map_elites_dir, f'{context.save_file}_map_elites.p'), 'wb'),
+        )
 
         if args.save_imgs:
-            process = attacker.process
-            p.dump(process, open(process_path, 'wb'))
+            p.dump(attacker.process, open(context.process_path, 'wb'))
 
         results = []
         for cell_index, individual in attacker.map_elites.grid_final.items():
             if individual is not None and individual.success_attack:
-                results.append([cell_index, individual.success_attack, individual.location, individual.patch, individual.l2, individual.loss])
-        p.dump(results, open(os.path.join(result_dir, f'{save_file}_result.p'), 'wb'))
+                results.append([
+                    cell_index,
+                    individual.success_attack,
+                    individual.location,
+                    individual.patch,
+                    individual.l2,
+                    individual.loss,
+                ])
+        p.dump(
+            results,
+            open(os.path.join(result_dir, f'{context.save_file}_result.p'), 'wb'),
+        )
 
         best_idv = attacker.get_best_quality_solution()
         print(f"Best patch:\n+ Adversarial: {best_idv.success_attack}\n+ L2: {best_idv.l2:.2f}")
         if best_idv.success_attack:
             location_counts.append(len(results))
 
-        img_adv = apply_patch(img_cls, best_idv.location, best_idv.patch)
-        metrics = metric_tracker.compute(img_cls, img_adv)
+        img_adv = apply_patch(context.img_cls, best_idv.location, best_idv.patch)
+        metrics = metric_tracker.compute(context.img_cls, img_adv)
         summary = {
             "adversarial": best_idv.success_attack,
             "l2_distance": best_idv.l2,
@@ -173,17 +255,25 @@ def main():
             "lpips": metrics["lpips"],
             "first_success_query": attacker.first_success_query,
         }
-        metric_tracker.print_result(path_img, summary)
-        with open(result_json, "w") as file:
+        metric_tracker.print_result(context.path_img, summary)
+        with open(context.result_json, "w") as file:
             json.dump(summary, file, indent=4, cls=NumpyEncoder)
 
         if args.save_imgs:
             output = img_adv * 255.0 if args.setting == "common" else img_adv
             Image.fromarray(np.clip(output, 0, 255).astype(np.uint8)).save(
-                f"{example_dir}/{best_idv.success_attack}_{path_img.replace('/', '_')}"
+                f"{example_dir}/{best_idv.success_attack}_{context.path_img.replace('/', '_')}"
             )
         l2_values.append(best_idv.l2)
         adversarial_results.append(best_idv.success_attack)
+
+    controller = AttackController(
+        evaluator=evaluator,
+        batch_size=args.batch_size,
+        on_complete=save_completed_job,
+        show_progress=True,
+    )
+    controller.run(attack_jobs())
 
     if not adversarial_results:
         print("No eligible images were evaluated.")

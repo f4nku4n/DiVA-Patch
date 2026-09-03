@@ -35,6 +35,16 @@ class Food101Model:
             x = preprocess_for_inference(x)
         return self._logits(x)
 
+    @torch.inference_mode()
+    def predict_many(self, images):
+        if self.setting == 'realistic':
+            images = [preprocess_for_inference(image) for image in images]
+        else:
+            images = list(images)
+        if not images:
+            raise ValueError("predict_many() requires at least one image")
+        return self._logits(torch.cat(images, dim=0))
+
     def forward(self, x):
         if self.setting == 'realistic':
             x = preprocess_for_inference(x)
