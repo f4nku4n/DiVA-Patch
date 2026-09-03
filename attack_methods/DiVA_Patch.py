@@ -1,17 +1,17 @@
 import numpy as np
-from base import MAP_Elites
-from base.individual import Individual
 from tqdm import tqdm
 from scipy.special import softmax
-import cv2
 
-from .utils import l2_compute
-from .base import Attacker
+from attack_methods.base import Attacker
+from attack_methods.utils import l2_compute
+from attack_methods.CamoPatch import mutate
 
+from base import MAP_Elites
+from base.individual import Individual, render
 
 class DiVA_Patch(Attacker):
-    def __init__(self, img_cls, loss_function, delta_max=10, delta_min=0.1, K=100,
-                 patch_size=[40, 40], grid_size=[40, 40], max_query=10000):
+    def __init__(self, img_cls, loss_function, delta_max=20, delta_min=0.1, K=100,
+                 patch_size=(40, 40), grid_size=(40, 40), max_query=10000, setting='realistic'):
         super().__init__(max_query)
 
         self.img_cls = img_cls
@@ -28,6 +28,8 @@ class DiVA_Patch(Attacker):
         self.delta_max, self.delta_min = delta_max, delta_min
         self.K = K
 
+        self.setting = setting
+
     def evaluate(self, idv):
         s = idv.s
         x, y = idv.location
@@ -39,7 +41,7 @@ class DiVA_Patch(Attacker):
         )
         self.count_query(adversarial)
         self.pbar.update(1)
-        l2_score = l2_compute(adv_patch=idv.patch, orig_patch=orig_patch, integer=True)
+        l2_score = l2_compute(adv_patch=idv.patch, orig_patch=orig_patch, integer=(self.setting == 'realistic'))
 
         idv.success_attack = adversarial
         idv.loss, idv.l2 = loss, l2_score
@@ -86,7 +88,7 @@ class DiVA_Patch(Attacker):
 
             ux = min(ux + 1, self.h - self.patch_size[0])
             uy = min(uy + 1, self.w - self.patch_size[1])
-            idv = Individual(patch_size=self.patch_size)
+            idv = Individual(patch_size=self.patch_size, setting=self.setting)
 
             idv.rand(img_h=self.h - idv.s[0], img_w=self.w - idv.s[1], lx=lx, ly=ly, ux=ux, uy=uy)
 
@@ -143,12 +145,12 @@ class DiVA_Patch(Attacker):
         idv = self.map_elites.grid_search[idx]
 
         if not idv.success_attack:
-            o = Individual(patch_size=self.patch_size)
+            o = Individual(patch_size=self.patch_size, setting=self.setting)
 
             o.location = idv.location.copy()
             o.s = idv.s.copy()
-            o.patch_geno = mutate_patch(idv.patch_geno)
-            o.patch = render(o.patch_geno, o.s[0], o.s[1])
+            o.patch_geno = mutate(idv.patch_geno, setting=self.setting)
+            o.patch = render(o.patch_geno, o.s[0], o.s[1], setting=self.setting)
 
             self.evaluate(o)
             self.map_elites.assign(o)
@@ -157,11 +159,11 @@ class DiVA_Patch(Attacker):
             best_l2 = idv.l2
 
             for _ in range(self.K):
-                o = Individual(patch_size=self.patch_size)
+                o = Individual(patch_size=self.patch_size, setting=self.setting)
                 o.location = idv.location.copy()
                 o.s = idv.s.copy()
-                o.patch_geno = mutate_patch(best_patch_geno)
-                o.patch = render(o.patch_geno, o.s[0], o.s[1])
+                o.patch_geno = mutate(best_patch_geno, setting=self.setting)
+                o.patch = render(o.patch_geno, o.s[0], o.s[1], setting=self.setting)
                 self.evaluate(o)
                 self.map_elites.assign(o)
 
@@ -175,7 +177,7 @@ class DiVA_Patch(Attacker):
         """
         idv = self.map_elites.grid_search[idx]
 
-        o = Individual(patch_size=self.patch_size)
+        o = Individual(patch_size=self.patch_size, setting=self.setting)
         if np.random.random() <= 0.5:
             # Mutate location
             o.location = update_location(idv.location.copy(), self.h, self.w, idv.s[0], idv.s[1])
@@ -185,8 +187,8 @@ class DiVA_Patch(Attacker):
             # Mutate patch
             o.location = idv.location.copy()
             o.s = idv.s.copy()
-            o.patch_geno = mutate_patch(idv.patch_geno)
-            o.patch = render(o.patch_geno, o.s[0], o.s[1])
+            o.patch_geno = mutate(idv.patch_geno, setting=self.setting)
+            o.patch = render(o.patch_geno, o.s[0], o.s[1], setting=self.setting)
         self.evaluate(o)
         self.map_elites.assign(o)
 
@@ -203,24 +205,6 @@ class DiVA_Patch(Attacker):
                 data.append([idx, None, None, None, None, None, None])
         return data
 
-
-def mutate_patch(soln, mut=0.3):
-    new_specie = soln.copy()
-
-    genes = soln.shape[0]
-    length = soln.shape[1]
-    y = np.random.randint(0, genes)
-    change = np.random.randint(0, length + 1)
-
-    selection = np.random.choice(length, size=change, replace=False)
-
-    if np.random.rand() < mut:
-        new_specie[y, selection] = np.random.randint(0, 256, size=len(selection))
-    else:
-        new_specie[y, selection] += np.random.randint(-43, 43, size=len(selection))
-        new_specie[y, selection] = np.clip(new_specie[y, selection], 0, 255)
-
-    return new_specie
 
 def update_location(loc_new, h, w, s_h, s_w):
     loc_new[0] = np.random.randint(low=0, high=h - s_h)
@@ -243,20 +227,3 @@ def compute_delta(remaining_evals, total_evals, delta_min=0.1, delta_max=10.0):
     progress_ratio = remaining_evals / (total_evals + 1e-8)
     T = delta_min + (delta_max - delta_min) * (progress_ratio ** 20)
     return T
-
-def render(x, h, w):
-    phenotype = np.ones((h, w, 3), dtype=np.uint8) * 255
-    radius_avg = (phenotype.shape[0] + phenotype.shape[1]) / 2 / 6
-    for row in x:
-        overlay = phenotype.copy()
-        cv2.circle(
-            overlay,
-            center=(int(row[1] * h / 255), int(row[0] * w / 255)),
-            radius=int(row[2] / 255 * 2 * radius_avg),
-            color=(int(row[3]), int(row[4]), int(row[5])),
-            thickness=-1,
-        )
-        alpha = row[6] / 255.
-        phenotype = cv2.addWeighted(overlay, alpha, phenotype, 1 - alpha, 0)
-
-    return phenotype

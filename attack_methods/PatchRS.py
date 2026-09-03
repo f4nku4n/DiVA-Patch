@@ -3,10 +3,11 @@ import numpy as np
 from tqdm import tqdm
 from attack_methods.base import Attacker
 from attack_methods.utils import l2_compute
-
+from attack_methods.CamoPatch import render, mutate
 
 class PatchRS(Attacker):
-    def __init__(self, img_cls, loss_function, p_init=0.4, patch_size=[40, 40], update_loc_period=4, max_query=10000):
+    def __init__(self, img_cls, loss_function, p_init=0.4, patch_size=(40, 40),
+                 update_loc_period=4, max_query=10000, setting='realistic'):
         super().__init__(max_query=max_query)
         self.img_cls = img_cls
         self.loss_function = loss_function
@@ -20,6 +21,7 @@ class PatchRS(Attacker):
         self.rescale_schedule = True
 
         self.init_patches = 'random_squares'
+        self.setting = setting
 
     def p_selection(self, it):
         """ schedule to decrease the parameter p """
@@ -58,7 +60,10 @@ class PatchRS(Attacker):
         return t
 
     def get_init_patch(self, s):
-        patch_geno = np.random.randint(0, 256, size=(self.N, 7))
+        if self.setting == 'realistic':
+            patch_geno = np.random.randint(0, 256, size=(self.N, 7))
+        else:
+            patch_geno = np.random.rand(self.N, 7)  # Difference
         patch = render(patch_geno, s[0], s[1])
         return patch_geno, patch
 
@@ -79,7 +84,7 @@ class PatchRS(Attacker):
         best_l2 = l2_compute(
             adv_patch=best_patch,
             orig_patch=self.img_cls[best_loc[0]: best_loc[0] + s[0], best_loc[1]: best_loc[1] + s[1], :].copy(),
-            integer=True
+            integer=(self.setting == 'realistic')
         )
         self.count_query(best_adversarial)
         self.process.append([self.n_query, best_adversarial, best_loc, best_patch, best_l2, best_loss])
@@ -87,7 +92,7 @@ class PatchRS(Attacker):
         for it in tqdm(range(1, self.max_query)):
             s_it = int(max(self.p_selection(it) ** .5 * s[0], 1))
 
-            # sample update
+            ## Sample update
             new_patch_geno = best_patch_geno.copy()
             new_patch = best_patch.copy()
             new_loc = best_loc.copy()
@@ -102,10 +107,10 @@ class PatchRS(Attacker):
             if update_patch:
                 # update patch
                 if s_it > 1:
-                    new_patch_geno = mutate(best_patch_geno, True)
+                    new_patch_geno = mutate(best_patch_geno, mut=1.1, setting=self.setting)
                 else:
-                    new_patch_geno = mutate(best_patch_geno, False)
-                new_patch = render(new_patch_geno, s[0], s[1])
+                    new_patch_geno = mutate(best_patch_geno, mut=-0.1, setting=self.setting)
+                new_patch = render(new_patch_geno, s[0], s[1], setting=self.setting)
 
             if update_loc:
                 new_loc[0] = np.clip(new_loc[0] + np.random.randint(-sh_it, sh_it + 1), 0, H - s[0])
@@ -117,7 +122,7 @@ class PatchRS(Attacker):
             new_l2 = l2_compute(
                 new_patch,
                 self.img_cls[new_loc[0]: new_loc[0] + s[0], new_loc[1]: new_loc[1] + s[1], :].copy(),
-                integer=True
+                integer=(self.setting == 'realistic')
             )
             self.count_query(new_adversarial)
 
@@ -140,41 +145,3 @@ def is_better(new_adversarial, adversarial, new_loss, loss, new_l2, l2):
     if not new_adversarial and not adversarial:
         return new_loss < loss
     return False
-
-
-def mutate(soln, sample_new=False):
-    new_specie = soln.copy()
-
-    # Randomization for Evolution
-    genes = soln.shape[0]
-    length = soln.shape[1]
-    y = np.random.randint(0, genes)
-    change = np.random.randint(0, length + 1)
-
-    selection = np.random.choice(length, size=change, replace=False)
-
-    if sample_new:
-        new_specie[y, selection] = np.random.randint(0, 256, size=len(selection))
-    else:
-        new_specie[y, selection] += np.random.randint(-43, 43, size=len(selection))
-        new_specie[y, selection] = np.clip(new_specie[y, selection], 0, 255)
-
-    return new_specie
-
-
-def render(x, h, w):
-    phenotype = np.ones((h, w, 3), dtype=np.uint8) * 255  # load a white patch w*w
-    radius_avg = (phenotype.shape[0] + phenotype.shape[1]) / 2 / 6
-    for row in x:
-        overlay = phenotype.copy()
-        cv2.circle(
-            overlay,
-            center=(int(row[1] * h / 255), int(row[0] * w / 255)),
-            radius=int(row[2] / 255 * 2 * radius_avg),
-            color=(int(row[3]), int(row[4]), int(row[5])),
-            thickness=-1,
-        )
-        alpha = row[6] / 255.
-        phenotype = cv2.addWeighted(overlay, alpha, phenotype, 1 - alpha, 0)
-
-    return phenotype

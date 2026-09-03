@@ -43,7 +43,7 @@ def _model(name, setting, device):
     if setting == "common":
         from models.ImageNetModels import ImageNetModel
     else:
-        from models.ImageNetModels_realistic import ImageNetModel
+        from models.ImageNetModels import ImageNetModel
     return ImageNetModel({"VGGNet16": 0, "ResNet50": 1, "ViT16": 2}[name], device)
 
 

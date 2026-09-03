@@ -68,7 +68,7 @@ def _components(dataset, vision_model, setting):
         if setting == "common":
             from models.ImageNetModels import ImageNetModel as ModelClass
         else:
-            from models.ImageNetModels_realistic import ImageNetModel as ModelClass
+            from models.ImageNetModels import ImageNetModel as ModelClass
         model_args = ({"VGGNet16": 0, "ResNet50": 1, "ViT16": 2}[vision_model],)
     elif dataset == "Flower102":
         if setting == "common":

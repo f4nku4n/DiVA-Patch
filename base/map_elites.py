@@ -1,7 +1,3 @@
-import numpy as np
-import math
-
-
 class MAP_Elites:
     def __init__(self, img_h, img_w, cell_h, cell_w):
         self.cell_h = cell_h
