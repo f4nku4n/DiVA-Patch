@@ -39,20 +39,10 @@ def apply_patch(clean_image, location, patch):
     adversarial[loc_x:loc_x + patch.shape[0], loc_y:loc_y + patch.shape[1], :] = patch
     return adversarial
 
-def sample_image_labels(
-    labels,
-    num_images,
-    seed,
-    label_source,
-    manifest_path,
-):
-    if num_images <= 0:
-        raise ValueError("num_images must be positive")
-
+def sample_image_labels(labels, num_images, seed, label_source, manifest_path):
     label_source = os.path.normpath(str(label_source))
     if os.path.exists(manifest_path):
-        with open(manifest_path) as file:
-            manifest = json.load(file)
+        manifest = json.load(open(manifest_path))
         expected = {
             "seed": int(seed),
             "num_images": int(num_images),
@@ -61,19 +51,19 @@ def sample_image_labels(
         for field, value in expected.items():
             if manifest.get(field) != value:
                 raise ValueError(
-                    f"sampling manifest conflict for {field}: "
+                    f"Sampling manifest conflict for {field}: "
                     f"expected {value!r}, found {manifest.get(field)!r}"
                 )
         images = manifest.get("images", [])
         expected_count = min(int(num_images), len(labels))
         if manifest.get("sampled_count") != expected_count:
             raise ValueError(
-                "sampling manifest count does not match the current label dict"
+                "Sampling manifest count does not match the current label dict"
             )
         missing = [path for path in images if path not in labels]
         if missing:
             raise ValueError(
-                f"sampling manifest contains missing image: {missing[0]}"
+                f"Sampling manifest contains missing image: {missing[0]}"
             )
     else:
         candidates = sorted(labels)
@@ -93,41 +83,26 @@ def sample_image_labels(
     return {path: labels[path] for path in images}
 
 
-def select_devopatch_target(
-    labels,
-    source_path,
-    targeted,
-    seed,
-):
+def select_devopatch_target(labels, source_path, targeted, seed):
     source_label = int(labels[source_path]["true_label"])
     if targeted:
         target_class = int(labels[source_path]["target_label"])
         candidates = sorted(
-            path
-            for path, metadata in labels.items()
-            if path != source_path
-            and int(metadata["true_label"]) == target_class
+            path for path, data in labels.items() if path != source_path and int(data["true_label"]) == target_class
         )
         if not candidates:
             raise ValueError(
-                f"no target image with true_label={target_class} exists "
+                f"No target image with true_label={target_class} exists "
                 f"in the label dictionary for {source_path}"
             )
     else:
         candidates = sorted(
-            path
-            for path, metadata in labels.items()
-            if path != source_path
-            and int(metadata["true_label"]) != source_label
+            path for path, data in labels.items() if path != source_path and int(data["true_label"]) != source_label
         )
         if not candidates:
-            raise ValueError(
-                f"no image from a different class exists for {source_path}"
-            )
+            raise ValueError(f"No image from a different class exists for {source_path}")
 
-    digest = hashlib.sha256(
-        f"{int(seed)}\0{source_path}".encode("utf-8")
-    ).digest()
+    digest = hashlib.sha256(f"{int(seed)}\0{source_path}".encode("utf-8")).digest()
     local_seed = int.from_bytes(digest[:8], "big")
     target_path = random.Random(local_seed).choice(candidates)
     target_class = int(labels[target_path]["true_label"])

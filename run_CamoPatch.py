@@ -22,7 +22,7 @@ VALID_MODELS = {
 def build_parser(default_setting=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("--setting", choices=["common", "realistic"], default=default_setting or "realistic", help="common resizes/crops to 224 in [0,1]; realistic uses raw images (pre-processing)")
-    parser.add_argument("--exp_root", default="./exp_result")
+    parser.add_argument("--exp_root", default="./exp_results")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--N", type=int, default=100, help="number of semi-transparent circles")
     parser.add_argument("--patch_size", type=int, default=40, help="patch size")

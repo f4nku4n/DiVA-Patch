@@ -26,7 +26,7 @@ def build_parser():
     parser.add_argument("--setting", choices=["common", "realistic"],
                         default="realistic",
                         help="common resizes/crops to 224 in [0,1]; realistic uses raw images (pre-processing)")
-    parser.add_argument("--exp_root", default='./exp_root')
+    parser.add_argument("--exp_root", default='./exp_results')
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--max_query", type=int, default=10000)
     parser.add_argument("--num_images", type=int, default=100)

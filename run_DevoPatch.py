@@ -14,15 +14,22 @@ from attack_methods.DevoPatch import DevoPatch
 from utils.LossFunctions import Targeted, UnTargeted
 from factory import getVisionModel, getImageLoader, getLabelFile
 
+VALID_MODELS = {
+    "ImageNet1K": ("VGGNet16", "ResNet50", "ViT16"),
+    "Flower102": ("EfficientNetV2S",),
+    "Food101": ("Swin",),
+}
+
 def build_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument("--setting", choices=["common", "realistic"],
                         default="realistic",
                         help="common resizes/crops to 224 in [0,1]; realistic uses raw images (pre-processing)")
-    parser.add_argument("--exp_root", default="./exp_result")
+    parser.add_argument("--exp_root", default="./exp_results")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--max_query", type=int, default=10000)
     parser.add_argument("--num_images", type=int, default=100)
+    parser.add_argument("--dataset", choices=list(VALID_MODELS), default="ImageNet1K")
     parser.add_argument("--vision_model", default="VGGNet16", choices=["VGGNet16", "ResNet50", "ViT16", "EfficientNetV2S", "Swin"])
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--dataset_root", required=True)
@@ -32,6 +39,7 @@ def build_parser():
     parser.add_argument("--mutation_rate", type=int, default=1)
     parser.add_argument("--fitness_norm", type=int, default=0, choices=[0, 1, 2])
     parser.add_argument("--save_imgs", action="store_true", help="save adversarial images")
+    parser.add_argument("--save_process", action="store_true", help="save attack process")
     parser.add_argument("--demo", action="store_true")
     return parser
 
@@ -102,7 +110,7 @@ def main():
 
     # Load label file
     label_file = getLabelFile(args)
-    path_labels = json.load(open(label_file))
+    all_labels = json.load(open(label_file))
 
     # Create results folders
     experiment = (f"DevoPatch-Pop_{args.pop_size}-Init_{args.init_rate}-Mutation_{args.mutation_rate}-"
@@ -115,7 +123,7 @@ def main():
     for directory in (save_dir, process_dir, result_dir, example_dir):
         os.makedirs(directory, exist_ok=True)
 
-    path_labels = sample_image_labels(path_labels, args.num_images, args.seed, label_file, f'{save_dir}/sampled_images.json')
+    path_labels = sample_image_labels(all_labels, args.num_images, args.seed, label_file, f'{save_dir}/sampled_images.json')
 
     target_manifest_path = f"{save_dir}/target_images.json"
     target_manifest = _load_target_manifest(target_manifest_path, args.seed, label_file)
@@ -134,8 +142,7 @@ def main():
         final_result_path = f'{result_dir}/{save_file}_result.p'
 
         if os.path.exists(result_path):
-            with open(result_path) as file:
-                summary = json.load(file)
+            summary = json.load(open(result_path))
             if (
                 metric_tracker.is_complete(summary)
                 and "first_success_query" in summary
@@ -153,7 +160,7 @@ def main():
         target_entry = target_manifest["targets"].get(path_img)
         if target_entry is None:
             target_path, target_class = select_devopatch_target(
-                path_labels, path_img, args.attack_type == "targeted", args.seed,
+                all_labels, path_img, args.attack_type == "targeted", args.seed,
             )
             target_entry = {"target_image": target_path, "target_class": target_class}
             target_manifest["targets"][path_img] = target_entry
@@ -214,7 +221,7 @@ def main():
             result = attacker.get_best()
             final_patch = np.asarray(result["patch"])
             adversarial = attacker.build_adversarial()
-            if args.save_imgs:
+            if args.save_process:
                 process = attacker.process
                 p.dump(process, open(process_path, 'wb'))
             summary = {

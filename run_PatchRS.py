@@ -26,7 +26,7 @@ def build_parser():
     parser.add_argument("--setting", choices=["common", "realistic"],
                         default="realistic",
                         help="common resizes/crops to 224 in [0,1]; realistic uses raw images (pre-processing)")
-    parser.add_argument("--exp_root", default="./exp_result")
+    parser.add_argument("--exp_root", default="./exp_results")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--patch_size", type=int, default=40, help="patch size")
     parser.add_argument("--p_init", type=float, default=0.4, help="initial Patch-RS sampling probability")
@@ -55,7 +55,7 @@ def main():
     path_labels = json.load(open(label_file))
 
     # Create results folders
-    experiment = f"PatchRS-{args.dataset}-{args.vision_model}-{args.setting}-{args.attack_type}/SEED_{args.seed}"
+    experiment = f"PatchRS-{args.dataset}-{args.vision_model}-{args.setting}-{args.attack_type}"
     save_dir = f'{args.exp_root}/{experiment}/SEED_{args.seed}'
 
     result_dir = f'{save_dir}/results'
