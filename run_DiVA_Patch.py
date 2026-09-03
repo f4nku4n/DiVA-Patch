@@ -1,22 +1,18 @@
 import os
 import json
-import pickle
 import argparse
+import pickle as p
 
 import numpy as np
 from PIL import Image
 
-from utils import (
-    set_seed,
-    apply_patch,
-    NumpyEncoder,
-    pytorch_switch,
-    sample_image_labels,
-    PerceptualMetricTracker,
-    first_success_query_from_process
-)
+from utils import NumpyEncoder, PerceptualMetricTracker
+from utils import first_success_query_from_process, sample_image_labels, set_seed, apply_patch
+
+from attack_methods.DiVA_Patch import DiVA_Patch
 
 from utils.LossFunctions import Targeted, UnTargeted
+from factory import getVisionModel, getImageLoader, getLabelFile
 
 VALID_MODELS = {
     "ImageNet1K": ("VGGNet16", "ResNet50", "ViT16"),
@@ -30,7 +26,7 @@ def build_parser():
     parser.add_argument("--setting", choices=["common", "realistic"],
                         default="realistic",
                         help="common resizes/crops to 224 in [0,1]; realistic uses raw images (pre-processing)")
-    parser.add_argument("--exp_root", default='./exp_root')
+    parser.add_argument("--exp_root", default='./exp_results')
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--max_query", type=int, default=10000)
     parser.add_argument("--num_images", type=int, default=100)
@@ -52,116 +48,45 @@ def build_parser():
     return parser
 
 
-def _components(dataset, vision_model, setting):
-    if vision_model not in VALID_MODELS[dataset]:
-        allowed = ", ".join(VALID_MODELS[dataset])
-        raise ValueError(f"--vision_model {vision_model!r} is not valid for --dataset {dataset!r}; choose one of: {allowed}")
-    if setting == "common":
-        from attack_methods.DiVA_Patch_common import DiVA_Patch_common as DiVA_Patch
-    else:
-        from attack_methods.DiVA_Patch import DiVA_Patch
-    if dataset == "ImageNet1K":
-        if setting == "common":
-            from models.ImageNetModels import ImageNetModel as VisionModel
-        else:
-            from models.ImageNetModels_realistic import ImageNetModel as VisionModel
-        model_args = ({"VGGNet16": 0, "ResNet50": 1, "ViT16": 2}[vision_model],)
-    elif dataset == "Flower102":
-        if setting == "common":
-            from models.Flower102Models import Flower102Model as VisionModel
-        else:
-            from models.Flower102Models import Flower102ModelRealistic as VisionModel
-        model_args = ()
-    else:
-        if setting == "common":
-            from models.Food101Models import Food101Model as VisionModel
-        else:
-            from models.Food101Models import Food101ModelRealistic as VisionModel
-        model_args = ()
-    return DiVA_Patch, VisionModel, model_args
-
-
-def _image_loader(dataset, setting):
-    if setting == "realistic":
-        def load_realistic(path):
-            return np.asarray(Image.open(path).convert("RGB"), dtype=np.float32)
-
-        return load_realistic
-
-    from torchvision import transforms
-
-    if dataset == "Flower102":
-        resize = transforms.Resize((256, 256))
-    elif dataset == "Food101":
-        resize = transforms.Resize((224, 224))
-    else:
-        resize = transforms.Resize(256)
-    operations = [resize]
-    if dataset != "Food101":
-        operations.append(transforms.CenterCrop(224))
-    operations.append(transforms.ToTensor())
-    transform = transforms.Compose(operations)
-
-    def load_common(path):
-        return pytorch_switch(transform(Image.open(path).convert("RGB"))).detach().numpy()
-
-    return load_common
-
 def _safe_name(path):
     return path.replace(".JPEG", "").replace("/", "_").replace("\\", "_")
-
-
-def _label_file(args):
-    if args.demo:
-        if args.dataset != "ImageNet1K":
-            raise ValueError("--demo is only supported with --dataset ImageNet1K")
-        return "TEST_IMGs/demo_targeted.json" if args.attack_type == "targeted" else "TEST_IMGs/demo_untargeted.json"
-    if args.dataset == "Flower102":
-        return "TEST_IMGs/EfficientNetV2S_Flower102.json"
-    if args.dataset == "Food101":
-        return "TEST_IMGs/Swin_Food101.json"
-    return f"TEST_IMGs/{args.vision_model}_ImgNet1K.json"
-
 
 def main():
     parser = build_parser()
     args = parser.parse_args()
 
-    try:
-        DiVA_Patch, VisionModel, model_args = _components(args.dataset, args.vision_model, args.setting)
-        label_file = _label_file(args)
-    except ValueError as exc:
-        parser.error(str(exc))
+    # Load vision model
+    VisionModel, model_args = getVisionModel(args.dataset, args.vision_model)
     model = VisionModel(*model_args, args.device)
 
-    load_image = _image_loader(args.dataset, args.setting)
-    set_seed(args.seed)
+    label_file = getLabelFile(args)
+    path_labels = json.load(open(label_file))
 
-    with open(label_file) as file:
-        path_labels = json.load(file)
-
+    # Create results folders
     experiment = f"DiVA_Patch-GridSize_{args.grid_h}_{args.grid_w}-Delta_{args.delta_max}_{args.delta_min}-K{args.K}-{args.dataset}-{args.vision_model}-{args.setting}-{args.attack_type}"
     save_dir = f'{args.exp_root}/{experiment}/SEED_{args.seed}'
 
-    result_dir = os.path.join(save_dir, "results")
-    example_dir = os.path.join(save_dir, "examples")
-    process_dir = os.path.join(save_dir, "processes")
-    map_elites_dir = os.path.join(save_dir, "map_elites")
-
-    for directory in (map_elites_dir, process_dir, result_dir, example_dir):
+    result_dir = f'{save_dir}/results'
+    example_dir = f'{save_dir}/examples'
+    process_dir = f'{save_dir}/processes'
+    map_elites_dir = f'{save_dir}/map_elites'
+    for directory in (save_dir, map_elites_dir, process_dir, result_dir, example_dir):
         os.makedirs(directory, exist_ok=True)
 
-    path_labels = sample_image_labels(path_labels, args.num_images, args.seed, label_file, os.path.join(save_dir, "sampled_images.json"))
+    path_labels = sample_image_labels(path_labels, args.num_images, args.seed, label_file, f'{save_dir}/sampled_images.json')
     metric_tracker = PerceptualMetricTracker(device=args.device, data_range=1.0 if args.setting == "common" else 255.0)
-    adversarial_results, l2_values, location_counts = [], [], []
 
+    load_image = getImageLoader(args.dataset, args.setting)
+    set_seed(args.seed)
+
+    # Run attack
+    adversarial_results, l2_values, location_counts = [], [], []
     for index, path_img in enumerate(path_labels, start=1):
         save_file = _safe_name(path_img)
-        result_json = os.path.join(result_dir, f"{save_file}.json")
-        process_path = os.path.join(process_dir, f"{save_file}_process.p")
+        result_json = f'{result_dir}/{save_file}.json'
+        process_path = f'{process_dir}/{save_file}_process.p'
         if os.path.exists(result_json):
-            with open(result_json) as file:
-                existing_result = json.load(file)
+            existing_result = json.load(open(result_json))
             if metric_tracker.is_complete(existing_result) and "first_success_query" in existing_result:
                 metric_tracker.add_summary(existing_result)
                 metric_tracker.print_result(path_img, existing_result)
@@ -171,10 +96,10 @@ def main():
                     location_counts.append(len(existing_result.get("#locs", [])))
                 continue
 
-        print(f"Image #{index}: {path_img}")
-        image_path = os.path.join(args.dataset_root, path_img)
-        true_label = path_labels[path_img]["true_label"]
-        target_label = path_labels[path_img]["target_label"]
+        print(f'Image #{index}: {path_img}')
+        image_path = f'{args.dataset_root}/{path_img}'
+        true_label = path_labels[path_img]['true_label']
+        target_label = path_labels[path_img]['target_label']
         if args.attack_type == "non_targeted":
             loss = UnTargeted(model, true_label, to_pytorch=True, device=args.device)
         else:
@@ -184,9 +109,10 @@ def main():
         if img_cls.shape[-1] != 3:
             continue
 
+        ## If we attacked this image, continue
         if os.path.exists(process_path):
-            with open(process_path, "rb") as file:
-                process = pickle.load(file)
+            process = p.load(open(process_path, 'rb'))
+
             best = process[-1]
             img_adv = apply_patch(img_cls, best[2], np.asarray(best[3]))
             metrics = metric_tracker.compute(img_cls, img_adv)
@@ -213,24 +139,24 @@ def main():
             continue
 
         set_seed(args.seed)
-        attacker = DiVA_Patch(img_cls=img_cls, loss_function=loss, delta_max=args.delta_max, delta_min=args.delta_min, K=args.K, patch_size=[args.patch_h, args.patch_w], grid_size=[args.grid_h, args.grid_w], max_query=args.max_query)
+        attacker = DiVA_Patch(img_cls=img_cls, loss_function=loss,
+                              delta_max=args.delta_max, delta_min=args.delta_min,
+                              K=args.K, patch_size=[args.patch_h, args.patch_w], grid_size=[args.grid_h, args.grid_w],
+                              max_query=args.max_query, setting=args.setting)
         attacker.run()
 
         map_elites = attacker.return_map_elites()
-        with open(os.path.join(map_elites_dir, f"{save_file}_map_elites.p"), "wb") as file:
-            pickle.dump(map_elites, file)
+        p.dump(map_elites, open(os.path.join(map_elites_dir, f'{save_file}_map_elites.p'), 'wb'))
 
         if args.save_imgs:
             process = attacker.process
-            with open(process_path, "wb") as file:
-                pickle.dump(process, file)
+            p.dump(process, open(process_path, 'wb'))
 
         results = []
         for cell_index, individual in attacker.map_elites.grid_final.items():
             if individual is not None and individual.success_attack:
                 results.append([cell_index, individual.success_attack, individual.location, individual.patch, individual.l2, individual.loss])
-        with open(os.path.join(result_dir, f"{save_file}_result.p"), "wb") as file:
-            pickle.dump(results, file)
+        p.dump(results, open(os.path.join(result_dir, f'{save_file}_result.p'), 'wb'))
 
         best_idv = attacker.get_best_quality_solution()
         print(f"Best patch:\n+ Adversarial: {best_idv.success_attack}\n+ L2: {best_idv.l2:.2f}")
@@ -253,12 +179,14 @@ def main():
 
         if args.save_imgs:
             output = img_adv * 255.0 if args.setting == "common" else img_adv
-            Image.fromarray(np.clip(output, 0, 255).astype(np.uint8)).save(os.path.join(example_dir, f"{best_idv.success_attack}_{path_img.replace('/', '_')}"))
+            Image.fromarray(np.clip(output, 0, 255).astype(np.uint8)).save(
+                f"{example_dir}/{best_idv.success_attack}_{path_img.replace('/', '_')}"
+            )
         l2_values.append(best_idv.l2)
         adversarial_results.append(best_idv.success_attack)
 
     if not adversarial_results:
-        print("No correctly classified, unfinished images were attacked.")
+        print("No eligible images were evaluated.")
         return
     print(f"Average Attack Success Rate: {100 * np.mean(adversarial_results):.2f}")
     print(f"L2 (mean, std): {np.mean(l2_values):.2f} ({np.std(l2_values):.2f})")
