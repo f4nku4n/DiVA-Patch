@@ -47,18 +47,18 @@ The old common and realistic entry points remain compatibility wrappers.
 
 CamoPatch common and realistic settings share one runner:
 ```shell
-python run_CamoPatch.py --setting common --vision_model VGGNet16 --dataset_root "$DATASET_PATH"
+python run_CamoPatch.py --setting common --vision_model VGGNet16 --dataset_root "$DATASET_PATH" --batch_size 8
 
-python run_CamoPatch.py --setting realistic --vision_model VGGNet16 --dataset_root "$DATASET_PATH"
+python run_CamoPatch.py --setting realistic --vision_model VGGNet16 --dataset_root "$DATASET_PATH" --batch_size 8
 ```
 
 Patch-RS uses the same unified runner pattern:
 ```shell
 python run_PatchRS.py --setting common \
-  --vision_model VGGNet16 --dataset_root "$DATASET_PATH"
+  --vision_model VGGNet16 --dataset_root "$DATASET_PATH" --batch_size 8
 
 python run_PatchRS.py --setting realistic \
-  --vision_model VGGNet16 --dataset_root "$DATASET_PATH"
+  --vision_model VGGNet16 --dataset_root "$DATASET_PATH" --batch_size 8
 ```
 Use `--patch_size`, `--p_init`, and `--update_loc_period` to configure
 Patch-RS. The old common and realistic entry points remain compatibility

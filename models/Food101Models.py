@@ -13,8 +13,8 @@ def preprocess_for_inference(tensor):
 
 class Food101Model:
     def __init__(self, device='cpu', setting='realistic'):
-        processor = AutoImageProcessor.from_pretrained('aspis/swin-finetuned-food101')
-        model = AutoModelForImageClassification.from_pretrained('aspis/swin-finetuned-food101')
+        processor = AutoImageProcessor.from_pretrained('model_weights/swin-finetuned-food101', local_files_only=True)
+        model = AutoModelForImageClassification.from_pretrained('model_weights/swin-finetuned-food101', local_files_only=True)
         mean, std = tuple(processor.image_mean), tuple(processor.image_std)
 
         self.setting = setting

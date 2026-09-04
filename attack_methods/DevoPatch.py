@@ -20,14 +20,7 @@ class DevoPatch(Attacker):
         self.fitness_norm = fitness_norm
         self.rng = np.random if rng is None else rng
         self.h, self.w = self.img_cls.shape[:2]
-        self.value_scale = (
-            255.0
-            if max(
-                float(np.max(self.img_cls)),
-                float(np.max(self.target_image)),
-            ) > 1.5
-            else 1.0
-        )
+        self.value_scale = 255.0 if max(float(np.max(self.img_cls)), float(np.max(self.target_image))) > 1.5 else 1.0
 
         self.loss_function.bind_base_image(self.img_cls)
         self.loss_function.bind_target_image(self.target_image)
@@ -97,7 +90,7 @@ class DevoPatch(Attacker):
             self.n_query,
             self.best_success,
             rectangle[:2].tolist(),
-            self._patch(rectangle),
+            # self._patch(rectangle),
             self.best_l2,
             self.best_fitness,
         ])
@@ -111,13 +104,7 @@ class DevoPatch(Attacker):
         fitness = self._fitness(rectangle)
         l2 = self._l2(rectangle)
 
-        if (
-            success
-            and (
-                not self.best_success
-                or fitness < self.best_fitness
-            )
-        ):
+        if success and (not self.best_success or fitness < self.best_fitness):
             self.best_rectangle = rectangle.copy()
             self.best_success = True
             self.best_fitness = fitness
@@ -132,9 +119,7 @@ class DevoPatch(Attacker):
     def _evaluate_query(self, rectangle):
         rectangle = self._bound_handle(np.asarray(rectangle, dtype=np.int64))
         top, left, _, _ = rectangle
-        result = yield self.loss_function.make_patch_query(
-            self._patch(rectangle), (int(top), int(left))
-        )
+        result = yield self.loss_function.make_patch_query(self._patch(rectangle), (int(top), int(left)))
         return self._apply_evaluation(rectangle, result.success)
 
     def _bound_handle(self, rectangle):
@@ -177,11 +162,7 @@ class DevoPatch(Attacker):
         best_index = int(np.argmin(fitnesses))
         choices = [i for i in range(len(self.population)) if i != best_index]
         j, q = self.rng.choice(choices, size=2, replace=False)
-        offspring = (
-            self.population[best_index]
-            + self.mutation_rate
-            * (self.population[int(j)] - self.population[int(q)])
-        )
+        offspring = self.population[best_index] + self.mutation_rate * (self.population[int(j)] - self.population[int(q)])
         noise = self.rng.randint(-self.mutation_rate, self.mutation_rate + 1, size=4)
         return self._bound_handle(offspring + noise)
 
@@ -222,7 +203,5 @@ class DevoPatch(Attacker):
     def build_adversarial(self):
         image = self.img_cls.copy()
         top, left, bottom, right = self.best_rectangle
-        image[top:bottom, left:right] = self.target_image[
-            top:bottom, left:right
-        ]
+        image[top:bottom, left:right] = self.target_image[top:bottom, left:right]
         return image

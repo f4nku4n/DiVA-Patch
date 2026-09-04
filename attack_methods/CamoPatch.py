@@ -1,18 +1,40 @@
 import cv2
 import math
 import numpy as np
-from tqdm import tqdm
 from attack_methods.base import Attacker
+from attack_methods.controller import AttackController, AttackJob
 from attack_methods.utils import l2_compute, sh_selection
+from utils.BatchEvaluator import BatchEvaluator
 
 
 class CamoPatch(Attacker):
-    def __init__(self, params, loss_function, max_query=10000, setting='realistic'):
+    def __init__(self, params, loss_function, max_query=10000, setting='realistic', rng=None):
         super().__init__(max_query)
         self.loss_function = loss_function
         self.params = params
         self.loss_function.bind_base_image(params["x"])
         self.setting = setting
+        self.rng = np.random if rng is None else rng
+        self._query_runner = self._pending_query = None
+        self._done = False
+
+    @property
+    def done(self): return self._done
+
+    def ask(self):
+        if self._done: return None
+        if self._pending_query is not None: return self._pending_query
+        if self._query_runner is None: self._query_runner = self._run_queries()
+        try: self._pending_query = next(self._query_runner)
+        except StopIteration: self._done = True; return None
+        return self._pending_query
+
+    def tell(self, result):
+        if self._done or self._pending_query is None:
+            raise RuntimeError("tell() requires a pending query")
+        self._pending_query = None
+        try: self._pending_query = self._query_runner.send(result)
+        except StopIteration: self._done = True
 
     def completion_procedure(self, is_success, x_adv, queries, loc, patch):
         data = {
@@ -28,6 +50,16 @@ class CamoPatch(Attacker):
         np.save(self.params["save_directory"], data, allow_pickle=True)
 
     def run(self):
+        AttackController(BatchEvaluator(self.loss_function.model), batch_size=1,
+                         description="CamoPatch").run([AttackJob(self)])
+        self.completion_procedure(self.is_success, self.x_adv, self.n_query, self.loc, self.patch)
+
+    def _query(self, patch, loc, bounds):
+        result = yield self.loss_function.make_patch_query(patch, loc, clip_bounds=bounds)
+        self.count_query(result.success)
+        return result.success, result.loss
+
+    def _run_queries(self):
         if self.setting == 'realistic':
             min_v, max_v = 0., 255.
         else:
@@ -39,19 +71,18 @@ class CamoPatch(Attacker):
         s = int(math.ceil(eps ** .5))
 
         if self.setting == 'realistic':
-            patch_geno = np.random.randint(0, 256, size=(self.params["N"], 7))
-            loc = [np.random.randint(h - s), np.random.randint(w - s)]
+            patch_geno = self.rng.randint(0, 256, size=(self.params["N"], 7))
+            loc = [self.rng.randint(h - s), self.rng.randint(w - s)]
         else:
-            patch_geno = np.random.rand(self.params["N"], 7)
-            loc = np.random.randint(h - s, size=2)
+            patch_geno = self.rng.rand(self.params["N"], 7)
+            loc = self.rng.randint(h - s, size=2)
 
         patch = render(patch_geno, s, s, setting=self.setting)
 
         update_loc_period = self.params["update_loc_period"]
 
         x_adv = compose_image(x, patch, loc, (min_v, max_v))
-        is_success, loss = self.loss_function.evaluate_patch(patch, loc, clip_bounds=(min_v, max_v))
-        self.count_query(is_success)
+        is_success, loss = yield from self._query(patch, loc, (min_v, max_v))
 
         l2_curr = l2_compute(
             adv_patch=patch,
@@ -62,17 +93,13 @@ class CamoPatch(Attacker):
 
         patch_counter = 0
 
-        for it in tqdm(range(1, self.max_query)):
+        for it in range(1, self.max_query):
             patch_counter += 1
             if patch_counter < update_loc_period:
-                patch_new_geno = mutate(patch_geno, self.params["mut"], setting=self.setting)
+                patch_new_geno = mutate(patch_geno, self.params["mut"], setting=self.setting, rng=self.rng)
                 patch_new = render(patch_new_geno, s, s, setting=self.setting)
                 # evaluate new solutions
-                is_success_new, loss_new = self.loss_function.evaluate_patch(
-                    patch_new, loc,
-                    clip_bounds=(min_v, max_v)
-                )
-                self.count_query(is_success_new)
+                is_success_new, loss_new = yield from self._query(patch_new, loc, (min_v, max_v))
 
                 orig_patch = x[loc[0]: loc[0] + s, loc[1]: loc[1] + s, :].copy()
 
@@ -106,13 +133,10 @@ class CamoPatch(Attacker):
                 sh_i = int(max(sh_selection(self.max_query, it) * h, 0))
                 sw_i = int(max(sh_selection(self.max_query, it) * w, 0))
                 loc_new = loc.copy()
-                loc_new = update_location(loc_new, sh_i, sw_i, h, w, s, setting=self.setting)
+                loc_new = update_location(loc_new, sh_i, sw_i, h, w, s, setting=self.setting, rng=self.rng)
 
                 # evaluate new solution
-                is_success_new, loss_new = self.loss_function.evaluate_patch(
-                    patch, loc_new, clip_bounds=(min_v, max_v)
-                )
-                self.count_query(is_success_new)
+                is_success_new, loss_new = yield from self._query(patch, loc_new, (min_v, max_v))
 
                 orig_patch_new = x[loc_new[0]: loc_new[0] + s, loc_new[1]: loc_new[1] + s, :].copy()
                 l2_new = l2_compute(
@@ -134,7 +158,7 @@ class CamoPatch(Attacker):
                     curr_temp = self.params["temp"] / (it + 1)
                     metropolis = math.exp(-diff / curr_temp)
 
-                    if loss_new < loss or np.random.rand() < metropolis:  # minimization # first check
+                    if loss_new < loss or self.rng.rand() < metropolis:  # minimization # first check
                         loss = loss_new
                         is_success = is_success_new
                         loc = loc_new
@@ -142,8 +166,7 @@ class CamoPatch(Attacker):
                         l2_curr = l2_new
             self.process.append([is_success, loc, patch_geno, l2_curr, loss])
 
-        self.completion_procedure(is_success, x_adv, self.n_query, loc, patch)
-        return
+        self.is_success, self.x_adv, self.loc, self.patch = is_success, x_adv, loc, patch
 
 ###################################################### Utilities #######################################################
 def compose_image(image, patch, location, clip_bounds):
@@ -154,14 +177,15 @@ def compose_image(image, patch, location, clip_bounds):
     return np.clip(image_adv, clip_bounds[0], clip_bounds[1])
 
 
-def update_location(loc_new, h_i, w_i, h, w, s, setting='realistic'):
+def update_location(loc_new, h_i, w_i, h, w, s, setting='realistic', rng=None):
+    rng = np.random if rng is None else rng
     if setting == 'realistic':
-        loc_new[0] += np.random.randint(low=-h_i, high=h_i + 1)
+        loc_new[0] += rng.randint(low=-h_i, high=h_i + 1)
         loc_new[0] = np.clip(loc_new[0], 0, h - s)
-        loc_new[1] += np.random.randint(low=-w_i, high=w_i + 1)
+        loc_new[1] += rng.randint(low=-w_i, high=w_i + 1)
         loc_new[1] = np.clip(loc_new[1], 0, w - s)
     else:
-        loc_new += np.random.randint(low=-h_i, high=h_i + 1, size=(2,))
+        loc_new += rng.randint(low=-h_i, high=h_i + 1, size=(2,))
         loc_new = np.clip(loc_new, 0, h - s)
     return loc_new
 

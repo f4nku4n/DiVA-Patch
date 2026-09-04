@@ -2,16 +2,18 @@ import os
 import json
 import argparse
 import pickle as p
+from dataclasses import dataclass
 
 import numpy as np
 from PIL import Image
 
-from utils import NumpyEncoder, PerceptualMetricTracker
+from utils import BatchEvaluator, NumpyEncoder, PerceptualMetricTracker
 from utils import first_success_query_from_process, sample_image_labels, set_seed
 
 from attack_methods.PatchRS import PatchRS
+from attack_methods.controller import AttackController, AttackJob
 
-from utils.LossFunctions import Targeted, UnTargeted
+from utils.LossFunctions import Targeted, UnTargeted, _torch_input
 from factory import getVisionModel, getImageLoader, getLabelFile
 
 VALID_MODELS = {
@@ -19,6 +21,11 @@ VALID_MODELS = {
     "Flower102": ("EfficientNetV2S",),
     "Food101": ("Swin",),
 }
+
+@dataclass
+class PatchRSContext:
+    path_img: str; save_file: str; image: np.ndarray; true_label: int; target_label: int
+    process_path: str; result_json: str; final_result_path: str
 
 
 def build_parser():
@@ -33,6 +40,7 @@ def build_parser():
     parser.add_argument("--update_loc_period", type=int, default=4, help="number of queries between location updates")
     parser.add_argument("--max_query", type=int, default=10000)
     parser.add_argument("--num_images", type=int, default=100)
+    parser.add_argument("--batch_size", type=int, default=1)
     parser.add_argument("--dataset", choices=list(VALID_MODELS), default="ImageNet1K")
     parser.add_argument("--vision_model", default="VGGNet16", choices=["VGGNet16", "ResNet50", "ViT16", "EfficientNetV2S", "Swin"])
     parser.add_argument("--device", default="cuda", help="cuda/cpu")
@@ -46,10 +54,12 @@ def build_parser():
 def main():
     parser = build_parser()
     args = parser.parse_args()
+    if args.batch_size < 1: parser.error("--batch_size must be at least 1")
 
     # Load vision model
     VisionModel, model_args = getVisionModel(args.dataset, args.vision_model)
     model = VisionModel(*model_args, args.device)
+    evaluator = BatchEvaluator(model)
 
     label_file = getLabelFile(args)
     path_labels = json.load(open(label_file))
@@ -73,6 +83,73 @@ def main():
 
     # Run attack
     adversarial, l2_values = [], []
+
+    def finish_batched(job):
+        context, process = job.context, job.attacker.process
+        best = process[-1]
+        img_adv = context.image.copy()
+        loc_x, loc_y = best[2]
+        patch = np.asarray(best[3])
+        img_adv[loc_x:loc_x + patch.shape[0], loc_y:loc_y + patch.shape[1], :] = patch
+        metrics = metric_tracker.compute(context.image, img_adv)
+        first_success = first_success_query_from_process(process, success_index=1, query_index=0)
+        summary = {"adversarial": bool(best[1]), "l2_distance": float(best[-2]),
+                   "location": best[2], "loss": float(best[-1]),
+                   "first_success_query": first_success, **metrics}
+        final_result = {**summary, "patch": patch.copy(), "queries": int(best[0]),
+                        "setting": args.setting, "attack_type": args.attack_type,
+                        "patch_size": args.patch_size, "p_init": args.p_init,
+                        "update_loc_period": args.update_loc_period}
+        if args.save_imgs:
+            p.dump(process, open(context.process_path, 'wb'))
+            output = img_adv * 255.0 if args.setting == "common" else img_adv
+            Image.fromarray(np.clip(output, 0, 255).astype(np.uint8)).save(
+                f"{example_dir}/{bool(best[1])}_{context.path_img.replace('/', '_')}")
+        p.dump(final_result, open(context.final_result_path, 'wb'))
+        json.dump(summary, open(context.result_json, 'w'), indent=4, cls=NumpyEncoder)
+        metric_tracker.print_result(context.path_img, summary)
+        adversarial.append(bool(best[1])); l2_values.append(float(best[-2]))
+
+    if args.batch_size > 1:
+        contexts = []
+        def run_chunk(chunk):
+            labels = evaluator.predict_labels([_torch_input(c.image, False, args.device) for c in chunk])
+            jobs = []
+            for context, label in zip(chunk, labels):
+                if label != context.true_label: continue
+                loss = (UnTargeted(model, context.true_label, to_pytorch=True, device=args.device)
+                        if args.attack_type == "non_targeted" else
+                        Targeted(model, context.true_label, context.target_label, to_pytorch=True, device=args.device))
+                attacker = PatchRS(context.image, loss, p_init=args.p_init,
+                                   patch_size=[args.patch_size, args.patch_size],
+                                   update_loc_period=args.update_loc_period, max_query=args.max_query,
+                                   setting=args.setting, rng=np.random.RandomState(args.seed))
+                jobs.append(AttackJob(attacker, context))
+            AttackController(evaluator, batch_size=args.batch_size, on_complete=finish_batched,
+                             description="PatchRS").run(jobs)
+        for index, path_img in enumerate(path_labels, start=1):
+            save_file = path_img.replace(".JPEG", "").replace("/", "_")
+            context = PatchRSContext(
+                path_img, save_file, load_image(f'{args.dataset_root}/{path_img}'),
+                int(path_labels[path_img]['true_label']), int(path_labels[path_img]['target_label']),
+                f'{process_dir}/{save_file}.p', f'{result_dir}/{save_file}.json',
+                f'{result_dir}/{save_file}_result.p')
+            if os.path.exists(context.result_json) and os.path.exists(context.final_result_path):
+                existing = json.load(open(context.result_json))
+                if metric_tracker.is_complete(existing) and "first_success_query" in existing:
+                    metric_tracker.add_summary(existing); metric_tracker.print_result(path_img, existing)
+                    adversarial.append(bool(existing["adversarial"])); l2_values.append(float(existing["l2_distance"])); continue
+            if context.image.shape[-1] == 3:
+                contexts.append(context)
+                if len(contexts) == args.batch_size:
+                    run_chunk(contexts); contexts = []
+        if contexts: run_chunk(contexts)
+        if not adversarial:
+            print("No eligible images were evaluated."); return
+        print(f"Average Attack Success Rate: {100 * np.mean(adversarial):.2f}")
+        print(f"L2 (mean, std): {np.mean(l2_values):.2f} ({np.std(l2_values):.2f})")
+        metric_tracker.print_summary(); return
+
     for index, path_img in enumerate(path_labels, start=1):
         save_file = path_img.replace(".JPEG", "").replace("/", "_")
         process_path = f'{process_dir}/{save_file}.p'

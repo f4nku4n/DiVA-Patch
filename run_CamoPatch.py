@@ -1,16 +1,18 @@
 import os
 import json
 import argparse
+from dataclasses import dataclass
 
 import numpy as np
 from PIL import Image
 
-from utils import NumpyEncoder, PerceptualMetricTracker
+from utils import BatchEvaluator, NumpyEncoder, PerceptualMetricTracker
 from utils import first_success_query_from_process, sample_image_labels, set_seed
 
 from attack_methods.CamoPatch import CamoPatch
+from attack_methods.controller import AttackController, AttackJob
 
-from utils.LossFunctions import Targeted, UnTargeted
+from utils.LossFunctions import Targeted, UnTargeted, _torch_input
 from factory import getVisionModel, getImageLoader, getLabelFile
 
 VALID_MODELS = {
@@ -18,6 +20,11 @@ VALID_MODELS = {
     "Flower102": ("EfficientNetV2S",),
     "Food101": ("Swin",),
 }
+
+@dataclass
+class CamoContext:
+    path_img: str; save_file: str; image: np.ndarray; true_label: int; target_label: int
+    process_path: str; result_json: str
 
 def build_parser(default_setting=None):
     parser = argparse.ArgumentParser()
@@ -28,6 +35,7 @@ def build_parser(default_setting=None):
     parser.add_argument("--patch_size", type=int, default=40, help="patch size")
     parser.add_argument("--max_query", type=int, default=10000)
     parser.add_argument("--num_images", type=int, default=100)
+    parser.add_argument("--batch_size", type=int, default=1)
     parser.add_argument("--dataset", choices=list(VALID_MODELS), default="ImageNet1K")
     parser.add_argument("--vision_model", default="VGGNet16", choices=["VGGNet16", "ResNet50", "ViT16", "EfficientNetV2S", "Swin"])
     parser.add_argument("--device", default="cuda", help="cuda/cpu")
@@ -44,10 +52,12 @@ def get_save_folder(args):
 def main():
     parser = build_parser()
     args = parser.parse_args()
+    if args.batch_size < 1: parser.error("--batch_size must be at least 1")
 
     # Load vision model
     VisionModel, model_args = getVisionModel(args.dataset, args.vision_model)
     model = VisionModel(*model_args, args.device, args.setting)
+    evaluator = BatchEvaluator(model)
 
     label_file = getLabelFile(args)
     path_labels = json.load(open(label_file))
@@ -71,6 +81,66 @@ def main():
     patch_size = args.patch_size
     # Run attack
     adversarial, l2_values = [], []
+
+    def finish_batched(job):
+        attacker, context = job.attacker, job.context
+        attacker.completion_procedure(attacker.is_success, attacker.x_adv,
+                                      attacker.n_query, attacker.loc, attacker.patch)
+        results = np.load(context.process_path, allow_pickle=True).item()
+        process = results["process"]
+        metrics = metric_tracker.compute(context.image, attacker.x_adv)
+        summary = {"adversarial": bool(results["adversarial"]),
+                   "l2_distance": float(process[-1][-2]), "location": results["loc"],
+                   "loss": float(process[-1][-1]),
+                   "first_success_query": results.get("first_success_query"), **metrics}
+        json.dump(summary, open(context.result_json, 'w'), indent=4, cls=NumpyEncoder)
+        metric_tracker.print_result(context.path_img, summary)
+        if args.save_imgs:
+            output = attacker.x_adv * 255.0 if args.setting == "common" else attacker.x_adv
+            Image.fromarray(np.clip(output, 0, 255).astype(np.uint8)).save(
+                f"{example_dir}/{summary['adversarial']}_{context.path_img.replace('/', '_')}")
+        adversarial.append(summary["adversarial"]); l2_values.append(summary["l2_distance"])
+
+    if args.batch_size > 1:
+        contexts = []
+        def run_chunk(chunk):
+            labels = evaluator.predict_labels([_torch_input(c.image, False, args.device) for c in chunk])
+            jobs = []
+            for context, label in zip(chunk, labels):
+                if label != context.true_label: continue
+                loss = (UnTargeted(model, context.true_label, to_pytorch=True, device=args.device)
+                        if args.attack_type == "non_targeted" else
+                        Targeted(model, context.true_label, context.target_label, to_pytorch=True, device=args.device))
+                image = context.image
+                params = {"x": image, "eps": args.patch_size ** 2,
+                          "n_queries": args.max_query, "save_directory": context.process_path,
+                          "c": image.shape[2], "h": image.shape[0], "w": image.shape[1],
+                          "N": args.N, "update_loc_period": 4, "mut": 0.3, "temp": 300}
+                jobs.append(AttackJob(CamoPatch(params, loss, args.max_query, args.setting,
+                                                rng=np.random.RandomState(args.seed)), context))
+            AttackController(evaluator, batch_size=args.batch_size, on_complete=finish_batched,
+                             description="CamoPatch").run(jobs)
+        for path_img in path_labels:
+            save_file = path_img.replace(".JPEG", "").replace("/", "_")
+            context = CamoContext(path_img, save_file,
+                load_image(f'{args.dataset_root}/{path_img}'),
+                int(path_labels[path_img]['true_label']), int(path_labels[path_img]['target_label']),
+                f'{process_dir}/{save_file}.npy', f'{result_dir}/{save_file}.json')
+            if os.path.exists(context.result_json):
+                existing = json.load(open(context.result_json))
+                if metric_tracker.is_complete(existing) and "first_success_query" in existing:
+                    metric_tracker.add_summary(existing); metric_tracker.print_result(path_img, existing)
+                    adversarial.append(bool(existing["adversarial"])); l2_values.append(float(existing["l2_distance"])); continue
+            if context.image.shape[-1] == 3:
+                contexts.append(context)
+                if len(contexts) == args.batch_size:
+                    run_chunk(contexts); contexts = []
+        if contexts: run_chunk(contexts)
+        if not adversarial: print("No eligible images were evaluated."); return
+        print(f"Average Attack Success Rate: {100 * np.mean(adversarial):.2f}")
+        print(f"L2 (mean, std): {np.mean(l2_values):.2f} ({np.std(l2_values):.2f})")
+        metric_tracker.print_summary(); return
+
     for index, path_img in enumerate(path_labels, start=1):
         save_file = path_img.replace(".JPEG", "").replace("/", "_")
         process_path = f'{process_dir}/{save_file}.npy'

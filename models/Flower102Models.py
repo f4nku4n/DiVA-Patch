@@ -20,11 +20,12 @@ def preprocess_for_inference(tensor):
 
 class Flower102Model:
     def __init__(self, device='cpu', setting='realistic'):
-        repo_id = "bengid/efficientnetv2-s-flower-classifier"
-        weights_path = hf_hub_download(
-            repo_id=repo_id,
-            filename="efficientnetv2-s-flower-classifier.safetensors",
-        )
+        # repo_id = "bengid/efficientnetv2-s-flower-classifier"
+        # weights_path = hf_hub_download(
+        #     repo_id=repo_id,
+        #     filename="efficientnetv2-s-flower-classifier.safetensors",
+        # )
+        weights_path = 'model_weights/efficientnetv2-s-flower-classifier.safetensors'
         model = torch_models.efficientnet_v2_s(weights=None)
         model.classifier[1] = nn.Linear(model.classifier[1].in_features, 102)
         model.load_state_dict(load_file(weights_path, device="cpu"), strict=True)
