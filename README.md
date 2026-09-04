@@ -28,9 +28,9 @@ This repo have already implemented following black-box patch-based attacks:
 
 Run DevoPatch under the common or realistic setting with:
 ```shell
-python run_DevoPatch.py --setting common --vision_model VGGNet16 --dataset_root "$DATASET_PATH" --device cuda
+python run_DevoPatch.py --setting common --vision_model VGGNet16 --dataset_root "$DATASET_PATH" --device cuda --batch_size 8
 
-python run_DevoPatch.py --setting realistic --vision_model VGGNet16 --dataset_root "$DATASET_PATH" --device cuda --attack_type targeted
+python run_DevoPatch.py --setting realistic --vision_model VGGNet16 --dataset_root "$DATASET_PATH" --device cuda --attack_type targeted --batch_size 8
 ```
 
 DevoPatch defaults to population size `10`, initialization rate `0.35`,
@@ -40,6 +40,9 @@ class in the full model-specific label dictionary. For a targeted attack, it
 is sampled from entries whose true label equals the configured target label.
 The selected texture is deterministic for the seed and source path and is
 recorded in `target_images.json`.
+`--batch_size` controls how many independent images are attacked concurrently;
+each active image owns one attacker and contributes at most one query to each
+victim-model batch.
 The old common and realistic entry points remain compatibility wrappers.
 
 CamoPatch common and realistic settings share one runner:

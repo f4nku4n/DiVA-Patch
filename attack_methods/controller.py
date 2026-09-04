@@ -12,13 +12,14 @@ class AttackJob:
 class AttackController:
     """Keep a window of ask/tell attackers supplied with batched evaluations."""
 
-    def __init__(self, evaluator, batch_size=1, on_complete=None, show_progress=True):
+    def __init__(self, evaluator, batch_size=1, on_complete=None, show_progress=True, description="DiVA-Patch"):
         if batch_size < 1:
             raise ValueError("batch_size must be at least 1")
         self.evaluator = evaluator
         self.batch_size = int(batch_size)
         self.on_complete = on_complete
         self.show_progress = show_progress
+        self.description = description
 
     def _complete(self, job):
         if self.on_complete is not None:
@@ -37,7 +38,7 @@ class AttackController:
                 except StopIteration:
                     source_exhausted = True
 
-        progress = tqdm(unit="query", desc="DiVA-Patch", disable=not self.show_progress)
+        progress = tqdm(unit="query", desc=self.description, disable=not self.show_progress)
         try:
             fill_active()
             while active:
