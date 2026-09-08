@@ -9,6 +9,8 @@ from PIL import Image
 
 from utils import set_seed, pytorch_switch, sample_image_labels
 from utils import NumpyEncoder, PerceptualMetrics, PerceptualMetricTracker
+from attack_methods.controller import AttackController, AttackJob
+from attack_methods.WhiteBoxController import WhiteBoxAttacker, WhiteBoxEvaluator
 
 
 ATTACK_NAMES = ["MaskedPGD", "MaskedAutoPGD", "LaVAN", "LOAP"]
@@ -71,16 +73,10 @@ def _components(dataset, vision_model, setting):
             from models.ImageNetModels import ImageNetModel as ModelClass
         model_args = ({"VGGNet16": 0, "ResNet50": 1, "ViT16": 2}[vision_model],)
     elif dataset == "Flower102":
-        if setting == "common":
-            from models.Flower102Models import Flower102Model as ModelClass
-        else:
-            from models.Flower102Models import Flower102ModelRealistic as ModelClass
+        from models.Flower102Models import Flower102Model as ModelClass
         model_args = ()
     else:
-        if setting == "common":
-            from models.Food101Models import Food101Model as ModelClass
-        else:
-            from models.Food101Models import Food101ModelRealistic as ModelClass
+        from models.Food101Models import Food101Model as ModelClass
         model_args = ()
 
     return attacks, ModelClass, model_args
@@ -216,6 +212,17 @@ def _run_common(args, model, attack_class, path_labels, save_folder, steps, eps,
     perceptual_metrics = None
     targeted = args.attack_type == "targeted"
 
+    attack_kwargs = dict(
+        targeted=targeted, patch_size=(args.patch_h, args.patch_w),
+        steps=steps, step_size=step_size, eps=eps, device=args.device,
+        location_update_period=args.location_update_period,
+        early_stop=args.early_stop,
+    )
+    if args.attack_method == "LOAP":
+        attack_kwargs.update(lo_mode=args.lo_mode, stride=args.stride,
+                             attempts=args.attempts, exclude_box=args.exclude_box)
+    evaluator = WhiteBoxEvaluator(attack_class, model, attack_kwargs)
+
     def run_batch(entries):
         nonlocal perceptual_metrics
         if not entries:
@@ -226,19 +233,26 @@ def _run_common(args, model, attack_class, path_labels, save_folder, steps, eps,
         entries = [entry for entry, prediction in zip(entries, predictions) if prediction == entry["true_label"]]
         if not entries:
             return
-        attack_kwargs = dict(images=np.stack([entry["image"] for entry in entries]), model=model, true_labels=[entry["true_label"] for entry in entries], target_labels=[entry["target_label"] for entry in entries], targeted=targeted, patch_size=(args.patch_h, args.patch_w), steps=steps, step_size=step_size, eps=eps, device=args.device, location_update_period=args.location_update_period, early_stop=args.early_stop)
-        if args.attack_method == "LOAP":
-            attack_kwargs.update(lo_mode=args.lo_mode, stride=args.stride, attempts=args.attempts, exclude_box=args.exclude_box)
-        try:
-            results = attack_class(**attack_kwargs).run()
-        except torch.cuda.OutOfMemoryError as error:
-            raise RuntimeError("CUDA out of memory during batched white-box attack; reduce --batch_size and rerun.") from error
         if perceptual_metrics is None:
             perceptual_metrics = PerceptualMetrics(device=args.device)
-        for entry, result in zip(entries, results):
+
+        def complete(job):
+            entry, result = job.context, job.attacker.result
             metrics = perceptual_metrics(entry["image"], result["image"], data_range=1.0)
             summary = _summary(args, result, metrics, steps, eps, step_size)
             _record_result(args, save_folder, entry, result, metrics, summary, aggregates)
+
+        jobs = [
+            AttackJob(
+                WhiteBoxAttacker(entry["image"], entry["true_label"], entry["target_label"]),
+                entry,
+            )
+            for entry in entries
+        ]
+        AttackController(
+            evaluator, batch_size=args.batch_size, on_complete=complete,
+            show_progress=False, description=f"WhiteBox-{args.attack_method}",
+        ).run(jobs)
 
     pending = []
     for index, path_img in enumerate(path_labels, start=1):
@@ -290,6 +304,70 @@ def _run_realistic(args, model, attack_class, path_labels, save_folder, steps, e
         _record_result(args, save_folder, entry, result, metrics, summary, aggregates)
 
 
+def _run_realistic_batched(args, model, attack_class, path_labels, save_folder,
+                           steps, eps, step_size, aggregates):
+    from attack_methods.WhiteBoxAsync import WhiteBoxGradientEvaluator
+
+    metrics_runner = PerceptualMetrics(device=args.device)
+    targeted = args.attack_type == "targeted"
+    evaluator = WhiteBoxGradientEvaluator(model)
+
+    def complete(job):
+        entry, result = job.context, job.attacker.result()
+        metrics = metrics_runner(entry["image"], result["image"], data_range=255.0)
+        summary = _summary(args, result, metrics, steps, eps, step_size)
+        _record_result(args, save_folder, entry, result, metrics, summary, aggregates)
+
+    def jobs():
+        pending = []
+
+        def build(batch):
+            tensors = [torch.from_numpy(entry["image"]).permute(2, 0, 1)[None].to(args.device)
+                       for entry in batch]
+            predictions = model.predict_many(tensors).argmax(1).cpu().tolist()
+            for entry, prediction in zip(batch, predictions):
+                if prediction != entry["true_label"]:
+                    continue
+                kwargs = dict(
+                    image=entry["image"], model=model,
+                    true_label=entry["true_label"], target_label=entry["target_label"],
+                    targeted=targeted, patch_size=(args.patch_h, args.patch_w),
+                    steps=steps, step_size=step_size, eps=eps,
+                    clip_min=0.0, clip_max=255.0, device=args.device,
+                    location_update_period=args.location_update_period,
+                    early_stop=args.early_stop,
+                )
+                if args.attack_method == "LOAP":
+                    kwargs.update(lo_mode=args.lo_mode, stride=args.stride,
+                                  attempts=args.attempts, exclude_box=args.exclude_box)
+                yield AttackJob(attack_class(**kwargs), entry)
+
+        for index, path_img in enumerate(path_labels, start=1):
+            save_file = path_img.replace(".JPEG", "").replace("/", "_")
+            result_path = os.path.join(save_folder, "results", save_file + ".json")
+            final_result_path = os.path.join(save_folder, "results", save_file + "_result.p")
+            if os.path.exists(result_path) and os.path.exists(final_result_path):
+                _add_existing(path_img, result_path, aggregates); continue
+            print(f"Image #{index}: {path_img}")
+            entry = {
+                "path": path_img,
+                "image": np.asarray(Image.open(os.path.join(args.dataset_root, path_img)).convert("RGB"), dtype=np.float32),
+                "true_label": path_labels[path_img]["true_label"],
+                "target_label": path_labels[path_img]["target_label"],
+                "result_path": result_path, "final_result_path": final_result_path,
+                "process_path": os.path.join(save_folder, "processes", save_file + ".p"),
+            }
+            pending.append(entry)
+            if len(pending) == args.batch_size:
+                yield from build(pending); pending = []
+        if pending: yield from build(pending)
+
+    AttackController(
+        evaluator, batch_size=args.batch_size, on_complete=complete,
+        description=f"WhiteBox-{args.attack_method}",
+    ).run(jobs())
+
+
 def main():
     parser = build_parser()
     args = parser.parse_args()
@@ -304,7 +382,7 @@ def main():
 
     attacks, ModelClass, model_args = _components(args.dataset, args.vision_model, args.setting)
     label_file = _label_file(args)
-    model = ModelClass(*model_args, args.device)
+    model = ModelClass(*model_args, args.device, args.setting)
     with open(label_file) as file:
         path_labels = json.load(file)
 
@@ -316,8 +394,12 @@ def main():
     steps, eps, step_size = _resolved_hyperparameters(args)
     aggregates = {"successes": [], "distances": [], "ssim": [], "lpips": []}
 
-    runner = _run_common if args.setting == "common" else _run_realistic
-    runner(args, model, attacks[args.attack_method], path_labels, save_folder, steps, eps, step_size, aggregates)
+    if args.setting == "common":
+        runner, attack_class = _run_common, attacks[args.attack_method]
+    else:
+        from attack_methods.WhiteBoxAsync import ASYNC_ATTACKS
+        runner, attack_class = _run_realistic_batched, ASYNC_ATTACKS[args.attack_method]
+    runner(args, model, attack_class, path_labels, save_folder, steps, eps, step_size, aggregates)
 
     if aggregates["successes"]:
         print(f"Average Attack Success Rate: {np.mean(aggregates['successes']) * 100:.2f}")

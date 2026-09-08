@@ -107,7 +107,12 @@ four-direction location optimization, stride `2`, and one random restart.
 Use `--lo_mode random` for RandLO, `--attempts` for additional restarts,
 and `--exclude_box TOP LEFT HEIGHT WIDTH` to prevent overlap with a region.
 
-The common white-box runner batches attacks with `--batch_size` (default `8`).
+The common white-box runner uses one attacker per image. A controller collects
+up to `--batch_size` pending attackers (default `8`) and sends their images to
+one white-box evaluator batch. In `realistic`, images may keep different native
+sizes: the evaluator preprocesses them independently, concatenates them only
+after they reach the model input size, and returns a separate gradient to each
+attacker.
 All white-box runners also accept `--early_stop`; when enabled, each image
 stops as soon as its accepted attack state succeeds. In a common batch,
 unfinished images continue independently.

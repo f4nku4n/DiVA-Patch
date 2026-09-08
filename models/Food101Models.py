@@ -15,6 +15,11 @@ class Food101Model:
     def __init__(self, device='cpu', setting='realistic'):
         processor = AutoImageProcessor.from_pretrained('model_weights/swin-finetuned-food101', local_files_only=True)
         model = AutoModelForImageClassification.from_pretrained('model_weights/swin-finetuned-food101', local_files_only=True)
+
+        # root = '/kaggle/input/models/f4nku4n99/weights/pytorch/default/2'
+        # processor = AutoImageProcessor.from_pretrained(f'{root}/swin-finetuned-food101', local_files_only=True)
+        # model = AutoModelForImageClassification.from_pretrained(f'{root}/swin-finetuned-food101', local_files_only=True)
+
         mean, std = tuple(processor.image_mean), tuple(processor.image_std)
 
         self.setting = setting
@@ -49,6 +54,12 @@ class Food101Model:
         if self.setting == 'realistic':
             x = preprocess_for_inference(x)
         return self._logits(x)
+
+    def forward_many(self, images):
+        """Differentiable heterogeneous-size forward used by white-box batches."""
+        if self.setting == 'realistic':
+            images = [preprocess_for_inference(image) for image in images]
+        return self._logits(torch.cat(list(images), dim=0))
 
     def __call__(self, x):
         return self.predict(x)

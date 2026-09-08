@@ -216,10 +216,7 @@ def main():
         context = job.context
 
         map_elites = attacker.return_map_elites()
-        p.dump(
-            map_elites,
-            open(os.path.join(map_elites_dir, f'{context.save_file}_map_elites.p'), 'wb'),
-        )
+        p.dump(map_elites, open(os.path.join(map_elites_dir, f'{context.save_file}_map_elites.p'), 'wb'))
 
         if args.save_imgs:
             p.dump(attacker.process, open(context.process_path, 'wb'))
@@ -235,10 +232,7 @@ def main():
                     individual.l2,
                     individual.loss,
                 ])
-        p.dump(
-            results,
-            open(os.path.join(result_dir, f'{context.save_file}_result.p'), 'wb'),
-        )
+        p.dump(results, open(os.path.join(result_dir, f'{context.save_file}_result.p'), 'wb'))
 
         best_idv = attacker.get_best_quality_solution()
         print(f"Best patch:\n+ Adversarial: {best_idv.success_attack}\n+ L2: {best_idv.l2:.2f}")
