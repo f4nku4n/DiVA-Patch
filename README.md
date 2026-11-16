@@ -28,9 +28,9 @@ This repo have already implemented following black-box patch-based attacks:
 
 Run DevoPatch under the common or realistic setting with:
 ```shell
-python run_DevoPatch.py --setting common --vision_model VGGNet16 --dataset_root "$DATASET_PATH" --device cuda
+python run_DevoPatch.py --setting common --vision_model VGGNet16 --dataset_root "$DATASET_PATH" --device cuda --batch_size 8
 
-python run_DevoPatch.py --setting realistic --vision_model VGGNet16 --dataset_root "$DATASET_PATH" --device cuda --attack_type targeted
+python run_DevoPatch.py --setting realistic --vision_model VGGNet16 --dataset_root "$DATASET_PATH" --device cuda --attack_type targeted --batch_size 8
 ```
 
 DevoPatch defaults to population size `10`, initialization rate `0.35`,
@@ -40,22 +40,25 @@ class in the full model-specific label dictionary. For a targeted attack, it
 is sampled from entries whose true label equals the configured target label.
 The selected texture is deterministic for the seed and source path and is
 recorded in `target_images.json`.
+`--batch_size` controls how many independent images are attacked concurrently;
+each active image owns one attacker and contributes at most one query to each
+victim-model batch.
 The old common and realistic entry points remain compatibility wrappers.
 
 CamoPatch common and realistic settings share one runner:
 ```shell
-python run_CamoPatch.py --setting common --vision_model VGGNet16 --dataset_root "$DATASET_PATH"
+python run_CamoPatch.py --setting common --vision_model VGGNet16 --dataset_root "$DATASET_PATH" --batch_size 8
 
-python run_CamoPatch.py --setting realistic --vision_model VGGNet16 --dataset_root "$DATASET_PATH"
+python run_CamoPatch.py --setting realistic --vision_model VGGNet16 --dataset_root "$DATASET_PATH" --batch_size 8
 ```
 
 Patch-RS uses the same unified runner pattern:
 ```shell
 python run_PatchRS.py --setting common \
-  --vision_model VGGNet16 --dataset_root "$DATASET_PATH"
+  --vision_model VGGNet16 --dataset_root "$DATASET_PATH" --batch_size 8
 
 python run_PatchRS.py --setting realistic \
-  --vision_model VGGNet16 --dataset_root "$DATASET_PATH"
+  --vision_model VGGNet16 --dataset_root "$DATASET_PATH" --batch_size 8
 ```
 Use `--patch_size`, `--p_init`, and `--update_loc_period` to configure
 Patch-RS. The old common and realistic entry points remain compatibility
@@ -67,8 +70,11 @@ python run_DiVA_Patch.py --setting common --vision_model VGGNet16 --dataset_root
 
 python run_DiVA_Patch.py --setting realistic --vision_model VGGNet16 --dataset_root "$DATASET_PATH" --attack_type targeted
 ```
-Use `--save_imgs` to save example images. The old common and realistic
-entry points remain compatibility wrappers.
+Use `--batch_size 8` (or another value that fits GPU memory) to attack that
+many images concurrently with one batched victim-model evaluation per query
+round. The default is `1` for compatibility; CUDA out-of-memory errors require
+rerunning with a smaller value. Use `--save_imgs` to save example images. The
+old common and realistic entry points remain compatibility wrappers.
 
 The repository also includes the following white-box localized attacks in
 `attack_methods/WhiteBoxPatch.py`:
@@ -101,7 +107,12 @@ four-direction location optimization, stride `2`, and one random restart.
 Use `--lo_mode random` for RandLO, `--attempts` for additional restarts,
 and `--exclude_box TOP LEFT HEIGHT WIDTH` to prevent overlap with a region.
 
-The common white-box runner batches attacks with `--batch_size` (default `8`).
+The common white-box runner uses one attacker per image. A controller collects
+up to `--batch_size` pending attackers (default `8`) and sends their images to
+one white-box evaluator batch. In `realistic`, images may keep different native
+sizes: the evaluator preprocesses them independently, concatenates them only
+after they reach the model input size, and returns a separate gradient to each
+attacker.
 All white-box runners also accept `--early_stop`; when enabled, each image
 stops as soon as its accepted attack state succeeds. In a common batch,
 unfinished images continue independently.

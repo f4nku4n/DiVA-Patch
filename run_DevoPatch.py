@@ -2,16 +2,18 @@ import os
 import json
 import argparse
 import pickle as p
+from dataclasses import dataclass
 
 import numpy as np
 from PIL import Image
 
-from utils import NumpyEncoder, PerceptualMetricTracker
+from utils import BatchEvaluator, NumpyEncoder, PerceptualMetricTracker
 from utils import select_devopatch_target,sample_image_labels, set_seed
 
 from attack_methods.DevoPatch import DevoPatch
+from attack_methods.controller import AttackController, AttackJob
 
-from utils.LossFunctions import Targeted, UnTargeted
+from utils.LossFunctions import Targeted, UnTargeted, _torch_input
 from factory import getVisionModel, getImageLoader, getLabelFile
 
 VALID_MODELS = {
@@ -19,6 +21,20 @@ VALID_MODELS = {
     "Flower102": ("EfficientNetV2S",),
     "Food101": ("Swin",),
 }
+
+
+@dataclass
+class DevoJobContext:
+    path_img: str
+    save_file: str
+    source: np.ndarray
+    target: np.ndarray
+    true_label: int
+    configured_target: int
+    target_entry: dict
+    result_path: str
+    process_path: str
+    final_result_path: str
 
 def build_parser():
     parser = argparse.ArgumentParser()
@@ -29,6 +45,8 @@ def build_parser():
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--max_query", type=int, default=10000)
     parser.add_argument("--num_images", type=int, default=100)
+    parser.add_argument("--batch_size", type=int, default=1,
+                        help="maximum number of images attacked in each evaluator batch")
     parser.add_argument("--dataset", choices=list(VALID_MODELS), default="ImageNet1K")
     parser.add_argument("--vision_model", default="VGGNet16", choices=["VGGNet16", "ResNet50", "ViT16", "EfficientNetV2S", "Swin"])
     parser.add_argument("--device", default="cuda")
@@ -103,10 +121,13 @@ def _print_result(image, summary):
 def main():
     parser = build_parser()
     args = parser.parse_args()
+    if args.batch_size < 1:
+        parser.error("--batch_size must be at least 1")
 
     # Load vision model
     VisionModel, model_args = getVisionModel(args.dataset, args.vision_model)
     model = VisionModel(*model_args, args.device)
+    evaluator = BatchEvaluator(model)
 
     # Load label file
     label_file = getLabelFile(args)
@@ -134,104 +155,8 @@ def main():
     set_seed(args.seed)
 
     successes, l2_values, areas, query_values = [], [], [], []
-    for index, path_img in enumerate(path_labels, start=1):
-        print(f'Image #{index}: {path_img}')
-        save_file = _safe_name(path_img)
-        result_path = f'{result_dir}/{save_file}.json'
-        process_path = f'{process_dir}/{save_file}_process.p'
-        final_result_path = f'{result_dir}/{save_file}_result.p'
 
-        if os.path.exists(result_path):
-            summary = json.load(open(result_path))
-            if (
-                metric_tracker.is_complete(summary)
-                and "first_success_query" in summary
-                and "target_image" in summary
-                and os.path.exists(final_result_path)
-            ):
-                metric_tracker.add_summary(summary)
-                _print_result(path_img, summary)
-                successes.append(bool(summary["adversarial"]))
-                l2_values.append(float(summary["l2_distance"]))
-                areas.append(float(summary["patch_area_ratio"]))
-                query_values.append(int(summary["queries"]))
-                continue
-
-        target_entry = target_manifest["targets"].get(path_img)
-        if target_entry is None:
-            target_path, target_class = select_devopatch_target(
-                all_labels, path_img, args.attack_type == "targeted", args.seed,
-            )
-            target_entry = {"target_image": target_path, "target_class": target_class}
-            target_manifest["targets"][path_img] = target_entry
-            _save_target_manifest(target_manifest_path, target_manifest)
-        target_path = target_entry["target_image"]
-        target_class = int(target_entry["target_class"])
-
-        source_file = f'{args.dataset_root}/{path_img}'
-        target_file = f'{args.dataset_root}/{target_path}'
-
-        source = load_image(source_file)
-        target = _load_target(target_file, args.setting, source.shape, load_image)
-        true_label = int(path_labels[path_img]['true_label'])
-        configured_target = int(path_labels[path_img]['target_label'])
-        if args.attack_type == "targeted":
-            loss = Targeted(model, true_label, configured_target, to_pytorch=True, device=args.device)
-        else:
-            loss = UnTargeted(model, true_label, to_pytorch=True, device=args.device)
-
-        if loss.get_label(source) != true_label:
-            print(f"Skip {path_img}: clean image is misclassified")
-            continue
-
-        if os.path.exists(process_path):
-            process = p.load(open(process_path, 'rb'))
-            adversarial = _rebuild_from_process(source, process)
-            best = process[-1]
-            patch = np.asarray(best[3])
-            final_patch = patch
-            summary = {
-                "adversarial": bool(best[1]),
-                "l2_distance": float(best[4]),
-                "fitness": float(best[5]),
-                "queries": int(best[0]),
-                "first_success_query": next((int(record[0]) for record in process if record[1]), None),
-                "location": best[2],
-                "rectangle": [
-                    best[2][0], best[2][1],
-                    best[2][0] + patch.shape[0], best[2][1] + patch.shape[1],
-                ],
-                "patch_area": int(patch.shape[0] * patch.shape[1]),
-                "patch_area_ratio": float(patch.shape[0] * patch.shape[1] / (source.shape[0] * source.shape[1])),
-                **target_entry,
-            }
-        else:
-            set_seed(args.seed)
-            attacker = DevoPatch(
-                source, target, loss,
-                pop_size=args.pop_size, init_rate=args.init_rate, mutation_rate=args.mutation_rate,
-                fitness_norm=args.fitness_norm, max_query=args.max_query
-            )
-            attacker.run()
-            result = attacker.get_best()
-            final_patch = np.asarray(result["patch"])
-            adversarial = attacker.build_adversarial()
-            if args.save_process:
-                process = attacker.process
-                p.dump(process, open(process_path, 'wb'))
-            summary = {
-                "adversarial": result["success"],
-                "l2_distance": result["l2"],
-                "fitness": result["fitness"],
-                "queries": result["queries"],
-                "first_success_query": result["first_success_query"],
-                "location": result["location"],
-                "rectangle": result["rectangle"],
-                "patch_area": result["patch_area"],
-                "patch_area_ratio": result["patch_area_ratio"],
-                **target_entry,
-            }
-
+    def save_result(context, summary, final_patch, adversarial):
         final_result = {
             "adversarial": bool(summary["adversarial"]),
             "location": summary["location"],
@@ -249,28 +174,134 @@ def main():
             "init_rate": args.init_rate,
             "mutation_rate": args.mutation_rate,
             "fitness_norm": args.fitness_norm,
-            **target_entry,
+            **context.target_entry,
         }
 
-        metrics = metric_tracker.compute(source, adversarial)
+        metrics = metric_tracker.compute(context.source, adversarial)
         summary.update(metrics)
         final_result.update(ssim=float(metrics["ssim"]), lpips=float(metrics["lpips"]))
-        p.dump(final_result, open(final_result_path, 'wb'))
+        p.dump(final_result, open(context.final_result_path, 'wb'))
 
         if args.save_imgs:
             output = adversarial if args.setting == "realistic" else adversarial * 255.0
             Image.fromarray(np.clip(output, 0, 255).astype(np.uint8)).save(
-                f"{example_dir}/{summary['adversarial']}_{save_file}.JPEG"
+                f"{example_dir}/{summary['adversarial']}_{context.save_file}.JPEG"
             )
 
-        with open(result_path, "w") as file:
+        with open(context.result_path, "w") as file:
             json.dump(summary, file, indent=4, cls=NumpyEncoder)
 
-        _print_result(path_img, summary)
+        _print_result(context.path_img, summary)
         successes.append(bool(summary["adversarial"]))
         l2_values.append(float(summary["l2_distance"]))
         areas.append(float(summary["patch_area_ratio"]))
         query_values.append(int(summary["queries"]))
+
+    def build_attack_jobs(contexts):
+        clean_inputs = [_torch_input(context.source, False, args.device) for context in contexts]
+        predicted_labels = evaluator.predict_labels(clean_inputs)
+        del clean_inputs
+        for context, predicted_label in zip(contexts, predicted_labels):
+            if predicted_label != context.true_label:
+                print(f"Skip {context.path_img}: clean image is misclassified")
+                continue
+            if args.attack_type == "targeted":
+                loss = Targeted(model, context.true_label, context.configured_target,
+                                to_pytorch=True, device=args.device)
+            else:
+                loss = UnTargeted(model, context.true_label, to_pytorch=True, device=args.device)
+            attacker = DevoPatch(
+                context.source, context.target, loss,
+                pop_size=args.pop_size, init_rate=args.init_rate,
+                mutation_rate=args.mutation_rate, fitness_norm=args.fitness_norm,
+                max_query=args.max_query, rng=np.random.RandomState(args.seed),
+            )
+            yield AttackJob(attacker=attacker, context=context)
+
+    def attack_jobs():
+        clean_batch = []
+        for index, path_img in enumerate(path_labels, start=1):
+            print(f'Image #{index}: {path_img}')
+            save_file = _safe_name(path_img)
+            result_path = f'{result_dir}/{save_file}.json'
+            process_path = f'{process_dir}/{save_file}_process.p'
+            final_result_path = f'{result_dir}/{save_file}_result.p'
+            if os.path.exists(result_path):
+                summary = json.load(open(result_path))
+                if (metric_tracker.is_complete(summary)
+                        and "first_success_query" in summary
+                        and "target_image" in summary
+                        and os.path.exists(final_result_path)):
+                    metric_tracker.add_summary(summary)
+                    _print_result(path_img, summary)
+                    successes.append(bool(summary["adversarial"]))
+                    l2_values.append(float(summary["l2_distance"]))
+                    areas.append(float(summary["patch_area_ratio"]))
+                    query_values.append(int(summary["queries"]))
+                    continue
+
+            target_entry = target_manifest["targets"].get(path_img)
+            if target_entry is None:
+                target_path, target_class = select_devopatch_target(
+                    all_labels, path_img, args.attack_type == "targeted", args.seed,
+                )
+                target_entry = {"target_image": target_path, "target_class": target_class}
+                target_manifest["targets"][path_img] = target_entry
+                _save_target_manifest(target_manifest_path, target_manifest)
+            source = load_image(f'{args.dataset_root}/{path_img}')
+            target = _load_target(
+                f'{args.dataset_root}/{target_entry["target_image"]}',
+                args.setting, source.shape, load_image,
+            )
+            context = DevoJobContext(
+                path_img, save_file, source, target,
+                int(path_labels[path_img]['true_label']),
+                int(path_labels[path_img]['target_label']), target_entry,
+                result_path, process_path, final_result_path,
+            )
+            if os.path.exists(process_path):
+                process = p.load(open(process_path, 'rb'))
+                best = process[-1]
+                patch = np.asarray(best[3])
+                summary = {
+                    "adversarial": bool(best[1]), "l2_distance": float(best[4]),
+                    "fitness": float(best[5]), "queries": int(best[0]),
+                    "first_success_query": next((int(r[0]) for r in process if r[1]), None),
+                    "location": best[2],
+                    "rectangle": [best[2][0], best[2][1], best[2][0] + patch.shape[0], best[2][1] + patch.shape[1]],
+                    "patch_area": int(patch.shape[0] * patch.shape[1]),
+                    "patch_area_ratio": float(patch.shape[0] * patch.shape[1] / (source.shape[0] * source.shape[1])),
+                    **target_entry,
+                }
+                save_result(context, summary, patch, _rebuild_from_process(source, process))
+                continue
+            clean_batch.append(context)
+            if len(clean_batch) == args.batch_size:
+                yield from build_attack_jobs(clean_batch)
+                clean_batch = []
+        if clean_batch:
+            yield from build_attack_jobs(clean_batch)
+
+    def save_completed_job(job):
+        attacker, context = job.attacker, job.context
+        result = attacker.get_best()
+        if args.save_process:
+            p.dump(attacker.process, open(context.process_path, 'wb'))
+        summary = {
+            "adversarial": result["success"], "l2_distance": result["l2"],
+            "fitness": result["fitness"], "queries": result["queries"],
+            "first_success_query": result["first_success_query"],
+            "location": result["location"], "rectangle": result["rectangle"],
+            "patch_area": result["patch_area"], "patch_area_ratio": result["patch_area_ratio"],
+            **context.target_entry,
+        }
+        save_result(context, summary, np.asarray(result["patch"]), attacker.build_adversarial())
+
+    controller = AttackController(
+        evaluator, batch_size=args.batch_size, on_complete=save_completed_job,
+        show_progress=True, description="DevoPatch",
+    )
+    controller.run(attack_jobs())
 
     if not successes:
         print("No eligible images were evaluated.")

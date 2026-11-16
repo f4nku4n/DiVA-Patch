@@ -1,17 +1,19 @@
 import numpy as np
-from tqdm import tqdm
 from scipy.special import softmax
 
 from attack_methods.base import Attacker
+from attack_methods.controller import AttackController, AttackJob
 from attack_methods.utils import l2_compute
 from attack_methods.CamoPatch import mutate
 
 from base import MAP_Elites
 from base.individual import Individual, render
+from utils.BatchEvaluator import BatchEvaluator
 
 class DiVA_Patch(Attacker):
     def __init__(self, img_cls, loss_function, delta_max=20, delta_min=0.1, K=100,
-                 patch_size=(40, 40), grid_size=(40, 40), max_query=10000, setting='realistic'):
+                 patch_size=(40, 40), grid_size=(40, 40), max_query=10000,
+                 setting='realistic', rng=None):
         super().__init__(max_query)
 
         self.img_cls = img_cls
@@ -19,36 +21,85 @@ class DiVA_Patch(Attacker):
         self.loss_function.bind_base_image(img_cls)
         self.h, self.w = img_cls.shape[0], img_cls.shape[1]
 
-        self.patch_size = patch_size
+        self.patch_size = list(patch_size)
         self.grid_size_h, self.grid_size_w = grid_size[0], grid_size[1]
 
         self.map_elites = MAP_Elites(img_h=self.h, img_w=self.w, cell_h=self.grid_size_h, cell_w=self.grid_size_w)
 
-        self.pbar = tqdm(total=self.max_query)
         self.delta_max, self.delta_min = delta_max, delta_min
         self.K = K
 
         self.setting = setting
+        self.rng = np.random if rng is None else rng
+
+        self._query_runner = None
+        self._pending_query = None
+        self._done = False
+
+    @property
+    def done(self):
+        return self._done
+
+    def ask(self):
+        if self._done:
+            return None
+        if self._pending_query is not None:
+            return self._pending_query
+
+        if self._query_runner is None:
+            self._query_runner = self._run_queries()
+        try:
+            self._pending_query = next(self._query_runner)
+        except StopIteration:
+            self._done = True
+            return None
+        return self._pending_query
+
+    def tell(self, result):
+        if self._done:
+            raise RuntimeError("Cannot tell() a completed DiVA_Patch attacker")
+        if self._pending_query is None:
+            raise RuntimeError("tell() requires a pending query from ask()")
+
+        self._pending_query = None
+        try:
+            self._pending_query = self._query_runner.send(result)
+        except StopIteration:
+            self._done = True
 
     def evaluate(self, idv):
+        """Evaluate immediately for callers that still use the legacy API."""
+        adversarial, loss = self.loss_function.evaluate_patch(idv.patch, idv.location)
+        self._apply_evaluation(idv, adversarial, loss)
+
+    def _evaluate_query(self, idv):
+        result = yield self.loss_function.make_patch_query(idv.patch, idv.location)
+        self._apply_evaluation(idv, result.success, result.loss)
+
+    def _apply_evaluation(self, idv, adversarial, loss):
         s = idv.s
         x, y = idv.location
 
         orig_patch = self.img_cls[x: x + s[0], y: y + s[1], :]
 
-        adversarial, loss = self.loss_function.evaluate_patch(
-            idv.patch, idv.location
-        )
         self.count_query(adversarial)
-        self.pbar.update(1)
         l2_score = l2_compute(adv_patch=idv.patch, orig_patch=orig_patch, integer=(self.setting == 'realistic'))
 
         idv.success_attack = adversarial
         idv.loss, idv.l2 = loss, l2_score
 
     def run(self):
+        """Run this attacker through the same batched path with batch size one."""
+        controller = AttackController(
+            BatchEvaluator(self.loss_function.model),
+            batch_size=1,
+            show_progress=True,
+        )
+        controller.run([AttackJob(self)])
+
+    def _run_queries(self):
         # Step 1: Initialize Archive
-        self.initialize_archive()
+        yield from self.initialize_archive()
         best_idv = self.get_best_quality_solution()
         self.process.append([
             self.n_query,
@@ -62,7 +113,7 @@ class DiVA_Patch(Attacker):
             idx = self.select_niche()
 
             # Step 3: Modify Niche
-            self.modify_niche(idx)
+            yield from self.modify_niche(idx)
 
             best_idv = self.get_best_quality_solution()
             self.process.append([
@@ -74,7 +125,6 @@ class DiVA_Patch(Attacker):
             if best_idv.success_attack and not first_print:
                 print(f'Successfully attack at {self.n_query} #evals!')
                 first_print = True
-        self.pbar.close()
 
     # Step 1: Initialize Archive
     def initialize_archive(self):
@@ -90,9 +140,12 @@ class DiVA_Patch(Attacker):
             uy = min(uy + 1, self.w - self.patch_size[1])
             idv = Individual(patch_size=self.patch_size, setting=self.setting)
 
-            idv.rand(img_h=self.h - idv.s[0], img_w=self.w - idv.s[1], lx=lx, ly=ly, ux=ux, uy=uy)
+            idv.rand(
+                img_h=self.h - idv.s[0], img_w=self.w - idv.s[1],
+                lx=lx, ly=ly, ux=ux, uy=uy, rng=self.rng,
+            )
 
-            self.evaluate(idv)
+            yield from self._evaluate_query(idv)
             self.map_elites.assign(idv)
 
     # Step 2: Select-Niche
@@ -102,7 +155,7 @@ class DiVA_Patch(Attacker):
                               delta_max=self.delta_max, delta_min=self.delta_min)
         list_probs = softmax(-list_loss / delta)
 
-        idx = np.random.choice(list_activated_cell, p=list_probs)
+        idx = self.rng.choice(list_activated_cell, p=list_probs)
 
         return idx
 
@@ -133,10 +186,10 @@ class DiVA_Patch(Attacker):
 
         if idx == idx_best or self.map_elites.grid_search[idx].success_attack:
             # Exploitation
-            self.modify_best_patch(idx)
+            yield from self.modify_best_patch(idx)
         else:
             # Exploration
-            self.modify_unsuccessful_patch(idx)
+            yield from self.modify_unsuccessful_patch(idx)
 
     def modify_best_patch(self, idx):
         """
@@ -149,10 +202,10 @@ class DiVA_Patch(Attacker):
 
             o.location = idv.location.copy()
             o.s = idv.s.copy()
-            o.patch_geno = mutate(idv.patch_geno, setting=self.setting)
+            o.patch_geno = mutate(idv.patch_geno, setting=self.setting, rng=self.rng)
             o.patch = render(o.patch_geno, o.s[0], o.s[1], setting=self.setting)
 
-            self.evaluate(o)
+            yield from self._evaluate_query(o)
             self.map_elites.assign(o)
         else:
             best_patch_geno = idv.patch_geno.copy()
@@ -162,9 +215,9 @@ class DiVA_Patch(Attacker):
                 o = Individual(patch_size=self.patch_size, setting=self.setting)
                 o.location = idv.location.copy()
                 o.s = idv.s.copy()
-                o.patch_geno = mutate(best_patch_geno, setting=self.setting)
+                o.patch_geno = mutate(best_patch_geno, setting=self.setting, rng=self.rng)
                 o.patch = render(o.patch_geno, o.s[0], o.s[1], setting=self.setting)
-                self.evaluate(o)
+                yield from self._evaluate_query(o)
                 self.map_elites.assign(o)
 
                 if o.success_attack and o.l2 < best_l2:
@@ -178,18 +231,20 @@ class DiVA_Patch(Attacker):
         idv = self.map_elites.grid_search[idx]
 
         o = Individual(patch_size=self.patch_size, setting=self.setting)
-        if np.random.random() <= 0.5:
+        if self.rng.random_sample() <= 0.5:
             # Mutate location
-            o.location = update_location(idv.location.copy(), self.h, self.w, idv.s[0], idv.s[1])
+            o.location = update_location(
+                idv.location.copy(), self.h, self.w, idv.s[0], idv.s[1], rng=self.rng
+            )
             o.patch_geno = idv.patch_geno.copy()
             o.patch = idv.patch.copy()
         else:
             # Mutate patch
             o.location = idv.location.copy()
             o.s = idv.s.copy()
-            o.patch_geno = mutate(idv.patch_geno, setting=self.setting)
+            o.patch_geno = mutate(idv.patch_geno, setting=self.setting, rng=self.rng)
             o.patch = render(o.patch_geno, o.s[0], o.s[1], setting=self.setting)
-        self.evaluate(o)
+        yield from self._evaluate_query(o)
         self.map_elites.assign(o)
 
     def get_best_quality_solution(self):
@@ -206,9 +261,10 @@ class DiVA_Patch(Attacker):
         return data
 
 
-def update_location(loc_new, h, w, s_h, s_w):
-    loc_new[0] = np.random.randint(low=0, high=h - s_h)
-    loc_new[1] = np.random.randint(low=0, high=w - s_w)
+def update_location(loc_new, h, w, s_h, s_w, rng=None):
+    rng = np.random if rng is None else rng
+    loc_new[0] = rng.randint(low=0, high=h - s_h)
+    loc_new[1] = rng.randint(low=0, high=w - s_w)
     return loc_new
 
 def compute_delta(remaining_evals, total_evals, delta_min=0.1, delta_max=10.0):

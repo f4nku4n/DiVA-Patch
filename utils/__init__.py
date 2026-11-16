@@ -7,6 +7,7 @@ from .common import (
     set_seed,
     apply_patch
 )
+from .BatchEvaluator import BatchEvaluator, EvaluationResult, PatchQuery
 from .PerceptualMetrics import (
     LPIPSAlexNet,
     PerceptualMetrics,
